@@ -7,6 +7,7 @@ import manifest from "./manifest.config";
 export default defineConfig({
   plugins: [preact(), crx({ manifest })],
   build: {
+    modulePreload: false,
     sourcemap: false,
     target: "chrome120",
     rollupOptions: {
