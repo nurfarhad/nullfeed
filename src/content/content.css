@@ -1,0 +1,51 @@
+[data-nullfeed-hidden] {
+  display: none !important;
+}
+
+/* Stable early-hiding surfaces. All rules require Nullfeed-owned root state. */
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-reel-shelf-renderer,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-rich-shelf-renderer[is-shorts],
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-reel-item-renderer {
+  display: none !important;
+}
+
+/* Facebook: pagelet names and article boundaries are stable at document_start. */
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
+  [data-pagelet*="Reels"],
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
+  [role="article"]:has(a[href^="/reel/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  [data-pagelet*="Stories"],
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [role="article"]:has(video),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [role="article"]:has(a[href^="/watch"], a[href^="/video"]) {
+  display: none !important;
+}
+
+/* Facebook navigation entries: hide only their semantic item, never a nav root. */
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
+  [role="navigation"] :is(li, [role="menuitem"], [role="tab"]):has(a[href^="/reel"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [role="navigation"] :is(li, [role="menuitem"], [role="tab"]):has(a[href^="/watch"], a[href^="/video"]) {
+  display: none !important;
+}
+
+/* Instagram: articles are safe post boundaries; nav links are hidden in place. */
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  article:has(a[href^="/reel/"]):not(:has(a[href^="/p/"])),
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  :is(nav, header, [role="navigation"]) a:is([href="/reels/"], [href^="/reel/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-explore]
+  :is(nav, header, [role="navigation"]) a[href^="/explore/"] {
+  display: none !important;
+}
+
+/*
+ * Instagram Stories and non-article grid cells do not expose a stable semantic
+ * container. The adapter validates those boundaries before hiding them instead
+ * of risking an early-CSS rule that can blank main content.
+ */

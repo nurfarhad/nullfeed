@@ -1,0 +1,34 @@
+{
+  "name": "nullfeed",
+  "version": "1.0.2",
+  "private": true,
+  "type": "module",
+  "description": "Privacy-first Chrome extension for hiding distracting social feed surfaces.",
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "dev": "vite",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:all": "npm run test && npm run build && npm run test:e2e",
+    "audit:network": "node scripts/audit-network-surface.mjs",
+    "audit:permissions": "node scripts/audit-manifest.mjs",
+    "generate:icons": "node scripts/generate-icons.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "preact": "10.29.2"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "2.7.0",
+    "@playwright/test": "1.61.1",
+    "@preact/preset-vite": "2.10.5",
+    "@types/chrome": "0.2.0",
+    "@types/node": "24.10.15",
+    "typescript": "6.0.3",
+    "vite": "8.1.0",
+    "vitest": "4.1.9"
+  }
+}
