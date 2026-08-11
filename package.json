@@ -5,13 +5,14 @@
   "type": "module",
   "description": "Privacy-first Chrome extension for hiding distracting social feed surfaces.",
   "scripts": {
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/audit-build.mjs",
     "dev": "vite",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:all": "npm run test && npm run build && npm run test:e2e",
     "audit:network": "node scripts/audit-network-surface.mjs",
+    "audit:build": "node scripts/audit-build.mjs",
     "audit:permissions": "node scripts/audit-manifest.mjs",
     "generate:icons": "node scripts/generate-icons.mjs"
   },

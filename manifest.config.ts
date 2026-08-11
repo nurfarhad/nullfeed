@@ -13,7 +13,7 @@ export default defineManifest({
     "https://www.youtube.com/*"
   ],
   background: {
-    service_worker: "src/background/index.ts",
+    service_worker: "src/background/serviceWorker.ts",
     type: "module"
   },
   action: {

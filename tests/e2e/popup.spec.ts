@@ -1,6 +1,15 @@
 import { chromium, expect, test, type BrowserContext } from "@playwright/test";
 import { resolve } from "node:path";
 
+const DEFAULT_SETTINGS = {
+  schemaVersion: 1,
+  enabled: true,
+  lastPlatform: "facebook",
+  facebook: { reels: true, stories: true, videos: false },
+  instagram: { reels: true, stories: true, explore: true },
+  youtube: { shorts: true, navigation: true, redirect: true }
+};
+
 let context: BrowserContext;
 
 test.beforeAll(async () => {
@@ -29,6 +38,15 @@ test("popup exposes the approved controls and pause state", async () => {
   if (!worker) {
     worker = await context.waitForEvent("serviceworker");
   }
+  await expect
+    .poll(() =>
+      worker.evaluate(async () => {
+        const stored = await chrome.storage.sync.get("settings");
+        return stored.settings;
+      })
+    )
+    .toEqual(DEFAULT_SETTINGS);
+
   const extensionId = new URL(worker.url()).host;
   const page = await context.newPage();
   const outgoingRequests: string[] = [];
@@ -72,11 +90,11 @@ test("popup exposes the approved controls and pause state", async () => {
 
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
-    "rgb(11, 12, 14)"
+    "rgb(17, 18, 20)"
   );
   await expect(page.locator(".protection")).toHaveCSS(
     "background-color",
-    "rgb(23, 25, 28)"
+    "rgb(26, 27, 30)"
   );
 
   await page.getByRole("switch", { name: "Protection" }).click();
@@ -85,6 +103,15 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect(
     page.getByRole("switch", { name: "Hide Reels", exact: true })
   ).toBeDisabled();
+
+  await expect
+    .poll(() =>
+      worker.evaluate(async () => {
+        const stored = await chrome.storage.sync.get("settings");
+        return stored.settings?.enabled;
+      })
+    )
+    .toBe(false);
 
   await worker.evaluate(async () => {
     const stored = await chrome.storage.sync.get("settings");
