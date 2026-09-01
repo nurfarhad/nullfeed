@@ -123,16 +123,24 @@ export async function setPlatformPreference<P extends Platform>(
   });
 }
 
+export const DEFAULT_SNOOZE_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
 export async function startSnooze(
   settings: Settings,
-  durationMs: number
+  durationMs: number = DEFAULT_SNOOZE_DURATION_MS
 ): Promise<Settings> {
   return saveSettings({
     ...settings,
     snooze: {
-      ...settings.snooze,
       active: true,
-      until: Date.now() + durationMs
+      until: Date.now() + durationMs,
+      sites: {
+        facebook: true,
+        instagram: true,
+        youtube: true,
+        linkedin: true,
+        twitter: true
+      }
     }
   });
 }
