@@ -16,6 +16,18 @@ describe("settings validation", () => {
     expect(DEFAULT_SETTINGS.lastPlatform).toBe("facebook");
   });
 
+  it("defaults ads to on for Facebook", () => {
+    expect(DEFAULT_SETTINGS.facebook.ads).toBe(true);
+  });
+
+  it("defaults snooze to inactive with all sites enabled", () => {
+    expect(DEFAULT_SETTINGS.snooze).toEqual({
+      active: false,
+      until: null,
+      sites: { facebook: true, instagram: true, youtube: true }
+    });
+  });
+
   it("preserves known values and ignores malformed or unknown data", () => {
     expect(
       validateSettings({
@@ -31,10 +43,49 @@ describe("settings validation", () => {
       schemaVersion: CURRENT_SCHEMA_VERSION,
       enabled: false,
       lastPlatform: "instagram",
-      facebook: { reels: true, stories: true, videos: true },
+      facebook: { reels: true, stories: true, videos: true, ads: true },
       instagram: { reels: true, stories: true, explore: true },
-      youtube: { shorts: false, navigation: true, redirect: true }
+      youtube: { shorts: false, navigation: true, redirect: true },
+      snooze: {
+        active: false,
+        until: null,
+        sites: { facebook: true, instagram: true, youtube: true }
+      }
     });
+  });
+
+  it("backfills missing ads field to default", () => {
+    const result = validateSettings({
+      facebook: { reels: false, stories: false, videos: false }
+    });
+    expect(result.facebook.ads).toBe(true);
+  });
+
+  it("backfills missing snooze object to defaults", () => {
+    const result = validateSettings({ enabled: true });
+    expect(result.snooze).toEqual({
+      active: false,
+      until: null,
+      sites: { facebook: true, instagram: true, youtube: true }
+    });
+  });
+
+  it("backfills malformed snooze.until to null", () => {
+    const result = validateSettings({
+      snooze: { active: true, until: "not-a-number", sites: {} }
+    });
+    expect(result.snooze.until).toBeNull();
+    expect(result.snooze.active).toBe(true);
+  });
+
+  it("preserves a valid finite snooze.until", () => {
+    const ts = Date.now() + 60000;
+    const result = validateSettings({
+      snooze: { active: true, until: ts, sites: { facebook: false } }
+    });
+    expect(result.snooze.until).toBe(ts);
+    expect(result.snooze.sites.facebook).toBe(false);
+    expect(result.snooze.sites.instagram).toBe(true);
   });
 
   it("detects whether any granular filter is active", () => {
@@ -43,9 +94,10 @@ describe("settings validation", () => {
       hasActiveFilters({
         ...DEFAULT_SETTINGS,
         youtube: { shorts: false, navigation: false, redirect: false },
-        facebook: { reels: false, stories: false, videos: false },
+        facebook: { reels: false, stories: false, videos: false, ads: false },
         instagram: { reels: false, stories: false, explore: false }
       })
     ).toBe(false);
   });
 });
+

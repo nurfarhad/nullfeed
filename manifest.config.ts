@@ -6,11 +6,14 @@ export default defineManifest({
   version: "1.0.2",
   description:
     "Hide distracting short-form feeds on YouTube, Facebook, and Instagram.",
-  permissions: ["storage"],
+  permissions: ["storage", "alarms"],
   host_permissions: [
-    "https://www.facebook.com/*",
-    "https://www.instagram.com/*",
-    "https://www.youtube.com/*"
+    "https://*.facebook.com/*",
+    "https://facebook.com/*",
+    "https://*.instagram.com/*",
+    "https://instagram.com/*",
+    "https://*.youtube.com/*",
+    "https://youtube.com/*"
   ],
   background: {
     service_worker: "src/background/serviceWorker.ts",
@@ -35,9 +38,12 @@ export default defineManifest({
   content_scripts: [
     {
       matches: [
-        "https://www.facebook.com/*",
-        "https://www.instagram.com/*",
-        "https://www.youtube.com/*"
+        "https://*.facebook.com/*",
+        "https://facebook.com/*",
+        "https://*.instagram.com/*",
+        "https://instagram.com/*",
+        "https://*.youtube.com/*",
+        "https://youtube.com/*"
       ],
       js: ["src/content/routeSignal.ts"],
       run_at: "document_start",
@@ -45,9 +51,12 @@ export default defineManifest({
     },
     {
       matches: [
-        "https://www.facebook.com/*",
-        "https://www.instagram.com/*",
-        "https://www.youtube.com/*"
+        "https://*.facebook.com/*",
+        "https://facebook.com/*",
+        "https://*.instagram.com/*",
+        "https://instagram.com/*",
+        "https://*.youtube.com/*",
+        "https://youtube.com/*"
       ],
       css: ["src/content/content.css"],
       js: ["src/content/index.ts"],

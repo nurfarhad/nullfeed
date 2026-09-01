@@ -4,135 +4,91 @@ import type { SiteAdapter } from "../adapter";
 import { queryAll } from "../adapter";
 import {
   cleanupOwnedElements,
+  collapseEmptyAncestors,
   hideElement
 } from "../domOwnership";
 
 const VERIFIED_FEED_UNITS = [
   '[role="article"]',
   '[data-pagelet^="FeedUnit"]',
+  'div[data-virtualized="false"]',
+  '[aria-posinset]',
   '[data-pagelet*="Reels"]',
   '[data-pagelet*="Stories"]'
 ] as const;
 
 const STORY_LINK_SELECTOR =
-  'a[href^="/stories/"], a[href="/stories/"]';
+  'a[href^="/stories/"], a[href="/stories/"], a[href*="/stories/create"]';
 
-function closestVerifiedUnit(link: Element): Element {
-  for (const selector of VERIFIED_FEED_UNITS) {
-    const unit = link.closest(selector);
-    if (unit) {
-      return unit;
-    }
-  }
-
-  // Facebook's unnamed feed wrappers are not stable enough to hide safely.
-  // Hiding only the matched entry point is preferable to blanking the feed.
-  return link;
-}
-
-function closestVerifiedFeedUnit(element: Element): Element | null {
-  for (const selector of VERIFIED_FEED_UNITS) {
+function findPostContainer(element: Element): Element {
+  for (const selector of [
+    '[role="article"]',
+    '[data-pagelet^="FeedUnit"]',
+    'div[data-virtualized="false"]',
+    '[aria-posinset]'
+  ]) {
     const unit = element.closest(selector);
-    if (unit) {
+    if (
+      unit &&
+      !unit.matches(
+        'main, [role="main"], [role="feed"], [role="navigation"], [role="banner"], header, nav'
+      )
+    ) {
       return unit;
     }
   }
 
-  return null;
-}
-
-/**
- * Check whether an element sits inside a feed post (article).
- * Story links inside posts are profile-picture avatars that happen
- * to link to stories and must NOT be hidden.
- */
-function isInsideFeedPost(element: Element): boolean {
-  return element.closest(
-    '[role="article"], [data-pagelet^="FeedUnit"]'
-  ) !== null;
-}
-
-/**
- * Walk up from a story tray to find its full visual section wrapper.
- * Facebook wraps the story tray in one or more parent divs that
- * remain visible (and blank) if we only hide the inner tray.
- */
-function findSectionWrapper(section: Element): Element | null {
-  let wrapper: Element = section;
-  let candidate = section.parentElement;
-
-  for (let depth = 0; candidate && depth < 2; depth += 1) {
-    if (
-      candidate.matches(
-        'main, [role="main"], [role="feed"], [role="navigation"], [role="banner"]'
-      )
-    ) {
-      break;
-    }
-
-    // Only unwrap single-child presentation shells. A sibling may be unrelated
-    // navigation, a composer, or a feed unit, so crossing it is unsafe.
-    if (
-      candidate.children.length !== 1 ||
-      candidate.querySelector(
-        '[role="article"], [data-pagelet^="FeedUnit_"]'
-      )
-    ) {
-      break;
-    }
-
-    wrapper = candidate;
-    candidate = candidate.parentElement;
-  }
-
-  return wrapper === section ? null : wrapper;
-}
-
-/**
- * Find the post container for a video element.
- * Tries verified selectors first, then performs a tightly bounded fallback for
- * an unnamed direct child of a semantic feed. Main-page wrappers are rejected.
- */
-function findVideoPostContainer(element: Element): Element | null {
-  const verified = closestVerifiedFeedUnit(element);
-  if (verified) {
-    return verified;
-  }
-
-  // Fallback: unnamed Facebook feed items occasionally omit role="article".
-  let child: Element | null = element;
+  let child: Element = element;
   let candidate = element.parentElement;
 
-  for (let depth = 0; candidate && depth < 8; depth += 1) {
+  for (let depth = 0; candidate && depth < 25; depth += 1) {
     if (
       candidate === document.body ||
-      candidate === document.documentElement
+      candidate === document.documentElement ||
+      candidate.matches('[role="navigation"], [role="banner"], header, nav')
     ) {
-      return null;
+      break;
     }
 
-    if (candidate.matches('[role="feed"]') && child) {
-      const nestedUnits = child.querySelectorAll(
-        '[role="article"], [data-pagelet^="FeedUnit"], [data-pagelet*="Reels"], [data-pagelet*="Stories"]'
-      ).length;
-      const videos = child.querySelectorAll("video").length;
-
-      if (nestedUnits === 0 && videos === 1) {
-        if (DEVELOPMENT) {
-          console.debug(
-            "Nullfeed Facebook used the validated unnamed-video fallback."
-          );
-        }
-        return child;
-      }
-      return null;
+    if (candidate.matches('[role="feed"], [role="main"], main')) {
+      return child;
     }
 
     child = candidate;
     candidate = candidate.parentElement;
   }
 
+  return element;
+}
+
+function closestVerifiedFeedUnit(element: Element): Element | null {
+  for (const selector of VERIFIED_FEED_UNITS) {
+    const unit = element.closest(selector);
+    if (
+      unit &&
+      !unit.matches('main, [role="main"], [role="feed"], [role="navigation"], [role="banner"]')
+    ) {
+      return unit;
+    }
+  }
+
   return null;
+}
+
+/**
+ * Check whether an element sits inside a regular single-author feed post.
+ * Story links inside posts are profile-picture avatars that happen
+ * to link to stories and must NOT trigger hiding the whole post.
+ */
+function isInsideFeedPost(element: Element): boolean {
+  const article = element.closest(
+    '[role="article"], div[data-virtualized="false"]:not(:has(a[href*="/stories/create"]))'
+  );
+  if (!article) {
+    return false;
+  }
+  const storyLinks = article.querySelectorAll(STORY_LINK_SELECTOR);
+  return storyLinks.length === 1 && !article.querySelector('a[href*="/stories/create"]');
 }
 
 function hideFeedEntries(
@@ -141,12 +97,69 @@ function hideFeedEntries(
   feature: string
 ): void {
   queryAll(root, selector).forEach((link) => {
-    hideElement(closestVerifiedUnit(link), feature);
+    // Guard: NEVER touch navigation, banner, header, or top navigation bar
+    if (
+      link.closest(
+        'nav, header, [role="navigation"], [role="banner"], [data-pagelet*="NavBar"], [data-pagelet*="Header"]'
+      )
+    ) {
+      return;
+    }
+
+    const unit = findPostContainer(link);
+    hideElement(unit, feature);
+    collapseEmptyAncestors(unit, feature);
   });
 }
 
+function findStoryTray(link: Element): Element {
+  const markedTray = link.closest('[data-pagelet*="Stories"]');
+  let candidate = (markedTray ?? link).parentElement;
+  let bestContainer: Element = markedTray ?? link;
+
+  for (let depth = 0; candidate && depth < 15; depth += 1) {
+    if (
+      candidate === document.body ||
+      candidate === document.documentElement ||
+      candidate.matches('main, [role="main"], [role="feed"], [role="navigation"], [role="banner"]')
+    ) {
+      return bestContainer;
+    }
+
+    // Stop immediately if candidate contains any regular feed post article
+    if (
+      candidate.matches('[role="article"]') &&
+      candidate.querySelectorAll(STORY_LINK_SELECTOR).length < 2 &&
+      !candidate.querySelector('a[href*="/stories/create"]')
+    ) {
+      return bestContainer;
+    }
+
+    if (candidate.querySelector('[role="article"]:not([data-pagelet*="Stories"])')) {
+      return bestContainer;
+    }
+
+    if (
+      candidate.matches(
+        '[data-pagelet*="Stories"], [data-pagelet^="FeedUnit"], [role="region"], div[data-virtualized="false"]'
+      ) ||
+      candidate.getAttribute("aria-label")?.toLowerCase().includes("stories")
+    ) {
+      bestContainer = candidate;
+    }
+
+    const storyCount = candidate.querySelectorAll(STORY_LINK_SELECTOR).length;
+    if (storyCount >= 2 || candidate.querySelector('a[href*="/stories/create"]')) {
+      bestContainer = candidate;
+    }
+
+    candidate = candidate.parentElement;
+  }
+
+  return bestContainer;
+}
+
 function hideStoryEntries(root: ParentNode): void {
-  // Filter out story links inside feed posts (profile-picture avatars)
   const storyLinks = queryAll(root, STORY_LINK_SELECTOR).filter(
     (link) => !isInsideFeedPost(link)
   );
@@ -159,7 +172,22 @@ function hideStoryEntries(root: ParentNode): void {
     }
   }
 
-  trays.forEach((tray) => hideElement(tray, "facebook-stories"));
+  // Also catch any data-pagelet*="Stories" or aria-label="Stories" containers directly
+  queryAll(
+    root,
+    '[data-pagelet*="Stories"], div[aria-label*="Stories" i], div[aria-label*="stories" i]'
+  ).forEach((el) => {
+    const tray = findStoryTray(el);
+    if (tray) {
+      trays.add(tray);
+    }
+  });
+
+  trays.forEach((tray) => {
+    hideElement(tray, "facebook-stories");
+    collapseEmptyAncestors(tray, "facebook-stories");
+  });
+
   storyLinks.forEach((link) => {
     if (![...trays].some((tray) => tray.contains(link))) {
       hideElement(link, "facebook-stories");
@@ -167,43 +195,8 @@ function hideStoryEntries(root: ParentNode): void {
   });
 }
 
-function findStoryTray(link: Element): Element | null {
-  const markedTray = link.closest('[data-pagelet*="Stories"]');
-  if (markedTray) {
-    return findSectionWrapper(markedTray) ?? markedTray;
-  }
-
-  let candidate = link.parentElement;
-  for (let depth = 0; candidate && depth < 8; depth += 1) {
-    if (
-      candidate.matches(
-        'main, [role="main"], [role="article"], [data-pagelet^="FeedUnit"]'
-      ) ||
-      candidate.querySelector(
-        '[role="article"], [data-pagelet^="FeedUnit"]'
-      )
-    ) {
-      return null;
-    }
-
-    const storyCount = candidate.querySelectorAll(STORY_LINK_SELECTOR).length;
-    if (storyCount >= 2) {
-      return findSectionWrapper(candidate) ?? candidate;
-    }
-
-    candidate = candidate.parentElement;
-  }
-
-  return null;
-}
-
 function hideNativeVideos(root: ParentNode): void {
   queryAll(root, "video").forEach((video) => {
-    const unit = findVideoPostContainer(video);
-    if (!unit) {
-      return;
-    }
-
     if (video instanceof HTMLVideoElement) {
       try {
         video.pause();
@@ -212,7 +205,13 @@ function hideNativeVideos(root: ParentNode): void {
         // Fail open if Facebook replaces the media element during playback.
       }
     }
+
+    const unit = findPostContainer(video);
     hideElement(unit, "facebook-videos");
+    collapseEmptyAncestors(unit, "facebook-videos");
+    if (unit !== video) {
+      hideElement(video, "facebook-videos");
+    }
   });
 }
 
@@ -223,10 +222,207 @@ function hideNavigationEntries(
 ): void {
   queryAll(root, selector).forEach((link) => {
     const navigationItem = link.closest(
-      '[role="navigation"] li, [role="menuitem"], [role="tab"]'
+      '[role="tab"], [role="menuitem"], li'
     );
-    hideElement(navigationItem ?? link, feature);
+    const target = navigationItem ?? link;
+    if (
+      target &&
+      !target.matches(
+        'main, [role="main"], [role="feed"], [role="navigation"], [role="banner"], header, nav'
+      )
+    ) {
+      hideElement(target, feature);
+    }
   });
+}
+
+// ---------------------------------------------------------------------------
+// Facebook Sponsored & Ads — two-path detection
+// ---------------------------------------------------------------------------
+//
+// FEED path (virtualised posts):
+//   Three-clause data-ad-rendering-role selectors identify ad posts.
+//   profile_name + story_message alone match most ordinary posts —
+//   cta- (call-to-action) is the ad-exclusive discriminator. Note ^=
+//   not = — values are index-suffixed (e.g. cta-6).
+//
+//   Run ONLY as querySelectorAll, NEVER in a CSS stylesheet. A :has()
+//   stylesheet rule re-evaluates on every DOM mutation; on Facebook's
+//   never-stopping feed this becomes a permanent style-recalculation tax
+//   that prevents Facebook from rendering its own posts.
+//
+//   Feed ads are tagged data-nullfeed-fb-ad="feed" and rendered as a 72px
+//   placeholder via CSS. Do NOT display:none them — Facebook's virtualised
+//   feed measures item heights, so removing posts makes it look short →
+//   more loading → more hidden ads → feed churns on skeletons forever.
+//
+//   Sanity guard: if ≥ FB_AD_RATIO_MIN_SAMPLE posts match AND
+//   matches/total > FB_AD_MAX_FEED_SHARE, the selector is catching ordinary
+//   posts on this account. Release everything already tagged and stand down.
+//
+// RAIL path (sidebar):
+//   Sidebar ads carry a real "Sponsored" text label inside an
+//   ignore-late-mutation wrapper. Text scan tags the innermost labelled
+//   wrapper data-nullfeed-fb-ad="rail" — CSS does display:none.
+//   Only innermost is tagged: tagging an outer one blanks surrounding layout.
+//
+// LINK path (supplementary):
+//   AdChoices / ad-about links are locale-independent and always present.
+//   Tags the containing article as a feed ad (placeholder treatment).
+
+/** Attribute written on every detected ad element. */
+const FB_AD_ATTR = "data-nullfeed-fb-ad";
+/** Value for a virtualised feed ad — gets a CSS placeholder, not display:none. */
+const FB_AD_FEED_VALUE = "feed";
+/** Value for a rail/sidebar ad — gets display:none. */
+const FB_AD_RAIL_VALUE = "rail";
+
+/**
+ * Three-clause feed-ad selectors — ALL three clauses are load-bearing.
+ * profile_name + story_message alone matched 16 of 17 ordinary posts in
+ * live testing. cta- is what makes this an ad test, not a post test.
+ */
+const FB_FEED_AD_SELECTORS = [
+  'div[data-virtualized="false"]:has([data-ad-rendering-role="profile_name"]):has([data-ad-rendering-role="story_message"]):has([data-ad-rendering-role^="cta-"])',
+  'div[role="article"]:has([data-ad-rendering-role="profile_name"]):has([data-ad-rendering-role="story_message"]):has([data-ad-rendering-role^="cta-"])',
+  '[aria-posinset]:has([data-ad-rendering-role="profile_name"]):has([data-ad-rendering-role="story_message"]):has([data-ad-rendering-role^="cta-"])',
+].join(",");
+
+/** Ordinary feed posts — denominator for the sanity ratio check. */
+const FB_FEED_POST_SELECTOR = 'div[data-virtualized="false"]';
+
+/**
+ * Sanity guard thresholds. If ≥ MIN_SAMPLE posts match AND
+ * match/total > MAX_FEED_SHARE, stand down (selector is matching real posts).
+ */
+const FB_AD_RATIO_MIN_SAMPLE = 4;
+const FB_AD_MAX_FEED_SHARE = 0.4;
+
+/** Sidebar ad containers — these carry a real "Sponsored" text label. */
+const FB_RAIL_CONTAINER_SELECTOR = 'div[data-visualcompletion="ignore-late-mutation"]';
+
+/** AdChoices and ad-about links — locale-independent, always in real ads. */
+const FB_AD_LINK_SELECTORS = [
+  'a[href*="/ads/about"]',
+  'a[href*="/adpreferences/ad"]',
+  'a[href*="about_ads"]',
+  'a[href*="/privacy/policies/ads"]',
+] as const;
+
+/**
+ * Strip zero-width characters Facebook injects into label text, then
+ * normalise whitespace for an exact "sponsored" comparison.
+ */
+function normalizeSponsoredText(text: string): string {
+  return text
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+/**
+ * True when the container has a dedicated "Sponsored" label element.
+ * Only examines small elements (≤ 2 child elements) — this keeps a post
+ * whose body copy merely mentions "sponsored" from being matched.
+ */
+function containerHasSponsoredLabel(container: Element): boolean {
+  for (const el of container.querySelectorAll("h3, h4, a, span")) {
+    if (el.childElementCount > 2) {
+      continue;
+    }
+    if (normalizeSponsoredText(el.textContent ?? "") === "sponsored") {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Release every feed-ad placeholder — used by the sanity guard. */
+function releaseFeedAds(): void {
+  document
+    .querySelectorAll(`[${FB_AD_ATTR}="${FB_AD_FEED_VALUE}"]`)
+    .forEach((el) => el.removeAttribute(FB_AD_ATTR));
+}
+
+/** Feed-ad detection via data-ad-rendering-role + sanity guard. */
+function applyFeedAdHiding(): void {
+  const matches = document.querySelectorAll(FB_FEED_AD_SELECTORS);
+  const feedPosts = document.querySelectorAll(FB_FEED_POST_SELECTOR);
+
+  if (
+    matches.length >= FB_AD_RATIO_MIN_SAMPLE &&
+    feedPosts.length > 0 &&
+    matches.length / feedPosts.length > FB_AD_MAX_FEED_SHARE
+  ) {
+    // Sanity guard triggered — selector is matching real posts, not just ads.
+    releaseFeedAds();
+    return;
+  }
+
+  for (const container of matches) {
+    if (container.closest(`[${FB_AD_ATTR}]`)) {
+      continue; // already inside a tagged element
+    }
+    if (!container.hasAttribute(FB_AD_ATTR)) {
+      container.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
+      container.querySelectorAll("video").forEach((v) => {
+        try { (v as HTMLVideoElement).pause(); } catch { /* ignore */ }
+      });
+    }
+  }
+}
+
+/** Rail/sidebar ad detection via text label scan. */
+function applyRailAdHiding(): void {
+  const labelled: Element[] = [];
+
+  for (const wrapper of document.querySelectorAll(FB_RAIL_CONTAINER_SELECTOR)) {
+    if (wrapper.hasAttribute(FB_AD_ATTR)) {
+      continue;
+    }
+    if (containerHasSponsoredLabel(wrapper)) {
+      labelled.push(wrapper);
+    }
+  }
+
+  for (const wrapper of labelled) {
+    // Only tag the innermost match — tagging an outer one blanks surrounding layout.
+    const hasNestedMatch = labelled.some(
+      (other) => other !== wrapper && wrapper.contains(other)
+    );
+    if (!hasNestedMatch) {
+      wrapper.setAttribute(FB_AD_ATTR, FB_AD_RAIL_VALUE);
+    }
+  }
+}
+
+/**
+ * Supplementary: AdChoices links → tag the containing verified article
+ * as a feed ad (placeholder treatment). Locale-independent and reliable.
+ */
+function applyLinkBasedAdHiding(root: ParentNode): void {
+  for (const selector of FB_AD_LINK_SELECTORS) {
+    queryAll(root, selector).forEach((link) => {
+      const article = closestVerifiedFeedUnit(link);
+      if (article && !article.hasAttribute(FB_AD_ATTR)) {
+        article.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
+      }
+    });
+  }
+}
+
+function hideSponsoredEntries(root: ParentNode): void {
+  applyLinkBasedAdHiding(root);
+  applyRailAdHiding();
+  applyFeedAdHiding();
+}
+
+/** Remove all ad tags — called when the ads toggle is turned off or on cleanup. */
+function restoreAds(): void {
+  document
+    .querySelectorAll(`[${FB_AD_ATTR}]`)
+    .forEach((el) => el.removeAttribute(FB_AD_ATTR));
 }
 
 export const facebookAdapter: SiteAdapter = {
@@ -277,14 +473,20 @@ export const facebookAdapter: SiteAdapter = {
       hideNativeVideos(root);
       hideFeedEntries(
         root,
-        'a[href^="/watch"], a[href^="/video"], a[href^="/videos"]',
+        'a[href*="/watch"], a[href*="/video"], a[href*="/videos"]',
         "facebook-videos"
       );
       hideNavigationEntries(
         root,
-        '[role="navigation"] a[href^="/watch"], [role="navigation"] a[href^="/video"]',
+        '[role="navigation"] a[href*="/watch"], [role="navigation"] a[href*="/video"]',
         "facebook-videos"
       );
+    }
+
+    if (settings.facebook.ads) {
+      hideSponsoredEntries(root);
+    } else {
+      restoreAds();
     }
   },
 
@@ -292,6 +494,7 @@ export const facebookAdapter: SiteAdapter = {
     document
       .querySelectorAll("[data-nullfeed-paused]")
       .forEach((video) => video.removeAttribute("data-nullfeed-paused"));
+    restoreAds();
     cleanupOwnedElements();
   }
 };

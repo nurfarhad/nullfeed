@@ -8,21 +8,139 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
   ytd-rich-shelf-renderer[is-shorts],
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
-  ytd-reel-item-renderer {
+  ytd-reel-item-renderer,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytm-shorts-lockup-view-model,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-rich-item-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-video-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-grid-video-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-compact-video-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  yt-lockup-view-model:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-mini-guide-entry-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-mini-guide-entry-renderer[aria-label*="Shorts" i],
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-guide-entry-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  yt-list-item-view-model:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  yt-chip-cloud-chip-renderer:has(yt-formatted-string[title="Shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-navigation]
+  ytd-mini-guide-entry-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-navigation]
+  ytd-mini-guide-entry-renderer[aria-label*="Shorts" i],
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-navigation]
+  ytd-guide-entry-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-navigation]
+  yt-list-item-view-model:has(a[href^="/shorts"]) {
   display: none !important;
 }
 
-/* Facebook: pagelet names and article boundaries are stable at document_start. */
+/*
+ * Facebook feed-level hiding rules.
+ *
+ * Reels: strictly scoped to the main feed area so top nav / banner is NEVER touched.
+ */
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
-  [data-pagelet*="Reels"],
+  :is(main, [role="main"], [role="feed"]) [data-pagelet*="Reels"],
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
   [role="article"]:has(a[href^="/reel/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
+  div[data-virtualized="false"]:has(a[href^="/reel/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-reels]
+  [data-pagelet^="FeedUnit"]:has(a[href^="/reel/"]),
+/*
+ * Stories — hide the inner tray, the outer card shell, and the feed wrapper.
+ * Hiding the feed container directly prevents any empty card shell or "See all" button from showing.
+ */
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
   [data-pagelet*="Stories"],
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  [data-pagelet^="FeedUnit"]:has([data-pagelet*="Stories"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  [data-pagelet^="FeedUnit"]:has(a[href^="/stories/"], a[href*="/stories/create"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  div[data-virtualized="false"]:has(a[href^="/stories/"], a[href*="/stories/create"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  [role="feed"] > div:has([data-pagelet*="Stories"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  [role="feed"] > div:has(a[href^="/stories/"], a[href*="/stories/create"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  div[aria-label*="Stories" i],
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
+  div[aria-label*="stories" i],
+/*
+ * Videos — cover articles, virtualized post wrappers, FeedUnits, and direct feed children.
+ */
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
   [role="article"]:has(video),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
-  [role="article"]:has(a[href^="/watch"], a[href^="/video"]) {
+  div[data-virtualized="false"]:has(video),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [data-pagelet^="FeedUnit"]:has(video),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [role="feed"] > div:has(video),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [role="article"]:has(a[href*="/watch"], a[href*="/video"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  div[data-virtualized="false"]:has(a[href*="/watch"], a[href*="/video"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-videos]
+  [data-pagelet^="FeedUnit"]:has(a[href*="/watch"], a[href*="/video"]) {
+  display: none !important;
+}
+
+/*
+ * Facebook Sponsored & Ads — two tiers driven by JS-applied data-nullfeed-fb-ad.
+ *
+ * Feed ads ("feed"): fixed-height placeholder instead of display:none.
+ *   Facebook's virtualised feed measures item heights to decide how much more
+ *   to load. Removing posts entirely makes the feed look short → triggers
+ *   more loading → hides those too → feed churns on skeletons forever.
+ *   A fixed-height placeholder keeps the feed stable while hiding the content.
+ *
+ * Rail/sidebar ads ("rail"): display:none is safe — sidebar markup is static.
+ */
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] {
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  margin-bottom: 12px !important;
+}
+
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] > * {
+  visibility: hidden !important;
+}
+
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"]::after {
+  content: "Sponsored post hidden" !important;
+  visibility: visible !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px dashed rgba(142, 142, 142, 0.35) !important;
+  border-radius: 12px !important;
+  color: rgba(142, 142, 142, 0.7) !important;
+  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: 0.01em !important;
+}
+
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="rail"] {
   display: none !important;
 }
 
@@ -34,18 +152,32 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   display: none !important;
 }
 
-/* Instagram: articles are safe post boundaries; nav links are hidden in place. */
+/* Instagram: articles are safe post boundaries; nav links and profile tabs are hidden. */
 html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
-  article:has(a[href^="/reel/"]):not(:has(a[href^="/p/"])),
+  article:has(a[href^="/reel/"], a[href^="/reels/"], a[href*="/reel/"], a[href*="/reels/"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
-  :is(nav, header, [role="navigation"]) a:is([href="/reels/"], [href^="/reel/"]),
+  [role="tablist"] > :has(a[href*="/reels/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  [role="tablist"] > a[href*="/reels/"],
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  [role="tab"]:has(a[href*="/reels/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  a[role="tab"][href*="/reels/"],
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  a[href$="/reels/"],
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-reels]
+  :is(nav, header, [role="navigation"]) a:is([href="/reels/"], [href^="/reel/"], [href*="/reels/"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-explore]
   :is(nav, header, [role="navigation"]) a[href^="/explore/"] {
   display: none !important;
 }
 
-/*
- * Instagram Stories and non-article grid cells do not expose a stable semantic
- * container. The adapter validates those boundaries before hiding them instead
- * of risking an early-CSS rule that can blank main content.
- */
+/* Instagram Stories & Highlights: hide story highlight list items, trays and direct links */
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-stories]
+  a[href^="/stories/highlights/"],
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-stories]
+  ul:has(> li a[href*="/stories/highlights/"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="instagram"][data-nullfeed-filter-stories]
+  li:has(a[href*="/stories/highlights/"]) {
+  display: none !important;
+}

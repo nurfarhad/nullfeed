@@ -5,9 +5,14 @@ const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   enabled: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false },
+  facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true }
+  youtube: { shorts: true, navigation: true, redirect: true },
+  snooze: {
+    active: false,
+    until: null,
+    sites: { facebook: true, instagram: true, youtube: true }
+  }
 };
 
 let context: BrowserContext;
@@ -107,7 +112,9 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect
     .poll(() =>
       worker.evaluate(async () => {
-        const stored = await chrome.storage.sync.get("settings");
+        const stored = (await chrome.storage.sync.get("settings")) as {
+          settings?: { enabled?: boolean };
+        };
         return stored.settings?.enabled;
       })
     )

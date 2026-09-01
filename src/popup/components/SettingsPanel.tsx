@@ -9,7 +9,8 @@ const ROWS = {
   facebook: [
     ["reels", "Hide Reels"],
     ["stories", "Hide Stories"],
-    ["videos", "Hide Videos"]
+    ["videos", "Hide Videos"],
+    ["ads", "Hide Sponsored & Ads"]
   ],
   instagram: [
     ["reels", "Hide Reels"],

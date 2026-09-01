@@ -21,8 +21,20 @@ const NAVIGATION_CONTAINERS = [
   "ytd-guide-entry-renderer",
   "ytd-mini-guide-entry-renderer",
   "tp-yt-paper-item",
-  "yt-list-item-view-model"
+  "yt-list-item-view-model",
+  "yt-chip-cloud-chip-renderer"
 ] as const;
+
+const SHORTS_NAV_SELECTORS = [
+  'ytd-mini-guide-entry-renderer:has(a[href^="/shorts"])',
+  'ytd-mini-guide-entry-renderer[aria-label*="Shorts" i]',
+  'ytd-guide-entry-renderer:has(a[href^="/shorts"])',
+  'yt-list-item-view-model:has(a[href^="/shorts"])',
+  'yt-chip-cloud-chip-renderer:has(yt-formatted-string[title="Shorts"])',
+  'a[title="Shorts"]',
+  'a[href="/shorts"]',
+  'a[href^="/shorts?"]'
+].join(",");
 
 export const youtubeAdapter: SiteAdapter = {
   platform: "youtube",
@@ -31,7 +43,7 @@ export const youtubeAdapter: SiteAdapter = {
   blockedRoute(pathname, settings) {
     return (
       settings.enabled &&
-      settings.youtube.redirect &&
+      (settings.youtube.redirect || settings.youtube.shorts) &&
       /^\/shorts(?:\/|$)/i.test(pathname)
     );
   },
@@ -55,22 +67,25 @@ export const youtubeAdapter: SiteAdapter = {
 
       queryAll(root, 'a[href^="/shorts/"], a[href="/shorts"]').forEach(
         (anchor) => {
-          if (!anchor.closest("ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer")) {
+          const nav = anchor.closest(
+            "ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item, yt-list-item-view-model"
+          );
+          if (nav) {
+            hideElement(nav, "youtube-navigation");
+          } else {
             hideClosest(anchor, SHORTS_CONTAINERS, "youtube-shorts");
           }
         }
       );
     }
 
-    if (settings.youtube.navigation) {
-      queryAll(root, 'a[href="/shorts"], a[href^="/shorts?"]').forEach(
-        (anchor) =>
-          hideClosest(
-            anchor,
-            NAVIGATION_CONTAINERS,
-            "youtube-navigation"
-          )
-      );
+    if (settings.youtube.navigation || settings.youtube.shorts) {
+      queryAll(root, SHORTS_NAV_SELECTORS).forEach((el) => {
+        const nav = el.closest(
+          "ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item, yt-list-item-view-model, yt-chip-cloud-chip-renderer"
+        );
+        hideElement(nav ?? el, "youtube-navigation");
+      });
     }
   },
 

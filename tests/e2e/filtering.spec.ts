@@ -12,9 +12,14 @@ const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   enabled: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false },
+  facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true }
+  youtube: { shorts: true, navigation: true, redirect: true },
+  snooze: {
+    active: false,
+    until: null as number | null,
+    sites: { facebook: true, instagram: true, youtube: true }
+  }
 };
 
 let context: BrowserContext;
@@ -124,10 +129,56 @@ test("Facebook filters Reels and Stories while leaving Videos at its default", a
   await expect(page.locator("#story")).toBeVisible();
 });
 
+test("Facebook hides Sponsored posts while leaving organic posts untouched", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    facebook: { reels: false, stories: false, videos: false, ads: true }
+  });
+
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `
+      <div role="article" id="sponsored-post">
+        <div>
+          <h4><a href="/advertiser-page/">Advertiser</a></h4>
+          <a role="link" href="/ads/about/">Sponsored</a>
+        </div>
+        <p>Buy our product!</p>
+      </div>
+      <div role="article" id="organic-post">
+        <div>
+          <h4><a href="/friend/">Friend</a></h4>
+          <span dir="auto">Just now</span>
+        </div>
+        <p>Check out this great deal — not a sponsored post, just sharing</p>
+      </div>
+      <div role="article" id="mentions-sponsored">
+        <div>
+          <h4><a href="/person/">Someone</a></h4>
+          <span dir="auto">2 hrs</span>
+        </div>
+        <p>I hate sponsored content on this platform</p>
+      </div>
+    `
+  );
+
+  await expect(page.locator("#sponsored-post")).toHaveAttribute(
+    "data-nullfeed-fb-ad",
+    "feed"
+  );
+  await expect(page.locator("#organic-post")).toBeVisible();
+  await expect(page.locator("#mentions-sponsored")).toBeVisible();
+
+  await setSettings({ ...DEFAULT_SETTINGS, enabled: false });
+  await expect(page.locator("#sponsored-post")).not.toHaveAttribute(
+    "data-nullfeed-fb-ad"
+  );
+});
+
 test("Facebook Stories never hide an unverified newsfeed wrapper", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: true, videos: false }
+    facebook: { reels: false, stories: true, videos: false, ads: false }
   });
 
   const page = await fixturePage(
@@ -159,7 +210,7 @@ test("Facebook Stories never hide an unverified newsfeed wrapper", async () => {
 test("Facebook collapses a modern Stories carousel without leaving a gap", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: true, videos: false }
+    facebook: { reels: false, stories: true, videos: false, ads: false }
   });
 
   const page = await fixturePage(
@@ -189,7 +240,7 @@ test("Facebook collapses a modern Stories carousel without leaving a gap", async
 test("Facebook Reels and Videos hide only verified feed units", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: true, stories: false, videos: true }
+    facebook: { reels: true, stories: false, videos: true, ads: false }
   });
 
   const page = await fixturePage(
@@ -221,7 +272,7 @@ test("Facebook Reels and Videos hide only verified feed units", async () => {
 test("Facebook hides and pauses native feed videos without a watch link", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: false, videos: true }
+    facebook: { reels: false, stories: false, videos: true, ads: false }
   });
 
   const page = await fixturePage(
@@ -360,6 +411,147 @@ test("Instagram hides only Reels in an untagged multi-link sidebar", async () =>
   await expect(page.locator("#normal-post")).toBeVisible();
 });
 
+test("Instagram hides profile reels tabs while leaving profile posts grid untouched", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    instagram: { reels: true, stories: false, explore: false }
+  });
+
+  const page = await fixturePage(
+    "https://www.instagram.com/user/",
+    `
+      <main id="main">
+        <div id="profile-header">
+          <div role="tablist">
+            <a role="tab" id="posts-tab" href="/user/">Posts</a>
+            <a role="tab" id="reels-tab" href="/user/reels/">Reels</a>
+            <a role="tab" id="saved-tab" href="/user/saved/">Saved</a>
+          </div>
+        </div>
+        <div id="grid">
+          <div id="photo-post"><a href="/p/123/"><img alt="Photo" /></a></div>
+          <div id="reel-post"><a href="/reel/456/"><img alt="Reel" /></a></div>
+        </div>
+      </main>
+    `
+  );
+
+  await expect(page.locator("#posts-tab")).toBeVisible();
+  await expect(page.locator("#reels-tab")).toBeHidden();
+  await expect(page.locator("#saved-tab")).toBeVisible();
+  await expect(page.locator("#photo-post")).toBeVisible();
+  await expect(page.locator("#reel-post")).toBeVisible();
+});
+
+test("Instagram hides profile story highlights carousel and navigation buttons without leaving a gap", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    instagram: { reels: false, stories: true, explore: false }
+  });
+
+  const page = await fixturePage(
+    "https://www.instagram.com/user/",
+    `
+      <main id="main">
+        <div id="profile-header">
+          <button id="edit-profile">Edit profile</button>
+        </div>
+        <div id="highlights-section">
+          <div id="carousel-wrapper">
+            <ul>
+              <li><a href="/stories/highlights/1/"><img alt="Highlight 1" /></a></li>
+              <li><a href="/stories/highlights/2/"><img alt="Highlight 2" /></a></li>
+            </ul>
+            <button id="carousel-next-btn">Next</button>
+          </div>
+        </div>
+        <div id="tablist" role="tablist">
+          <a role="tab" id="posts-tab" href="/user/">Posts</a>
+        </div>
+      </main>
+    `
+  );
+
+  await expect(page.locator("#posts-tab")).toBeVisible();
+});
+
+test("Instagram Hide Stories never hides profile header, followers, bio or tabs on post-less profiles", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    instagram: { reels: false, stories: true, explore: false }
+  });
+
+  const page = await fixturePage(
+    "https://www.instagram.com/mahaonsocial/",
+    `
+      <main id="main">
+        <div id="profile-container">
+          <header id="profile-header">
+            <h2 id="username">mahaonsocial</h2>
+            <button id="follow-btn">Follow</button>
+            <a id="followers-link" href="/mahaonsocial/followers/">10k followers</a>
+            <div id="bio">Bio text here</div>
+          </header>
+          <div id="highlights-tray">
+            <ul>
+              <li><a href="/stories/highlights/111/"><img alt="Highlight" /></a></li>
+            </ul>
+          </div>
+          <div id="tablist" role="tablist">
+            <a role="tab" id="posts-tab" href="/mahaonsocial/">Posts</a>
+          </div>
+          <div id="empty-posts-placeholder">No posts yet.</div>
+        </div>
+      </main>
+    `
+  );
+
+  await expect(page.locator("#username")).toBeVisible();
+  await expect(page.locator("#follow-btn")).toBeVisible();
+  await expect(page.locator("#followers-link")).toBeVisible();
+  await expect(page.locator("#bio")).toBeVisible();
+  await expect(page.locator("#highlights-tray")).toBeHidden();
+  await expect(page.locator("#tablist")).toBeVisible();
+  await expect(page.locator("#posts-tab")).toBeVisible();
+  await expect(page.locator("#empty-posts-placeholder")).toBeVisible();
+});
+
+test("Instagram collapses Explore grid reel columns without leaving blank space", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    instagram: { reels: true, stories: false, explore: false }
+  });
+
+  const page = await fixturePage(
+    "https://www.instagram.com/explore/",
+    `
+      <main id="main">
+        <div id="explore-grid">
+          <div id="explore-row-1">
+            <div id="photo-col"><a href="/p/photo1/"><img alt="Photo 1" /></a></div>
+            <div id="reel-col">
+              <div id="reel-item-1"><a href="/reel/123/"><img alt="Reel 1" /></a></div>
+              <div id="reel-item-2"><a href="/p/456/"><svg aria-label="Clip"></svg><img alt="Reel 2" /></a></div>
+            </div>
+          </div>
+          <div id="explore-row-2">
+            <div id="photo-item-2"><a href="/p/photo2/"><img alt="Photo 2" /></a></div>
+            <div id="photo-item-3"><a href="/p/photo3/"><img alt="Photo 3" /></a></div>
+          </div>
+        </div>
+      </main>
+    `
+  );
+
+  await expect(page.locator("#photo-col")).toBeVisible();
+  await expect(page.locator("#reel-col")).toBeHidden();
+  await expect(page.locator("#reel-item-1")).toBeHidden();
+  await expect(page.locator("#reel-item-2")).toBeHidden();
+  await expect(page.locator("#explore-row-1")).toBeVisible();
+  await expect(page.locator("#explore-row-2")).toBeVisible();
+  await expect(page.locator("#photo-item-2")).toBeVisible();
+});
+
 test("History API navigation is blocked without waiting for the polling backstop", async () => {
   const page = await fixturePage(
     "https://www.youtube.com/",
@@ -390,4 +582,54 @@ test("blocked routes use replacement navigation to the platform home", async () 
 
   await page.goto("https://www.youtube.com/shorts/abc");
   await expect(page).toHaveURL("https://www.youtube.com/");
+});
+
+test("Snooze overlay shows on snoozed platform and hides on resume", async () => {
+  const until = Date.now() + 60_000;
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    snooze: {
+      active: true,
+      until,
+      sites: { facebook: true, instagram: true, youtube: true }
+    }
+  });
+
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `<div role="article" id="post">Normal post</div>`
+  );
+
+  await expect(page.locator("#nullfeed-snooze-overlay")).toBeVisible();
+
+  // Resume clears the overlay
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    snooze: {
+      active: false,
+      until: null,
+      sites: { facebook: true, instagram: true, youtube: true }
+    }
+  });
+  await expect(page.locator("#nullfeed-snooze-overlay")).toBeHidden();
+});
+
+test("Snooze overlay does not show for unchecked platforms", async () => {
+  const until = Date.now() + 60_000;
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    snooze: {
+      active: true,
+      until,
+      sites: { facebook: false, instagram: true, youtube: true }
+    }
+  });
+
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `<div role="article" id="post">Normal post</div>`
+  );
+
+  await expect(page.locator("#nullfeed-snooze-overlay")).toHaveCount(0);
+  await expect(page.locator("#post")).toBeVisible();
 });

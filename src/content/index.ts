@@ -1,4 +1,3 @@
-import { DEVELOPMENT } from "../shared/constants";
 import type { Settings } from "../shared/settings";
 import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
 import type { SiteAdapter } from "./adapter";
@@ -7,21 +6,21 @@ import { instagramAdapter } from "./adapters/instagram";
 import { youtubeAdapter } from "./adapters/youtube";
 import { observeDynamicContent } from "./observer";
 import { watchRoutes } from "./routeWatcher";
+import { hideSnoozeOverlay, showSnoozeOverlay } from "./snoozeOverlay";
 
 const adapter = selectAdapter(location.hostname);
 let settings: Settings | null = null;
 
 function selectAdapter(hostname: string): SiteAdapter | null {
-  if (hostname === "www.youtube.com") return youtubeAdapter;
-  if (hostname === "www.facebook.com") return facebookAdapter;
-  if (hostname === "www.instagram.com") return instagramAdapter;
+  if (/(?:^|\.)youtube\.com$/i.test(hostname)) return youtubeAdapter;
+  if (/(?:^|\.)facebook\.com$/i.test(hostname)) return facebookAdapter;
+  if (/(?:^|\.)instagram\.com$/i.test(hostname)) return instagramAdapter;
   return null;
 }
 
 function logFailure(message: string, error: unknown): void {
-  if (DEVELOPMENT) {
-    console.error(message, error);
-  }
+  // Always log — errors surface in chrome://extensions > Errors panel.
+  console.error(message, error);
 }
 
 function updateRootState(current: Settings): void {
@@ -76,6 +75,23 @@ function apply(nextSettings: Settings): void {
   }
 
   try {
+    // Guard against malformed snooze data (e.g. old schema without snooze field)
+    const snooze = nextSettings.snooze;
+    const snoozed =
+      snooze != null &&
+      snooze.active === true &&
+      typeof snooze.until === "number" &&
+      Date.now() < snooze.until &&
+      snooze.sites?.[adapter.platform] === true;
+
+    if (snoozed) {
+      settings = nextSettings;
+      updateRootState(nextSettings);
+      showSnoozeOverlay(nextSettings.snooze.until!);
+      return;
+    }
+
+    hideSnoozeOverlay();
     adapter.cleanup();
     settings = nextSettings;
     updateRootState(nextSettings);

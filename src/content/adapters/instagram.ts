@@ -1,7 +1,11 @@
 import type { Settings } from "../../shared/settings";
 import type { SiteAdapter } from "../adapter";
 import { queryAll } from "../adapter";
-import { cleanupOwnedElements, hideElement } from "../domOwnership";
+import {
+  cleanupOwnedElements,
+  collapseEmptyAncestors,
+  hideElement
+} from "../domOwnership";
 
 const CONTENT_LINK_SELECTOR =
   'a[href^="/p/"], a[href^="/reel/"], a[href^="/reels/"]';
@@ -26,20 +30,40 @@ function isSingleContentBoundary(candidate: Element): boolean {
   );
 }
 
-/** Find a bounded Instagram post or grid cell without crossing into a row/feed. */
+/** Find a bounded Instagram post, grid cell, or reel column without crossing into mixed photo layouts. */
 function findContentBoundary(link: Element): Element {
   const article = link.closest("article");
   if (article && isSingleContentBoundary(article)) {
     return article;
   }
 
-  let candidate = link.parentElement;
+  let candidate: Element | null = link.parentElement;
   let boundary: Element = link;
 
-  for (let depth = 0; candidate && depth < 4; depth += 1) {
-    if (!isSingleContentBoundary(candidate)) {
+  for (let depth = 0; candidate && depth < 6; depth += 1) {
+    if (
+      candidate === document.body ||
+      candidate === document.documentElement ||
+      candidate.matches(
+        'main, nav, header, [role="main"], [role="navigation"], [role="tablist"], [role="feed"]'
+      )
+    ) {
       break;
     }
+
+    // Stop if candidate contains any non-reel links outside of current boundary
+    const nonReelLinks = candidate.querySelectorAll(
+      'a[href]:not([href*="/reel/"]):not([href*="/reels/"])'
+    );
+    if (nonReelLinks.length > 0) {
+      const hasSiblingLinks = Array.from(nonReelLinks).some(
+        (nl) => !boundary.contains(nl)
+      );
+      if (hasSiblingLinks) {
+        break;
+      }
+    }
+
     boundary = candidate;
     candidate = candidate.parentElement;
   }
@@ -47,41 +71,68 @@ function findContentBoundary(link: Element): Element {
   return boundary;
 }
 
-/**
- * A Stories tray is accepted only when the smallest candidate contains at
- * least two story entries and no post/reel entry or article. Single ambiguous
- * links fail open by being hidden in place.
- */
-function findStoryTray(link: Element): Element | null {
-  let candidate = link.parentElement;
+function findStoryTray(link: Element): Element {
+  let candidate: Element | null = link.parentElement;
+  let bestTray: Element = link;
 
   for (let depth = 0; candidate && depth < 6; depth += 1) {
     if (
+      candidate === document.body ||
+      candidate === document.documentElement ||
       candidate.matches(
-        'main, nav, header, article, [role="main"], [role="navigation"]'
-      ) ||
-      candidate.querySelector("article, " + CONTENT_LINK_SELECTOR)
+        'main, nav, header, section, [role="main"], [role="navigation"], [role="tablist"], [role="tabpanel"]'
+      )
     ) {
-      return null;
+      break;
     }
 
-    const unrelatedLinkCount = uniqueHrefs(
-      candidate,
-      `a[href]:not([href^="/stories/"])`
-    ).size;
-    if (unrelatedLinkCount > MAX_STORY_TRAY_UNRELATED_LINKS) {
-      return null;
+    // Never engulf candidate if it contains headers, tabs, articles, forms, or follower/bio info
+    if (
+      candidate.querySelector(
+        'header, [role="tablist"], [role="tabpanel"], article, form, a[href*="/followers/"], a[href*="/following/"]'
+      )
+    ) {
+      break;
     }
 
-    if (uniqueHrefs(candidate, STORY_LINK_SELECTOR).size >= 2) {
-      return candidate;
+    // Stop if candidate contains any links that are not stories
+    const nonStoryLinks = candidate.querySelectorAll(
+      'a[href]:not([href^="/stories/"])'
+    );
+    if (nonStoryLinks.length > 0) {
+      break;
+    }
+
+    const storyLinks = candidate.querySelectorAll(STORY_LINK_SELECTOR);
+    const isHighlights =
+      candidate.querySelector('a[href*="/stories/highlights/"]') !== null;
+
+    if (storyLinks.length >= 2 || isHighlights) {
+      bestTray = candidate;
     }
 
     candidate = candidate.parentElement;
   }
 
-  return null;
+  return bestTray;
 }
+
+const PROFILE_REELS_TAB_SELECTORS = [
+  'a[href$="/reels/"]',
+  'a[href*="/reels/"]',
+  'a[role="tab"][href*="/reels"]',
+  '[role="tab"]:has(a[href*="/reels"])'
+].join(",");
+
+const REEL_SELECTORS = [
+  'a[href^="/reel/"]',
+  'a[href*="/reel/"]',
+  'a[href^="/reels/"]',
+  'a[href*="/reels/"]',
+  'a:has(svg[aria-label*="Clip" i])',
+  'a:has(svg[aria-label*="Reel" i])',
+  'a:has(svg[aria-label*="Video" i])'
+].join(",");
 
 function hideNavigationLink(link: Element, feature: string): void {
   const item = link.closest(
@@ -101,7 +152,8 @@ export const instagramAdapter: SiteAdapter = {
 
     if (
       settings.instagram.reels &&
-      /^\/(?:reel|reels)(?:\/|$)/i.test(pathname)
+      (/^\/(?:reel|reels)(?:\/|$)/i.test(pathname) ||
+       /^\/[^/]+\/reels(?:\/|$)/i.test(pathname))
     ) {
       return true;
     }
@@ -118,25 +170,51 @@ export const instagramAdapter: SiteAdapter = {
     }
 
     if (settings.instagram.reels) {
+      // 1. Hide profile reels tabs
+      queryAll(root, PROFILE_REELS_TAB_SELECTORS).forEach((tab) => {
+        const tabItem =
+          tab.closest('[role="tablist"] > *') ??
+          tab.closest('[role="tab"], li') ??
+          tab;
+        hideElement(tabItem, "instagram-reels");
+        collapseEmptyAncestors(tabItem, "instagram-reels");
+      });
+
+      // 2. Hide navigation entries
       queryAll(
         root,
-        'a[href^="/reel/"], a[href="/reels/"], a[href^="/reels/"]'
+        ':is(nav, header, [role="navigation"]) a:is([href="/reels/"], [href^="/reel/"], [href*="/reels/"])'
       ).forEach((link) => {
-        if (link.closest('nav, header, [role="navigation"]')) {
-          hideNavigationLink(link, "instagram-reels");
-        } else {
-          hideElement(findContentBoundary(link), "instagram-reels");
-        }
+        hideNavigationLink(link, "instagram-reels");
       });
+
+      // 3. Hide non-profile reels (feed, explore, search)
+      const isProfile = queryAll(document, '[role="tablist"]').length > 0;
+
+      if (!isProfile) {
+        queryAll(root, REEL_SELECTORS).forEach((link) => {
+          if (!link.closest('nav, header, [role="navigation"]')) {
+            const boundary = findContentBoundary(link);
+            hideElement(boundary, "instagram-reels");
+            collapseEmptyAncestors(boundary, "instagram-reels");
+          }
+        });
+      }
     }
 
     if (settings.instagram.stories) {
+      const trays = new Set<Element>();
       queryAll(root, STORY_LINK_SELECTOR).forEach((link) => {
         // Story URLs inside posts are author avatars, not the Stories tray.
         if (link.closest("article")) {
           return;
         }
-        hideElement(findStoryTray(link) ?? link, "instagram-stories");
+        trays.add(findStoryTray(link));
+      });
+
+      trays.forEach((tray) => {
+        hideElement(tray, "instagram-stories");
+        collapseEmptyAncestors(tray, "instagram-stories");
       });
     }
 

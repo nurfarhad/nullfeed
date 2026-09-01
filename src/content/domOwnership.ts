@@ -78,3 +78,56 @@ export function hideClosest(
 
   hideElement(element, feature);
 }
+
+const DEFAULT_COLLAPSE_BOUNDARY =
+  'main, [role="main"], [role="feed"], [role="navigation"], [role="banner"], [role="article"], header, nav, [data-pagelet="NavBar"], [data-pagelet="MNav"]';
+
+function isVisiblyEmpty(element: Element): boolean {
+  if (element.hasAttribute(HIDDEN_ATTRIBUTE)) {
+    return true;
+  }
+  if (element instanceof HTMLElement && element.style.display === "none") {
+    return true;
+  }
+  if (
+    element instanceof HTMLImageElement ||
+    element instanceof HTMLVideoElement ||
+    element instanceof HTMLCanvasElement
+  ) {
+    return false;
+  }
+  if (element.children.length > 0) {
+    for (const child of Array.from(element.children)) {
+      if (!isVisiblyEmpty(child)) {
+        return false;
+      }
+    }
+  }
+  return (element.textContent ?? "").trim().length === 0;
+}
+
+/**
+ * After hiding `element`, walk up its ancestors and hide any wrapper whose
+ * *entire remaining visible content* is empty — i.e. every child is either
+ * already Nullfeed-hidden or contains no rendered text. Stops at a real
+ * layout boundary or after `maxDepth` levels, whichever comes first.
+ */
+export function collapseEmptyAncestors(
+  element: Element,
+  feature: string,
+  boundarySelector: string = DEFAULT_COLLAPSE_BOUNDARY,
+  maxDepth = 6
+): void {
+  let candidate = element.parentElement;
+
+  for (let depth = 0; candidate && depth < maxDepth; depth += 1) {
+    if (candidate.matches(boundarySelector)) {
+      break;
+    }
+    if (!isVisiblyEmpty(candidate)) {
+      break;
+    }
+    hideElement(candidate, feature);
+    candidate = candidate.parentElement;
+  }
+}

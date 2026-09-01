@@ -27,6 +27,9 @@ describe("blocked routes", () => {
       true
     );
     expect(
+      instagramAdapter.blockedRoute("/username/reels/", DEFAULT_SETTINGS)
+    ).toBe(true);
+    expect(
       instagramAdapter.blockedRoute("/explore/", DEFAULT_SETTINGS)
     ).toBe(true);
   });

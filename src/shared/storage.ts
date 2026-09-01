@@ -115,3 +115,47 @@ export async function setPlatformPreference<P extends Platform>(
     }
   });
 }
+
+export async function startSnooze(
+  settings: Settings,
+  durationMs: number
+): Promise<Settings> {
+  return saveSettings({
+    ...settings,
+    snooze: {
+      ...settings.snooze,
+      active: true,
+      until: Date.now() + durationMs
+    }
+  });
+}
+
+export async function endSnooze(
+  settings: Settings
+): Promise<Settings> {
+  return saveSettings({
+    ...settings,
+    snooze: {
+      ...settings.snooze,
+      active: false,
+      until: null
+    }
+  });
+}
+
+export async function setSnoozeSite(
+  settings: Settings,
+  platform: Platform,
+  value: boolean
+): Promise<Settings> {
+  return saveSettings({
+    ...settings,
+    snooze: {
+      ...settings.snooze,
+      sites: {
+        ...settings.snooze.sites,
+        [platform]: value
+      }
+    }
+  });
+}

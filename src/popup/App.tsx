@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { DEVELOPMENT, LINKEDIN_URL } from "../shared/constants";
 import {
@@ -9,12 +9,15 @@ import {
   type Settings
 } from "../shared/settings";
 import {
+  endSnooze,
   getSettings,
   isStorageQuotaError,
   SETTINGS_STORAGE_KEY,
   setEnabled,
   setLastPlatform,
-  setPlatformPreference
+  setPlatformPreference,
+  setSnoozeSite,
+  startSnooze
 } from "../shared/storage";
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
@@ -22,6 +25,22 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { Switch } from "./components/Switch";
 
 const SKELETON_MINIMUM_MS = 150;
+
+const SNOOZE_DURATIONS = [
+  { label: "1m", ms: 60_000 },
+  { label: "2m", ms: 120_000 },
+  { label: "5m", ms: 300_000 },
+  { label: "10m", ms: 600_000 },
+  { label: "30m", ms: 1_800_000 },
+  { label: "1h", ms: 3_600_000 },
+  { label: "24h", ms: 86_400_000 }
+] as const;
+
+const PLATFORM_LABELS: Record<Platform, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  youtube: "YouTube"
+};
 
 type Status = {
   label: string;
@@ -53,13 +72,63 @@ function getStatus(settings: Settings): Status {
   };
 }
 
+function formatCountdown(until: number): string {
+  const remaining = Math.max(0, until - Date.now());
+  const totalSeconds = Math.floor(remaining / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState("");
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const status = useMemo(
     () => getStatus(settings ?? DEFAULT_SETTINGS),
     [settings]
   );
+
+  // Snooze countdown timer
+  useEffect(() => {
+    if (countdownRef.current !== null) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+
+    if (
+      settings?.snooze.active &&
+      settings.snooze.until !== null &&
+      settings.snooze.until > Date.now()
+    ) {
+      const until = settings.snooze.until;
+      setCountdown(formatCountdown(until));
+      countdownRef.current = setInterval(() => {
+        if (Date.now() >= until) {
+          setCountdown("0:00");
+          if (countdownRef.current !== null) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
+          }
+        } else {
+          setCountdown(formatCountdown(until));
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (countdownRef.current !== null) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    };
+  }, [settings?.snooze.active, settings?.snooze.until]);
 
   useEffect(() => {
     const started = performance.now();
@@ -120,6 +189,10 @@ export function App() {
   }
 
   const currentSettings = settings;
+  const isSnoozing =
+    currentSettings.snooze.active &&
+    currentSettings.snooze.until !== null &&
+    currentSettings.snooze.until > Date.now();
 
   async function commit(
     optimistic: Settings,
@@ -175,6 +248,46 @@ export function App() {
     );
   }
 
+  function handleStartSnooze(durationMs: number) {
+    const optimistic = {
+      ...currentSettings,
+      snooze: {
+        ...currentSettings.snooze,
+        active: true,
+        until: Date.now() + durationMs
+      }
+    };
+
+    void commit(optimistic, () => startSnooze(currentSettings, durationMs));
+  }
+
+  function handleEndSnooze() {
+    const optimistic = {
+      ...currentSettings,
+      snooze: {
+        ...currentSettings.snooze,
+        active: false,
+        until: null
+      }
+    };
+
+    void commit(optimistic, () => endSnooze(currentSettings));
+  }
+
+  function handleSnoozeSite(platform: Platform, value: boolean) {
+    const optimistic = {
+      ...currentSettings,
+      snooze: {
+        ...currentSettings.snooze,
+        sites: { ...currentSettings.snooze.sites, [platform]: value }
+      }
+    };
+
+    void commit(optimistic, () =>
+      setSnoozeSite(currentSettings, platform, value)
+    );
+  }
+
   const platform = currentSettings.lastPlatform;
 
   return (
@@ -196,6 +309,58 @@ export function App() {
           <strong id="protection-heading">Protection</strong>
         </Switch>
         <p>{status.sentence}</p>
+      </section>
+
+      <section class="snooze" aria-labelledby="snooze-heading">
+        <strong class="snooze-title" id="snooze-heading">Snooze</strong>
+        {isSnoozing ? (
+          <div class="snooze-active">
+            <p class="snooze-status">
+              Snoozing — resume in{" "}
+              <span class="snooze-countdown">{countdown}</span>
+            </p>
+            <button
+              class="snooze-resume"
+              id="snooze-resume"
+              onClick={handleEndSnooze}
+              type="button"
+            >
+              Resume now
+            </button>
+          </div>
+        ) : (
+          <>
+            <div class="snooze-buttons">
+              {SNOOZE_DURATIONS.map(({ label, ms }) => (
+                <button
+                  class="snooze-duration"
+                  id={`snooze-${label}`}
+                  key={label}
+                  onClick={() => handleStartSnooze(ms)}
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div class="snooze-sites">
+              {(["facebook", "instagram", "youtube"] as const).map((p) => (
+                <label class="snooze-site-label" key={p}>
+                  <input
+                    checked={currentSettings.snooze.sites[p]}
+                    class="snooze-site-input"
+                    id={`snooze-site-${p}`}
+                    onChange={(e) =>
+                      handleSnoozeSite(p, e.currentTarget.checked)
+                    }
+                    type="checkbox"
+                  />
+                  <span>{PLATFORM_LABELS[p]}</span>
+                </label>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       <PlatformTabs active={platform} onChange={changePlatform} />
@@ -230,3 +395,4 @@ export function App() {
     </main>
   );
 }
+
