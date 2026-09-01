@@ -14,8 +14,7 @@ import {
   SETTINGS_STORAGE_KEY,
   setEnabled,
   setLastPlatform,
-  setPlatformPreference,
-  setShowQuotes
+  setPlatformPreference
 } from "../shared/storage";
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
@@ -151,12 +150,6 @@ export function App() {
     );
   }
 
-  function changeShowQuotes(showQuotes: boolean) {
-    void commit({ ...currentSettings, showQuotes }, () =>
-      setShowQuotes(currentSettings, showQuotes)
-    );
-  }
-
   function changePlatform(platform: Platform) {
     if (platform === currentSettings.lastPlatform) {
       return;
@@ -207,16 +200,6 @@ export function App() {
           <strong id="protection-heading">Protection</strong>
         </Switch>
         <p>{status.sentence}</p>
-
-        <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
-          <Switch
-            checked={settings.showQuotes}
-            id="show-quotes"
-            onChange={changeShowQuotes}
-          >
-            <span>Mindful Quotes</span>
-          </Switch>
-        </div>
       </section>
 
       <PlatformTabs active={platform} onChange={changePlatform} />
