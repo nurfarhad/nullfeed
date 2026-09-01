@@ -8,16 +8,29 @@
   <img src="public/icons/icon-128.png" alt="Nullfeed Logo" width="96" height="96" />
 </p>
 
-Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed to hide distracting short-form video feeds, algorithmic rabbit holes, stories, and advertisements across **YouTube**, **Facebook**, and **Instagram** — without breaking essential browsing or platform functionality.
+Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed to hide distracting short-form video feeds, algorithmic rabbit holes, stories, and advertisements across **YouTube**, **Facebook**, **Instagram**, **LinkedIn**, and **Twitter/X** — replacing endless feed voids with mindful focus quotes.
 
 ---
 
 ## Key Features
 
+### Mindful Focus Quotes
+* **Serene Feed Replacement**: When algorithmic feeds are hidden, Nullfeed replaces the distraction void with a sleek, dark-mode glassmorphic Focus Card featuring inspiring quotes from Marcus Aurelius, Seneca, Naval Ravikant, Steve Jobs, and more.
+* **Interactive Refresh**: Click the subtle refresh button to cycle to a new quote anytime.
+
 ### YouTube
 * **Hide YouTube Shorts**: Removes Shorts shelves, grid lockups, and recommended short-form reels across home, subscriptions, and search feeds.
 * **Hide Shorts Navigation**: Cleans up the left sidebar and mini-guide by removing the Shorts icon and quick-access buttons.
-* **Instant Redirect**: Automatically redirects any direct `/shorts/...` URL back to your clean YouTube home feed.
+* **Instant Shorts Redirect**: Automatically redirects direct `/shorts/...` URLs back to your clean YouTube home feed.
+* **Hide Recommended Sidebar**: Removes the "Up Next / Recommended Videos" sidebar on watch pages to stop endless video rabbit holes.
+
+### LinkedIn
+* **Hide Main Feed**: Replaces the infinite home feed with a Mindful Focus Card while keeping Search, Messages, Jobs, and Notifications 100% active.
+* **Hide News Sidebar**: Removes trending news modules and sidebar engagement bait.
+
+### Twitter / X
+* **Hide Home Timeline**: Hides the algorithmic "For You" timeline while keeping Direct Messages, Notifications, Search, Lists, and Profiles active.
+* **Hide Trends & What's Happening**: Removes the right-hand trending topics module.
 
 ### Facebook
 * **Hide Reels**: Removes Reels carousels, feed cards, and sidebar items without affecting the main navigation.

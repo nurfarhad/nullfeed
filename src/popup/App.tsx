@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import { DEVELOPMENT, LINKEDIN_URL } from "../shared/constants";
+import { DEVELOPMENT, LINKEDIN_URL, PLATFORM_LABELS } from "../shared/constants";
 import {
   DEFAULT_SETTINGS,
   hasActiveFilters,
@@ -16,6 +16,7 @@ import {
   setEnabled,
   setLastPlatform,
   setPlatformPreference,
+  setShowQuotes,
   setSnoozeSite,
   startSnooze
 } from "../shared/storage";
@@ -36,11 +37,13 @@ const SNOOZE_DURATIONS = [
   { label: "24h", ms: 86_400_000 }
 ] as const;
 
-const PLATFORM_LABELS: Record<Platform, string> = {
-  facebook: "Facebook",
-  instagram: "Instagram",
-  youtube: "YouTube"
-};
+const ALL_PLATFORMS: readonly Platform[] = [
+  "facebook",
+  "instagram",
+  "youtube",
+  "linkedin",
+  "twitter"
+] as const;
 
 type Status = {
   label: string;
@@ -223,6 +226,12 @@ export function App() {
     );
   }
 
+  function changeShowQuotes(showQuotes: boolean) {
+    void commit({ ...currentSettings, showQuotes }, () =>
+      setShowQuotes(currentSettings, showQuotes)
+    );
+  }
+
   function changePlatform(platform: Platform) {
     if (platform === currentSettings.lastPlatform) {
       return;
@@ -309,6 +318,16 @@ export function App() {
           <strong id="protection-heading">Protection</strong>
         </Switch>
         <p>{status.sentence}</p>
+
+        <div style={{ marginTop: "10px", paddingTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+          <Switch
+            checked={settings.showQuotes}
+            id="show-quotes"
+            onChange={changeShowQuotes}
+          >
+            <span>Mindful Quotes</span>
+          </Switch>
+        </div>
       </section>
 
       <section class="snooze" aria-labelledby="snooze-heading">
@@ -344,7 +363,7 @@ export function App() {
               ))}
             </div>
             <div class="snooze-sites">
-              {(["facebook", "instagram", "youtube"] as const).map((p) => (
+              {ALL_PLATFORMS.map((p) => (
                 <label class="snooze-site-label" key={p}>
                   <input
                     checked={currentSettings.snooze.sites[p]}

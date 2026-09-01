@@ -94,6 +94,13 @@ export async function setEnabled(
   return saveSettings({ ...settings, enabled });
 }
 
+export async function setShowQuotes(
+  settings: Settings,
+  showQuotes: boolean
+): Promise<Settings> {
+  return saveSettings({ ...settings, showQuotes });
+}
+
 export async function setLastPlatform(
   settings: Settings,
   lastPlatform: Platform

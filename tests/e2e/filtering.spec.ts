@@ -11,14 +11,23 @@ import { resolve } from "node:path";
 const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   enabled: true,
+  showQuotes: true,
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true },
+  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true },
+  linkedin: { feed: true, news: true },
+  twitter: { timeline: true, trending: true },
   snooze: {
     active: false,
     until: null as number | null,
-    sites: { facebook: true, instagram: true, youtube: true }
+    sites: {
+      facebook: true,
+      instagram: true,
+      youtube: true,
+      linkedin: true,
+      twitter: true
+    }
   }
 };
 
@@ -591,7 +600,7 @@ test("Snooze overlay shows on snoozed platform and hides on resume", async () =>
     snooze: {
       active: true,
       until,
-      sites: { facebook: true, instagram: true, youtube: true }
+      sites: { ...DEFAULT_SETTINGS.snooze.sites }
     }
   });
 
@@ -608,7 +617,7 @@ test("Snooze overlay shows on snoozed platform and hides on resume", async () =>
     snooze: {
       active: false,
       until: null,
-      sites: { facebook: true, instagram: true, youtube: true }
+      sites: { ...DEFAULT_SETTINGS.snooze.sites }
     }
   });
   await expect(page.locator("#nullfeed-snooze-overlay")).toBeHidden();
@@ -621,7 +630,7 @@ test("Snooze overlay does not show for unchecked platforms", async () => {
     snooze: {
       active: true,
       until,
-      sites: { facebook: false, instagram: true, youtube: true }
+      sites: { ...DEFAULT_SETTINGS.snooze.sites, facebook: false }
     }
   });
 
@@ -633,3 +642,87 @@ test("Snooze overlay does not show for unchecked platforms", async () => {
   await expect(page.locator("#nullfeed-snooze-overlay")).toHaveCount(0);
   await expect(page.locator("#post")).toBeVisible();
 });
+
+test("YouTube hides watch page recommended sidebar when enabled", async () => {
+  const page = await fixturePage(
+    "https://www.youtube.com/watch?v=12345",
+    `
+      <div id="player">Video Player</div>
+      <ytd-watch-next-secondary-results-renderer id="recommended-sidebar">
+        <div>Recommended Videos</div>
+      </ytd-watch-next-secondary-results-renderer>
+    `
+  );
+
+  await expect(page.locator("#player")).toBeVisible();
+  await expect(page.locator("#recommended-sidebar")).toBeHidden();
+});
+
+test("Mindful Focus Quote Card mounts on YouTube home and cycles quotes on refresh", async () => {
+  const page = await fixturePage(
+    "https://www.youtube.com/",
+    `
+      <ytd-browse page-subtype="home" id="home-browse">
+        <div id="contents">Home Feed</div>
+      </ytd-browse>
+    `
+  );
+
+  const card = page.locator("#nullfeed-quote-card");
+  await expect(card).toBeVisible();
+  await expect(page.locator(".nullfeed-quote-badge")).toHaveText("NULLFEED FOCUS");
+  
+  const initialQuote = await page.locator(".nullfeed-quote-text").textContent();
+  expect(initialQuote).toBeTruthy();
+
+  await page.locator(".nullfeed-quote-refresh").click();
+  const refreshedQuote = await page.locator(".nullfeed-quote-text").textContent();
+  expect(refreshedQuote).toBeTruthy();
+});
+
+test("LinkedIn hides feed and news module when enabled", async () => {
+  const page = await fixturePage(
+    "https://www.linkedin.com/feed/",
+    `
+      <header id="nav">LinkedIn Nav</header>
+      <div class="core-rail">
+        <div class="scaffold-finite-scroll" id="linkedin-feed">
+          <div>Post 1</div>
+        </div>
+      </div>
+      <aside class="feed-right-column" id="linkedin-news">
+        <div id="feed-news-module">Trending News</div>
+      </aside>
+    `
+  );
+
+  await expect(page.locator("#nav")).toBeVisible();
+  await expect(page.locator("#linkedin-feed")).toBeHidden();
+  await expect(page.locator("#linkedin-news")).toBeHidden();
+  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
+});
+
+test("Twitter/X hides home timeline and trending sidebar when enabled", async () => {
+  const page = await fixturePage(
+    "https://x.com/home",
+    `
+      <nav id="twitter-nav">Nav</nav>
+      <div data-testid="primaryColumn">
+        <section role="region" id="twitter-timeline">
+          <div>Tweet 1</div>
+        </section>
+      </div>
+      <div data-testid="sidebarColumn">
+        <section role="region" id="twitter-trending">
+          <div aria-label="Timeline: Trending now">Trends</div>
+        </section>
+      </div>
+    `
+  );
+
+  await expect(page.locator("#twitter-nav")).toBeVisible();
+  await expect(page.locator("#twitter-timeline")).toBeHidden();
+  await expect(page.locator("#twitter-trending")).toBeHidden();
+  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
+});
+

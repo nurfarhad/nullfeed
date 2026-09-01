@@ -6,6 +6,7 @@ import {
   hideClosest,
   hideElement
 } from "../domOwnership";
+import { mountQuoteCard, unmountQuoteCard } from "../quoteCard";
 
 const SHORTS_CONTAINERS = [
   "ytd-rich-item-renderer",
@@ -36,6 +37,11 @@ const SHORTS_NAV_SELECTORS = [
   'a[href^="/shorts?"]'
 ].join(",");
 
+const SIDEBAR_RECOMMENDED_SELECTORS = [
+  "ytd-watch-next-secondary-results-renderer",
+  "#secondary.ytd-watch-flexy"
+] as const;
+
 export const youtubeAdapter: SiteAdapter = {
   platform: "youtube",
   homeUrl: "https://www.youtube.com/",
@@ -50,6 +56,7 @@ export const youtubeAdapter: SiteAdapter = {
 
   scan(root, settings) {
     if (!settings.enabled) {
+      unmountQuoteCard();
       return;
     }
 
@@ -87,9 +94,29 @@ export const youtubeAdapter: SiteAdapter = {
         hideElement(nav ?? el, "youtube-navigation");
       });
     }
+
+    if (settings.youtube.sidebar) {
+      SIDEBAR_RECOMMENDED_SELECTORS.forEach((selector) => {
+        queryAll(root, selector).forEach((element) =>
+          hideElement(element, "youtube-sidebar")
+        );
+      });
+    }
+
+    // Mount Focus Quote Card on YouTube home feed if enabled
+    const isHome = window.location.pathname === "/" || window.location.pathname === "";
+    if (isHome && settings.showQuotes) {
+      const browseContainer = root.querySelector?.('ytd-browse[page-subtype="home"], #primary.ytd-two-column-browse-results-renderer');
+      if (browseContainer) {
+        mountQuoteCard(browseContainer, "before");
+      }
+    } else if (!isHome) {
+      unmountQuoteCard();
+    }
   },
 
   cleanup() {
+    unmountQuoteCard();
     cleanupOwnedElements();
   }
 };

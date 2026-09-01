@@ -1,6 +1,6 @@
 export const CURRENT_SCHEMA_VERSION = 1 as const;
 
-export type Platform = "facebook" | "instagram" | "youtube";
+export type Platform = "facebook" | "instagram" | "youtube" | "linkedin" | "twitter";
 
 export type FacebookSettings = {
   reels: boolean;
@@ -19,12 +19,25 @@ export type YouTubeSettings = {
   shorts: boolean;
   navigation: boolean;
   redirect: boolean;
+  sidebar: boolean;
+};
+
+export type LinkedInSettings = {
+  feed: boolean;
+  news: boolean;
+};
+
+export type TwitterSettings = {
+  timeline: boolean;
+  trending: boolean;
 };
 
 export type SnoozeSites = {
   facebook: boolean;
   instagram: boolean;
   youtube: boolean;
+  linkedin: boolean;
+  twitter: boolean;
 };
 
 export type SnoozeSettings = {
@@ -36,10 +49,13 @@ export type SnoozeSettings = {
 export type Settings = {
   schemaVersion: typeof CURRENT_SCHEMA_VERSION;
   enabled: boolean;
+  showQuotes: boolean;
   lastPlatform: Platform;
   facebook: FacebookSettings;
   instagram: InstagramSettings;
   youtube: YouTubeSettings;
+  linkedin: LinkedInSettings;
+  twitter: TwitterSettings;
   snooze: SnoozeSettings;
 };
 
@@ -47,6 +63,8 @@ export type PlatformSettings = {
   facebook: FacebookSettings;
   instagram: InstagramSettings;
   youtube: YouTubeSettings;
+  linkedin: LinkedInSettings;
+  twitter: TwitterSettings;
 };
 
 export type PlatformSettingKey<P extends Platform> = keyof PlatformSettings[P];
@@ -54,6 +72,7 @@ export type PlatformSettingKey<P extends Platform> = keyof PlatformSettings[P];
 export const DEFAULT_SETTINGS: Settings = Object.freeze({
   schemaVersion: CURRENT_SCHEMA_VERSION,
   enabled: true,
+  showQuotes: true,
   lastPlatform: "facebook",
   facebook: Object.freeze({
     reels: true,
@@ -69,16 +88,37 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   youtube: Object.freeze({
     shorts: true,
     navigation: true,
-    redirect: true
+    redirect: true,
+    sidebar: true
+  }),
+  linkedin: Object.freeze({
+    feed: true,
+    news: true
+  }),
+  twitter: Object.freeze({
+    timeline: true,
+    trending: true
   }),
   snooze: Object.freeze({
     active: false,
     until: null,
-    sites: Object.freeze({ facebook: true, instagram: true, youtube: true })
+    sites: Object.freeze({
+      facebook: true,
+      instagram: true,
+      youtube: true,
+      linkedin: true,
+      twitter: true
+    })
   })
 });
 
-const PLATFORMS = new Set<Platform>(["facebook", "instagram", "youtube"]);
+const PLATFORMS = new Set<Platform>([
+  "facebook",
+  "instagram",
+  "youtube",
+  "linkedin",
+  "twitter"
+]);
 
 function booleanOrDefault(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
@@ -95,6 +135,8 @@ export function validateSettings(value: unknown): Settings {
   const facebook = recordOrEmpty(source.facebook);
   const instagram = recordOrEmpty(source.instagram);
   const youtube = recordOrEmpty(source.youtube);
+  const linkedin = recordOrEmpty(source.linkedin);
+  const twitter = recordOrEmpty(source.twitter);
   const snooze = recordOrEmpty(source.snooze);
   const snoozeSites = recordOrEmpty(snooze.sites);
   const platform = source.lastPlatform;
@@ -108,6 +150,7 @@ export function validateSettings(value: unknown): Settings {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     enabled: booleanOrDefault(source.enabled, DEFAULT_SETTINGS.enabled),
+    showQuotes: booleanOrDefault(source.showQuotes, DEFAULT_SETTINGS.showQuotes),
     lastPlatform:
       typeof platform === "string" && PLATFORMS.has(platform as Platform)
         ? (platform as Platform)
@@ -156,6 +199,30 @@ export function validateSettings(value: unknown): Settings {
       redirect: booleanOrDefault(
         youtube.redirect,
         DEFAULT_SETTINGS.youtube.redirect
+      ),
+      sidebar: booleanOrDefault(
+        youtube.sidebar,
+        DEFAULT_SETTINGS.youtube.sidebar
+      )
+    },
+    linkedin: {
+      feed: booleanOrDefault(
+        linkedin.feed,
+        DEFAULT_SETTINGS.linkedin.feed
+      ),
+      news: booleanOrDefault(
+        linkedin.news,
+        DEFAULT_SETTINGS.linkedin.news
+      )
+    },
+    twitter: {
+      timeline: booleanOrDefault(
+        twitter.timeline,
+        DEFAULT_SETTINGS.twitter.timeline
+      ),
+      trending: booleanOrDefault(
+        twitter.trending,
+        DEFAULT_SETTINGS.twitter.trending
       )
     },
     snooze: {
@@ -176,6 +243,14 @@ export function validateSettings(value: unknown): Settings {
         youtube: booleanOrDefault(
           snoozeSites.youtube,
           DEFAULT_SETTINGS.snooze.sites.youtube
+        ),
+        linkedin: booleanOrDefault(
+          snoozeSites.linkedin,
+          DEFAULT_SETTINGS.snooze.sites.linkedin
+        ),
+        twitter: booleanOrDefault(
+          snoozeSites.twitter,
+          DEFAULT_SETTINGS.snooze.sites.twitter
         )
       }
     }
@@ -183,7 +258,11 @@ export function validateSettings(value: unknown): Settings {
 }
 
 export function hasActiveFilters(settings: Settings): boolean {
-  return Object.values(settings.facebook).some(Boolean) ||
+  return (
+    Object.values(settings.facebook).some(Boolean) ||
     Object.values(settings.instagram).some(Boolean) ||
-    Object.values(settings.youtube).some(Boolean);
+    Object.values(settings.youtube).some(Boolean) ||
+    Object.values(settings.linkedin).some(Boolean) ||
+    Object.values(settings.twitter).some(Boolean)
+  );
 }

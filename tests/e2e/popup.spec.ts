@@ -4,14 +4,23 @@ import { resolve } from "node:path";
 const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   enabled: true,
+  showQuotes: true,
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true },
+  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true },
+  linkedin: { feed: true, news: true },
+  twitter: { timeline: true, trending: true },
   snooze: {
     active: false,
     until: null,
-    sites: { facebook: true, instagram: true, youtube: true }
+    sites: {
+      facebook: true,
+      instagram: true,
+      youtube: true,
+      linkedin: true,
+      twitter: true
+    }
   }
 };
 
@@ -68,11 +77,13 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect(page.getByText("Protected", { exact: true })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Protection" })).toBeChecked();
   const tabs = page.getByRole("tab");
-  await expect(tabs).toHaveCount(3);
+  await expect(tabs).toHaveCount(5);
   expect(await tabs.allTextContents()).toEqual([
     "Facebook",
     "Instagram",
-    "YouTube"
+    "YouTube",
+    "LinkedIn",
+    "Twitter/X"
   ]);
   await expect(page.getByRole("tab", { name: "Facebook" })).toHaveAttribute(
     "aria-selected",

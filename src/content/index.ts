@@ -3,6 +3,8 @@ import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
 import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
 import { instagramAdapter } from "./adapters/instagram";
+import { linkedinAdapter } from "./adapters/linkedin";
+import { twitterAdapter } from "./adapters/twitter";
 import { youtubeAdapter } from "./adapters/youtube";
 import { observeDynamicContent } from "./observer";
 import { watchRoutes } from "./routeWatcher";
@@ -15,6 +17,8 @@ function selectAdapter(hostname: string): SiteAdapter | null {
   if (/(?:^|\.)youtube\.com$/i.test(hostname)) return youtubeAdapter;
   if (/(?:^|\.)facebook\.com$/i.test(hostname)) return facebookAdapter;
   if (/(?:^|\.)instagram\.com$/i.test(hostname)) return instagramAdapter;
+  if (/(?:^|\.)linkedin\.com$/i.test(hostname)) return linkedinAdapter;
+  if (/(?:^|\.)(?:x\.com|twitter\.com)$/i.test(hostname)) return twitterAdapter;
   return null;
 }
 

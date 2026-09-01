@@ -20,7 +20,16 @@ const ROWS = {
   youtube: [
     ["shorts", "Hide Shorts"],
     ["navigation", "Hide Short Navigation"],
-    ["redirect", "Redirect/Short Pages"]
+    ["redirect", "Redirect / Shorts Pages"],
+    ["sidebar", "Hide Recommended Videos"]
+  ],
+  linkedin: [
+    ["feed", "Hide Main Feed"],
+    ["news", "Hide News Sidebar"]
+  ],
+  twitter: [
+    ["timeline", "Hide Home Timeline"],
+    ["trending", "Hide Trends & What's Happening"]
   ]
 } as const;
 

@@ -42,7 +42,7 @@ describe("snooze storage helpers", () => {
       snooze: {
         active: true,
         until: Date.now() + 60_000,
-        sites: { facebook: true, instagram: true, youtube: true }
+        sites: { ...DEFAULT_SETTINGS.snooze.sites }
       }
     });
 
@@ -66,7 +66,7 @@ describe("snooze storage helpers", () => {
       snooze: {
         active: true,
         until: 9999999999999,
-        sites: { facebook: true, instagram: true, youtube: true }
+        sites: { ...DEFAULT_SETTINGS.snooze.sites }
       }
     });
 

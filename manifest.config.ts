@@ -13,7 +13,13 @@ export default defineManifest({
     "https://*.instagram.com/*",
     "https://instagram.com/*",
     "https://*.youtube.com/*",
-    "https://youtube.com/*"
+    "https://youtube.com/*",
+    "https://*.linkedin.com/*",
+    "https://linkedin.com/*",
+    "https://*.x.com/*",
+    "https://x.com/*",
+    "https://*.twitter.com/*",
+    "https://twitter.com/*"
   ],
   background: {
     service_worker: "src/background/serviceWorker.ts",
@@ -43,7 +49,13 @@ export default defineManifest({
         "https://*.instagram.com/*",
         "https://instagram.com/*",
         "https://*.youtube.com/*",
-        "https://youtube.com/*"
+        "https://youtube.com/*",
+        "https://*.linkedin.com/*",
+        "https://linkedin.com/*",
+        "https://*.x.com/*",
+        "https://x.com/*",
+        "https://*.twitter.com/*",
+        "https://twitter.com/*"
       ],
       js: ["src/content/routeSignal.ts"],
       run_at: "document_start",
@@ -56,7 +68,13 @@ export default defineManifest({
         "https://*.instagram.com/*",
         "https://instagram.com/*",
         "https://*.youtube.com/*",
-        "https://youtube.com/*"
+        "https://youtube.com/*",
+        "https://*.linkedin.com/*",
+        "https://linkedin.com/*",
+        "https://*.x.com/*",
+        "https://x.com/*",
+        "https://*.twitter.com/*",
+        "https://twitter.com/*"
       ],
       css: ["src/content/content.css"],
       js: ["src/content/index.ts"],

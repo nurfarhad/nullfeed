@@ -1,7 +1,7 @@
-import type { Settings } from "../shared/settings";
+import type { Platform, Settings } from "../shared/settings";
 
 export interface SiteAdapter {
-  platform: "youtube" | "facebook" | "instagram";
+  platform: Platform;
   homeUrl: string;
   blockedRoute(pathname: string, settings: Settings): boolean;
   scan(root: ParentNode, settings: Settings): void;

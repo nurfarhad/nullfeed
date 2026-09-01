@@ -4,4 +4,6 @@ playwright-report/
 test-results/
 *.log
 *.zip
+Inspiration/
+
 
