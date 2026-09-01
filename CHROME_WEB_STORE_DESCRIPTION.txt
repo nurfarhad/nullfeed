@@ -1,0 +1,98 @@
+================================================================================
+CHROME WEB STORE LISTING DETAILS — NULLFEED
+================================================================================
+
+[1] EXTENSION NAME
+--------------------------------------------------------------------------------
+Nullfeed - Eradicate Distractions & Focus
+
+
+[2] SUMMARY / SHORT DESCRIPTION (Under 132 characters)
+--------------------------------------------------------------------------------
+Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, Instagram, LinkedIn & Twitter/X. Replace voids with quotes.
+
+
+[3] DETAILED DESCRIPTION
+--------------------------------------------------------------------------------
+Take back control of your focus, time, and mental clarity.
+
+Nullfeed is a 100% free, privacy-first Chrome extension that eradicates addictive short-form video feeds, algorithmic rabbit holes, and distracting advertisements across your favorite web platforms — replacing the endless feed void with mindful focus quotes.
+
+Use social media for its intended purpose — messaging, professional networking, intentional search, and productive collaboration — without getting trapped in endless algorithmic scrolling loops.
+
+--------------------------------------------------------------------------------
+✨ KEY FEATURES & PLATFORM SUPPORT
+--------------------------------------------------------------------------------
+
+🎯 1. MINDFUL FOCUS QUOTES
+• Replaces empty feed spaces with a sleek, serene dark-mode focus card.
+• Curated quotes on focus, stoicism, and deep work from Marcus Aurelius, Seneca, Naval Ravikant, Steve Jobs, and more.
+• Interactive quote cycling to refresh your inspiration anytime.
+
+📺 2. YOUTUBE
+• Hide Shorts: Eradicates Shorts shelves, grids, and recommendation carousels on Home, Subscriptions, and Search feeds.
+• Clean Navigation: Removes the Shorts button from the left sidebar and mini-guide.
+• Auto-Redirect: Directly navigates away from distracting `/shorts/...` URLs back to your clean home feed.
+• Hide Recommended Sidebar: Blocks the "Up Next / Related Videos" sidebar on watch pages to stop endless video chains.
+
+👥 3. FACEBOOK
+• Hide Reels: Removes Reels carousels, feed cards, and video suggestions.
+• Hide Stories: Collapses story trays with zero layout gaps or empty placeholders.
+• Hide Videos & Auto-Pause: Blocks distracting video posts and pauses background autoplay.
+• Ad & Sponsored Blocker: Cleans away sponsored ads and commercial side rails.
+
+📸 4. INSTAGRAM
+• Hide Reels: Removes the Reels icon from the sidebar, removes the Reels tab on profiles, and redirects `/reels/` pages.
+• Hide Stories & Highlights: Hides story trays and profile story highlights smoothly.
+• Clean Explore: Hides the Explore button to prevent doomscrolling while leaving Messages, Search, and Profile posts completely intact.
+
+💼 5. LINKEDIN (Active by Default)
+• Hide Feed: Replaces the noisy news feed with a mindful focus card.
+• Clean News: Removes the "Trending News" and engagement modules while keeping Search, Messages, Jobs, and Notifications 100% functional.
+
+🐦 6. TWITTER / X (Active by Default)
+• Hide Home Timeline: Removes the algorithmic "For You" feed.
+• Hide What's Happening & Trends: Removes trending rabbit holes while keeping Direct Messages, Notifications, and Search active.
+
+--------------------------------------------------------------------------------
+🔒 100% PRIVACY-FIRST — ZERO TRACKING
+--------------------------------------------------------------------------------
+• No tracking, no telemetry, and no data collection whatsoever.
+• Zero external network requests — all filtering happens locally in your browser.
+• No account or registration required.
+• Completely free forever.
+
+--------------------------------------------------------------------------------
+⚡ LIGHTWEIGHT & FAST
+--------------------------------------------------------------------------------
+Built using Manifest V3 and pre-emptive CSS injection to ensure zero page flickering, blazing fast load times, and near-zero memory footprint.
+
+Say goodbye to mindless scrolling and hello to deep focus with Nullfeed!
+
+
+================================================================================
+CHROME WEB STORE DEVELOPER DASHBOARD — CONFIGURATION GUIDE
+================================================================================
+
+[CATEGORY]
+Productivity / Workflow
+
+[PRIMARY LANGUAGE]
+English
+
+[PRIVACY PRACTICES TAB]
+Single Purpose:
+"Nullfeed helps users maintain focus and eliminate digital distractions by hiding algorithmic feeds, short-form reels, and ads on supported social media platforms."
+
+Permission Justifications:
+• storage: Required to store user toggle preferences locally on the browser using chrome.storage.sync.
+• alarms: Required to manage local background snooze intervals.
+• Host Permissions (youtube.com, facebook.com, instagram.com, linkedin.com, x.com, twitter.com): Required to inject content filtering scripts and styles to hide distracting feed elements on supported websites.
+
+Data Usage:
+• Does Nullfeed collect user data? -> NO (Check "I do not collect or use any user data").
+
+================================================================================
+PACKAGE FILE FOR UPLOAD:
+G:\Code\Nullfeed\Nullfeed_ChromeWebStore.zip
+================================================================================

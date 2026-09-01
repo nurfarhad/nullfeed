@@ -104,6 +104,14 @@ npm run audit:build
 
 ---
 
+## Chrome Web Store Publishing
+
+A pre-packaged, ready-to-upload ZIP file and description text are included in the repository root:
+* **Upload ZIP Package**: `Nullfeed_ChromeWebStore.zip` (ready for [Chrome Developer Dashboard](https://chrome.google.com/webstore/devconsole))
+* **Store Listing Copy & Metadata**: `CHROME_WEB_STORE_DESCRIPTION.txt` (contains short description, long description, categories, and permission justifications ready to copy-paste).
+
+---
+
 ## Privacy Policy
 
 Nullfeed operates strictly inside your browser:
