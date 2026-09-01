@@ -280,7 +280,11 @@ export function App() {
     void commit(optimistic, () => endSnooze(currentSettings));
   }
 
-  const platform = currentSettings.lastPlatform;
+  const rawPlatform = currentSettings.lastPlatform;
+  const platform: "facebook" | "instagram" | "youtube" =
+    rawPlatform === "linkedin" || rawPlatform === "twitter"
+      ? "facebook"
+      : rawPlatform;
 
   return (
     <main class="popup-shell">

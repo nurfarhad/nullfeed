@@ -3,7 +3,11 @@ import type { JSX } from "preact";
 import { PLATFORM_LABELS } from "../../shared/constants";
 import type { Platform } from "../../shared/settings";
 
-const PLATFORMS = Object.keys(PLATFORM_LABELS) as Platform[];
+const UI_PLATFORMS: readonly Platform[] = [
+  "facebook",
+  "instagram",
+  "youtube"
+] as const;
 
 type PlatformTabsProps = {
   active: Platform;
@@ -19,17 +23,18 @@ export function PlatformTabs({ active, onChange }: PlatformTabsProps) {
     }
 
     event.preventDefault();
-    const currentIndex = PLATFORMS.indexOf(active);
+    const currentIndex = UI_PLATFORMS.indexOf(active as "facebook" | "instagram" | "youtube");
+    const safeIndex = currentIndex === -1 ? 0 : currentIndex;
     const delta = event.key === "ArrowRight" ? 1 : -1;
-    const nextIndex = (currentIndex + delta + PLATFORMS.length) % PLATFORMS.length;
-    const nextPlatform = PLATFORMS[nextIndex];
+    const nextIndex = (safeIndex + delta + UI_PLATFORMS.length) % UI_PLATFORMS.length;
+    const nextPlatform = UI_PLATFORMS[nextIndex];
     onChange(nextPlatform);
     document.getElementById(`tab-${nextPlatform}`)?.focus();
   }
 
   return (
     <div aria-label="Platforms" class="platform-tabs" role="tablist">
-      {PLATFORMS.map((platform) => (
+      {UI_PLATFORMS.map((platform) => (
         <button
           aria-controls={`panel-${platform}`}
           aria-selected={active === platform}

@@ -77,13 +77,11 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect(page.getByText("Protected", { exact: true })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Protection" })).toBeChecked();
   const tabs = page.getByRole("tab");
-  await expect(tabs).toHaveCount(5);
+  await expect(tabs).toHaveCount(3);
   expect(await tabs.allTextContents()).toEqual([
     "Facebook",
     "Instagram",
-    "YouTube",
-    "LinkedIn",
-    "Twitter/X"
+    "YouTube"
   ]);
   await expect(page.getByRole("tab", { name: "Facebook" })).toHaveAttribute(
     "aria-selected",
