@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import { DEVELOPMENT, LINKEDIN_URL, PLATFORM_LABELS } from "../shared/constants";
+import { DEVELOPMENT, LINKEDIN_URL } from "../shared/constants";
 import {
   DEFAULT_SETTINGS,
   hasActiveFilters,
@@ -17,7 +17,6 @@ import {
   setLastPlatform,
   setPlatformPreference,
   setShowQuotes,
-  setSnoozeSite,
   startSnooze
 } from "../shared/storage";
 import { NullMark } from "./components/NullMark";
@@ -35,14 +34,6 @@ const SNOOZE_DURATIONS = [
   { label: "30m", ms: 1_800_000 },
   { label: "1h", ms: 3_600_000 },
   { label: "24h", ms: 86_400_000 }
-] as const;
-
-const ALL_PLATFORMS: readonly Platform[] = [
-  "facebook",
-  "instagram",
-  "youtube",
-  "linkedin",
-  "twitter"
 ] as const;
 
 type Status = {
@@ -261,9 +252,15 @@ export function App() {
     const optimistic = {
       ...currentSettings,
       snooze: {
-        ...currentSettings.snooze,
         active: true,
-        until: Date.now() + durationMs
+        until: Date.now() + durationMs,
+        sites: {
+          facebook: true,
+          instagram: true,
+          youtube: true,
+          linkedin: true,
+          twitter: true
+        }
       }
     };
 
@@ -281,20 +278,6 @@ export function App() {
     };
 
     void commit(optimistic, () => endSnooze(currentSettings));
-  }
-
-  function handleSnoozeSite(platform: Platform, value: boolean) {
-    const optimistic = {
-      ...currentSettings,
-      snooze: {
-        ...currentSettings.snooze,
-        sites: { ...currentSettings.snooze.sites, [platform]: value }
-      }
-    };
-
-    void commit(optimistic, () =>
-      setSnoozeSite(currentSettings, platform, value)
-    );
   }
 
   const platform = currentSettings.lastPlatform;
@@ -348,37 +331,19 @@ export function App() {
             </button>
           </div>
         ) : (
-          <>
-            <div class="snooze-buttons">
-              {SNOOZE_DURATIONS.map(({ label, ms }) => (
-                <button
-                  class="snooze-duration"
-                  id={`snooze-${label}`}
-                  key={label}
-                  onClick={() => handleStartSnooze(ms)}
-                  type="button"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <div class="snooze-sites">
-              {ALL_PLATFORMS.map((p) => (
-                <label class="snooze-site-label" key={p}>
-                  <input
-                    checked={currentSettings.snooze.sites[p]}
-                    class="snooze-site-input"
-                    id={`snooze-site-${p}`}
-                    onChange={(e) =>
-                      handleSnoozeSite(p, e.currentTarget.checked)
-                    }
-                    type="checkbox"
-                  />
-                  <span>{PLATFORM_LABELS[p]}</span>
-                </label>
-              ))}
-            </div>
-          </>
+          <div class="snooze-buttons">
+            {SNOOZE_DURATIONS.map(({ label, ms }) => (
+              <button
+                class="snooze-duration"
+                id={`snooze-${label}`}
+                key={label}
+                onClick={() => handleStartSnooze(ms)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         )}
       </section>
 

@@ -349,37 +349,6 @@ footer {
   background: var(--accent-soft);
 }
 
-.snooze-sites {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  margin-top: 10px;
-}
-
-.snooze-site-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 16px;
-  cursor: pointer;
-  transition: color 150ms ease;
-}
-
-.snooze-site-label:hover {
-  color: var(--ink);
-}
-
-.snooze-site-input {
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
 .snooze-active {
   display: flex;
   flex-direction: column;
