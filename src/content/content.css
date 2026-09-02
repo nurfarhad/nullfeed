@@ -125,7 +125,7 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
 
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
   [data-nullfeed-fb-ad="feed"]::after {
-  content: "Sponsored post hidden" !important;
+  content: "Sponsored & ads hidden by Nur Farhad" !important;
   visibility: visible !important;
   position: absolute !important;
   inset: 0 !important;
@@ -138,6 +138,41 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   letter-spacing: 0.01em !important;
 }
+
+/* When JS has injected the richer attribution node, suppress the CSS pseudo fallback */
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"][data-nullfeed-ad-label]::after {
+  content: "" !important;
+}
+
+.nullfeed-ad-label {
+  visibility: visible !important;
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px dashed rgba(142, 142, 142, 0.35) !important;
+  border-radius: 12px !important;
+  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  letter-spacing: 0.01em !important;
+  gap: 4px !important;
+  color: rgba(142, 142, 142, 0.7) !important;
+  pointer-events: all !important;
+  text-decoration: none !important;
+}
+
+.nullfeed-ad-label a {
+  color: rgba(142, 142, 142, 0.9) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  cursor: pointer !important;
+}
+
+.nullfeed-ad-label a:hover {
+  color: #fff !important;
+}
+
 
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
   [data-nullfeed-fb-ad="rail"] {

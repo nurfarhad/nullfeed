@@ -345,6 +345,23 @@ function releaseFeedAds(): void {
     .forEach((el) => el.removeAttribute(FB_AD_ATTR));
 }
 
+/**
+ * Injects a real DOM node with a clickable attribution link inside the
+ * ad placeholder so "Nur Farhad" is a live anchor, not just CSS text.
+ * A data attribute is added to suppress the CSS ::after fallback text.
+ */
+function injectAdLabel(container: Element): void {
+  if (container.hasAttribute("data-nullfeed-ad-label")) return;
+  container.setAttribute("data-nullfeed-ad-label", "1");
+
+  const label = document.createElement("span");
+  label.className = "nullfeed-ad-label";
+  label.innerHTML =
+    'Sponsored &amp; ads hidden by '
+    + '<a href="https://www.linkedin.com/in/nurfarhad/" target="_blank" rel="noopener noreferrer">Nur Farhad</a>';
+  container.appendChild(label);
+}
+
 /** Feed-ad detection via data-ad-rendering-role + sanity guard. */
 function applyFeedAdHiding(): void {
   const matches = document.querySelectorAll(FB_FEED_AD_SELECTORS);
@@ -369,6 +386,7 @@ function applyFeedAdHiding(): void {
       container.querySelectorAll("video").forEach((v) => {
         try { (v as HTMLVideoElement).pause(); } catch { /* ignore */ }
       });
+      injectAdLabel(container);
     }
   }
 }
@@ -407,6 +425,7 @@ function applyLinkBasedAdHiding(root: ParentNode): void {
       const article = closestVerifiedFeedUnit(link);
       if (article && !article.hasAttribute(FB_AD_ATTR)) {
         article.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
+        injectAdLabel(article);
       }
     });
   }
