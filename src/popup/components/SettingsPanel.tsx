@@ -9,8 +9,7 @@ const ROWS = {
   facebook: [
     ["reels", "Hide Reels"],
     ["stories", "Hide Stories"],
-    ["videos", "Hide Videos"],
-    ["ads", "Hide Sponsored & Ads"]
+    ["videos", "Hide Videos"]
   ],
   instagram: [
     ["reels", "Hide Reels"],
@@ -20,7 +19,6 @@ const ROWS = {
   youtube: [
     ["shorts", "Hide Shorts"],
     ["navigation", "Hide Short Navigation"],
-    ["redirect", "Redirect / Shorts Pages"],
     ["sidebar", "Hide Recommended Videos"]
   ],
   linkedin: [
