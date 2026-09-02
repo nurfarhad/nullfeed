@@ -19,14 +19,16 @@ export function createQuoteCardElement(): HTMLElement {
   card.innerHTML = `
     <div class="nullfeed-quote-header">
       <span class="nullfeed-quote-badge">NULLFEED FOCUS</span>
-      <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-        </svg>
-      </button>
     </div>
-    <blockquote class="nullfeed-quote-text">“${quote.text}”</blockquote>
-    <cite class="nullfeed-quote-author">— ${quote.author}</cite>
+    <div class="nullfeed-quote-body">
+      <blockquote class="nullfeed-quote-text">“${quote.text}”</blockquote>
+      <cite class="nullfeed-quote-author">— ${quote.author}</cite>
+    </div>
+    <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+      </svg>
+    </button>
   `;
 
   const refreshBtn = card.querySelector<HTMLButtonElement>(".nullfeed-quote-refresh");

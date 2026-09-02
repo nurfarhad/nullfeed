@@ -106,9 +106,13 @@ export const youtubeAdapter: SiteAdapter = {
     // Mount Focus Quote Card on YouTube home feed if enabled
     const isHome = window.location.pathname === "/" || window.location.pathname === "";
     if (isHome && settings.showQuotes) {
-      const browseContainer = root.querySelector?.('ytd-browse[page-subtype="home"], #primary.ytd-two-column-browse-results-renderer');
-      if (browseContainer) {
-        mountQuoteCard(browseContainer, "before");
+      // Target the inner contents renderer inside the primary feed column,
+      // not the outer two-column wrapper (which stretches the whole left column).
+      const feedContents = root.querySelector?.(
+        "ytd-rich-grid-renderer, #contents.ytd-rich-grid-renderer"
+      );
+      if (feedContents) {
+        mountQuoteCard(feedContents, "before");
       }
     } else if (!isHome) {
       unmountQuoteCard();

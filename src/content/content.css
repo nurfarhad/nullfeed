@@ -219,41 +219,43 @@ html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filt
 /* Nullfeed Mindful Focus Quote Card */
 .nullfeed-quote-card {
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
-  text-align: center !important;
+  justify-content: space-between !important;
   box-sizing: border-box !important;
-  max-width: 580px !important;
-  margin: 32px auto !important;
-  padding: 28px 24px !important;
-  background: rgba(18, 18, 22, 0.75) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 0 20px 0 !important;
+  padding: 18px 24px !important;
+  background: rgba(18, 18, 22, 0.82) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(167, 139, 250, 0.18) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
   color: #f1f3f5 !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   z-index: 100 !important;
-  transition: all 0.25s ease-out !important;
+  gap: 20px !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .nullfeed-quote-card:hover {
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.55) !important;
+  border-color: rgba(167, 139, 250, 0.35) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
 
 .nullfeed-quote-header {
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-  margin-bottom: 16px !important;
+  flex-shrink: 0 !important;
+  gap: 0 !important;
+  margin-bottom: 0 !important;
+  width: auto !important;
 }
 
 .nullfeed-quote-badge {
-  font-size: 10.5px !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
   letter-spacing: 0.12em !important;
   text-transform: uppercase !important;
@@ -262,6 +264,15 @@ html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filt
   padding: 4px 10px !important;
   border-radius: 20px !important;
   border: 1px solid rgba(167, 139, 250, 0.2) !important;
+  white-space: nowrap !important;
+}
+
+.nullfeed-quote-body {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  min-width: 0 !important;
 }
 
 .nullfeed-quote-refresh {
@@ -270,36 +281,42 @@ html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filt
   justify-content: center !important;
   background: transparent !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.6) !important;
+  color: rgba(255, 255, 255, 0.5) !important;
   cursor: pointer !important;
-  width: 28px !important;
-  height: 28px !important;
+  width: 30px !important;
+  height: 30px !important;
   border-radius: 8px !important;
   transition: all 0.2s ease !important;
   padding: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 .nullfeed-quote-refresh:hover {
   color: #fff !important;
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.25) !important;
-  transform: rotate(45deg);
+  transform: rotate(45deg) !important;
 }
 
 .nullfeed-quote-text {
-  font-size: 17px !important;
-  line-height: 1.55 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
   font-weight: 400 !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-  margin: 0 0 12px 0 !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  margin: 0 0 4px 0 !important;
   font-style: italic !important;
-  max-width: 90% !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
 }
 
 .nullfeed-quote-author {
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: rgba(255, 255, 255, 0.4) !important;
   font-style: normal !important;
   letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
 }
+

@@ -663,7 +663,9 @@ test("Mindful Focus Quote Card mounts on YouTube home and cycles quotes on refre
     "https://www.youtube.com/",
     `
       <ytd-browse page-subtype="home" id="home-browse">
-        <div id="contents">Home Feed</div>
+        <ytd-rich-grid-renderer id="rich-grid">
+          <div id="contents">Home Feed</div>
+        </ytd-rich-grid-renderer>
       </ytd-browse>
     `
   );
@@ -671,7 +673,7 @@ test("Mindful Focus Quote Card mounts on YouTube home and cycles quotes on refre
   const card = page.locator("#nullfeed-quote-card");
   await expect(card).toBeVisible();
   await expect(page.locator(".nullfeed-quote-badge")).toHaveText("NULLFEED FOCUS");
-  
+
   const initialQuote = await page.locator(".nullfeed-quote-text").textContent();
   expect(initialQuote).toBeTruthy();
 
