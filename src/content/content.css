@@ -145,7 +145,13 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   content: "" !important;
 }
 
-.nullfeed-ad-label {
+/*
+ * The JS-injected .nullfeed-ad-label is a direct child so it is caught by the
+ * > * { visibility: hidden } rule above. We need the same specificity weight
+ * (or higher) to restore visibility for this specific element.
+ */
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label {
   visibility: visible !important;
   position: absolute !important;
   inset: 0 !important;
@@ -159,17 +165,20 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   gap: 4px !important;
   color: rgba(142, 142, 142, 0.7) !important;
   pointer-events: all !important;
-  text-decoration: none !important;
+  box-sizing: border-box !important;
 }
 
-.nullfeed-ad-label a {
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a {
   color: rgba(142, 142, 142, 0.9) !important;
   text-decoration: underline !important;
   text-underline-offset: 2px !important;
   cursor: pointer !important;
+  pointer-events: all !important;
 }
 
-.nullfeed-ad-label a:hover {
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:hover {
   color: #fff !important;
 }
 
