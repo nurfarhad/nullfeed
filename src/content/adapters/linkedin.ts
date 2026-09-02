@@ -38,8 +38,11 @@ export const linkedinAdapter: SiteAdapter = {
 
     if (settings.linkedin.feed) {
       // Mount quote card before the scroll container (outside the hidden subtree)
-      if (settings.showQuotes) {
-        const scrollContainer = root.querySelector?.(".scaffold-finite-scroll");
+      if (settings.showQuotes && !document.getElementById("nullfeed-quote-card")) {
+        const doc = root instanceof Document ? root : document;
+        const scrollContainer = doc.querySelector(
+          ".scaffold-finite-scroll, main.scaffold-layout__main, .core-rail"
+        );
         if (scrollContainer) mountQuoteCard(scrollContainer, "before");
       }
 

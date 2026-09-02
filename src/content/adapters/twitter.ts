@@ -7,6 +7,15 @@ import { mountQuoteCard, unmountQuoteCard } from "../quoteCard";
 const TIMELINE_SELECTORS = [
   'div[data-testid="primaryColumn"] section[role="region"]',
   'div[aria-label="Home timeline"] > div > section[role="region"]',
+  'div[aria-label="Timeline: Your Home Timeline"]',
+  'div[data-testid="primaryColumn"] section[role="region"] div[data-testid="cellInnerDiv"]',
+  'article[data-testid="tweet"]'
+] as const;
+
+// The container to mount the quote card BEFORE (outside the hidden tweet cells)
+const TIMELINE_CONTAINER_SELECTORS = [
+  'div[data-testid="primaryColumn"] section[role="region"]',
+  'div[aria-label="Home timeline"] > div > section[role="region"]',
   'div[aria-label="Timeline: Your Home Timeline"]'
 ] as const;
 
@@ -34,12 +43,20 @@ export const twitterAdapter: SiteAdapter = {
     const isHome = /^\/(?:home|$)/i.test(window.location.pathname);
 
     if (settings.twitter.timeline && isHome) {
+      if (settings.showQuotes && !document.getElementById("nullfeed-quote-card")) {
+        const doc = root instanceof Document ? root : document;
+        for (const selector of TIMELINE_CONTAINER_SELECTORS) {
+          const container = doc.querySelector(selector);
+          if (container) {
+            mountQuoteCard(container, "before");
+            break;
+          }
+        }
+      }
+
       TIMELINE_SELECTORS.forEach((selector) => {
         queryAll(root, selector).forEach((el) => {
           hideElement(el, "twitter-timeline");
-          if (settings.showQuotes) {
-            mountQuoteCard(el, "before");
-          }
         });
       });
     } else {
@@ -60,3 +77,4 @@ export const twitterAdapter: SiteAdapter = {
     cleanupOwnedElements();
   }
 };
+
