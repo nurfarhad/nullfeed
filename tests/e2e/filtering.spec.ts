@@ -688,8 +688,13 @@ test("LinkedIn hides feed and news module when enabled", async () => {
     `
       <header id="nav">LinkedIn Nav</header>
       <div class="core-rail">
-        <div class="scaffold-finite-scroll" id="linkedin-feed">
-          <div>Post 1</div>
+        <div class="scaffold-finite-scroll" id="linkedin-scroll">
+          <div class="scaffold-finite-scroll__content">
+            <ul id="linkedin-feed">
+              <li id="post-1" class="occludable-update">Post 1</li>
+              <li id="post-2" class="occludable-update">Post 2</li>
+            </ul>
+          </div>
         </div>
       </div>
       <aside class="feed-right-column" id="linkedin-news">
@@ -699,10 +704,12 @@ test("LinkedIn hides feed and news module when enabled", async () => {
   );
 
   await expect(page.locator("#nav")).toBeVisible();
-  await expect(page.locator("#linkedin-feed")).toBeHidden();
+  await expect(page.locator("#post-1")).toBeHidden();
+  await expect(page.locator("#post-2")).toBeHidden();
   await expect(page.locator("#linkedin-news")).toBeHidden();
   await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
 });
+
 
 test("Twitter/X hides home timeline and trending sidebar when enabled", async () => {
   const page = await fixturePage(
