@@ -141,6 +141,18 @@ function hideNavigationLink(link: Element, feature: string): void {
   hideElement(item ?? link, feature);
 }
 
+// Cached per-pathname layout flag — avoids re-querying document on every mutation during scroll.
+let cachedPathname: string | null = null;
+let cachedIsProfile = false;
+
+function checkIsProfile(): boolean {
+  if (cachedPathname !== window.location.pathname) {
+    cachedPathname = window.location.pathname;
+    cachedIsProfile = queryAll(document, '[role="tablist"]').length > 0;
+  }
+  return cachedIsProfile;
+}
+
 export const instagramAdapter: SiteAdapter = {
   platform: "instagram",
   homeUrl: "https://www.instagram.com/",
@@ -166,6 +178,7 @@ export const instagramAdapter: SiteAdapter = {
 
   scan(root, settings) {
     if (!settings.enabled) {
+      cachedPathname = null;
       return;
     }
 
@@ -189,9 +202,7 @@ export const instagramAdapter: SiteAdapter = {
       });
 
       // 3. Hide non-profile reels (feed, explore, search)
-      const isProfile = queryAll(document, '[role="tablist"]').length > 0;
-
-      if (!isProfile) {
+      if (!checkIsProfile()) {
         queryAll(root, REEL_SELECTORS).forEach((link) => {
           if (!link.closest('nav, header, [role="navigation"]')) {
             const boundary = findContentBoundary(link);

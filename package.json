@@ -14,7 +14,8 @@
     "audit:network": "node scripts/audit-network-surface.mjs",
     "audit:build": "node scripts/audit-build.mjs",
     "audit:permissions": "node scripts/audit-manifest.mjs",
-    "generate:icons": "node scripts/generate-icons.mjs"
+    "generate:icons": "node scripts/generate-icons.mjs",
+    "package": "node scripts/package-zip.mjs"
   },
   "engines": {
     "node": ">=24"

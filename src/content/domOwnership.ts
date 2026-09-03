@@ -96,11 +96,12 @@ function isVisiblyEmpty(element: Element): boolean {
   ) {
     return false;
   }
-  if (element.children.length > 0) {
-    for (const child of Array.from(element.children)) {
-      if (!isVisiblyEmpty(child)) {
-        return false;
-      }
+  if (element.children.length === 0) {
+    return (element.textContent ?? "").trim().length === 0;
+  }
+  for (const child of Array.from(element.children)) {
+    if (!isVisiblyEmpty(child)) {
+      return false;
     }
   }
   return (element.textContent ?? "").trim().length === 0;
@@ -116,12 +117,16 @@ export function collapseEmptyAncestors(
   element: Element,
   feature: string,
   boundarySelector: string = DEFAULT_COLLAPSE_BOUNDARY,
-  maxDepth = 6
+  maxDepth = 4
 ): void {
   let candidate = element.parentElement;
 
   for (let depth = 0; candidate && depth < maxDepth; depth += 1) {
-    if (candidate.matches(boundarySelector)) {
+    if (
+      candidate === document.body ||
+      candidate === document.documentElement ||
+      candidate.matches(boundarySelector)
+    ) {
       break;
     }
     if (!isVisiblyEmpty(candidate)) {

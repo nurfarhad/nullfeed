@@ -1,3 +1,4 @@
+import { DEVELOPMENT } from "../shared/constants";
 import type { Platform, Settings } from "../shared/settings";
 
 export interface SiteAdapter {
@@ -19,7 +20,10 @@ export function queryAll(
       matches.push(root);
     }
     matches.push(...root.querySelectorAll(selector));
-  } catch {
+  } catch (error) {
+    if (DEVELOPMENT) {
+      console.warn(`[Nullfeed] queryAll selector error: "${selector}"`, error);
+    }
     // Fail open: one obsolete or malformed selector must not stop an adapter.
   }
 

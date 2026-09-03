@@ -658,7 +658,7 @@ test("YouTube hides watch page recommended sidebar when enabled", async () => {
   await expect(page.locator("#recommended-sidebar")).toBeHidden();
 });
 
-test("Mindful Focus Quote Card mounts on YouTube home and cycles quotes on refresh", async () => {
+test("Quote card does NOT mount on YouTube home (prevents layout thrashing)", async () => {
   const page = await fixturePage(
     "https://www.youtube.com/",
     `
@@ -670,16 +670,10 @@ test("Mindful Focus Quote Card mounts on YouTube home and cycles quotes on refre
     `
   );
 
-  const card = page.locator("#nullfeed-quote-card");
-  await expect(card).toBeVisible();
-  await expect(page.locator(".nullfeed-quote-badge")).toHaveText("NULLFEED FOCUS");
-
-  const initialQuote = await page.locator(".nullfeed-quote-text").textContent();
-  expect(initialQuote).toBeTruthy();
-
-  await page.locator(".nullfeed-quote-refresh").click();
-  const refreshedQuote = await page.locator(".nullfeed-quote-text").textContent();
-  expect(refreshedQuote).toBeTruthy();
+  // Quote card should NOT be present on YouTube
+  await expect(page.locator("#nullfeed-quote-card")).toHaveCount(0);
+  // Feed content should remain visible and untouched
+  await expect(page.locator("#contents")).toBeVisible();
 });
 
 test("LinkedIn hides feed and news module when enabled", async () => {

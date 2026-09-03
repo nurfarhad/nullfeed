@@ -24,10 +24,23 @@ export function observeDynamicContent(scan: ScanCallback): () => void {
     }
   };
 
+  const isNullfeedNode = (node: Node): boolean => {
+    if (!(node instanceof Element)) return false;
+    return (
+      node.id === "nullfeed-quote-card" ||
+      node.id === "nullfeed-snooze-overlay" ||
+      node.hasAttribute("data-nullfeed-hidden") ||
+      node.classList.contains("nullfeed-ad-label") ||
+      Boolean(node.closest?.("[data-nullfeed-hidden]"))
+    );
+  };
+
   const observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       mutation.addedNodes.forEach((node) => {
         if (node instanceof Element || node instanceof DocumentFragment) {
+          // Skip Nullfeed's own injected/modified nodes to prevent feedback loops
+          if (node instanceof Element && isNullfeedNode(node)) return;
           schedule(node);
         }
       });

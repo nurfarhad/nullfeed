@@ -432,16 +432,27 @@ function applyLinkBasedAdHiding(root: ParentNode): void {
 }
 
 function hideSponsoredEntries(root: ParentNode): void {
+  // Link-based detection uses the narrow subtree — fast on incremental scans.
   applyLinkBasedAdHiding(root);
+  // Rail and feed detections always need the full document for the sanity ratio,
+  // but we guard with hasAttribute checks so already-tagged elements are skipped.
   applyRailAdHiding();
   applyFeedAdHiding();
 }
 
 /** Remove all ad tags — called when the ads toggle is turned off or on cleanup. */
 function restoreAds(): void {
+  // Remove the data attribute that drives CSS placeholder styling
   document
     .querySelectorAll(`[${FB_AD_ATTR}]`)
     .forEach((el) => el.removeAttribute(FB_AD_ATTR));
+
+  // Also remove injected label nodes and their marker attribute so they don't
+  // accumulate if the user toggles ads off and back on.
+  document.querySelectorAll(".nullfeed-ad-label").forEach((label) => {
+    label.parentElement?.removeAttribute("data-nullfeed-ad-label");
+    label.remove();
+  });
 }
 
 export const facebookAdapter: SiteAdapter = {

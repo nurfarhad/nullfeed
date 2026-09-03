@@ -158,7 +158,8 @@ export function showSnoozeOverlay(until: number): void {
   }
 
   const overlay = createOverlayElement(until);
-  document.documentElement.appendChild(overlay);
+  const target = document.body ?? document.documentElement;
+  target.appendChild(overlay);
   startCountdown(until);
 }
 

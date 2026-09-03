@@ -5,7 +5,7 @@ export default defineManifest({
   name: "Nullfeed",
   version: "2.0.0",
   description:
-    "Hide distracting short-form feeds on YouTube, Facebook, and Instagram.",
+    "Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, Instagram, LinkedIn & Twitter/X.",
   permissions: ["storage", "alarms"],
   host_permissions: [
     "https://*.facebook.com/*",

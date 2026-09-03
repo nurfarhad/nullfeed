@@ -12,6 +12,16 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
   ytm-shorts-lockup-view-model,
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytm-shorts-lockup-view-model-v2,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  grid-shelf-view-model:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  grid-shelf-view-model:has(ytm-shorts-lockup-view-model-v2),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  grid-shelf-view-model:has(ytm-shorts-lockup-view-model),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-shelf-renderer:has(a[href^="/shorts"]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
   ytd-rich-item-renderer:has(a[href^="/shorts"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
   ytd-video-renderer:has(a[href^="/shorts"]),
@@ -39,6 +49,17 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   ytd-guide-entry-renderer:has(a[href^="/shorts"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-navigation]
   yt-list-item-view-model:has(a[href^="/shorts"]) {
+  display: none !important;
+}
+
+/* YouTube: collapse parent section containers of Shorts shelves so
+   YouTube's virtualizer sees zero height — no empty-margin reflow. */
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts]),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-rich-section-renderer:has(ytd-reel-shelf-renderer),
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-shorts]
+  ytd-rich-section-renderer:has([is-shorts]) {
   display: none !important;
 }
 

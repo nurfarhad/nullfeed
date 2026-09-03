@@ -43,12 +43,20 @@ export const twitterAdapter: SiteAdapter = {
     const isHome = /^\/(?:home|$)/i.test(window.location.pathname);
 
     if (settings.twitter.timeline && isHome) {
-      if (settings.showQuotes && !document.getElementById("nullfeed-quote-card")) {
+      if (settings.showQuotes) {
         const doc = root instanceof Document ? root : document;
         for (const selector of TIMELINE_CONTAINER_SELECTORS) {
           const container = doc.querySelector(selector);
           if (container) {
-            mountQuoteCard(container, "before");
+            const existing = document.getElementById("nullfeed-quote-card");
+            // Re-mount if the card is missing or no longer sits just before
+            // the target container (can happen after SPA navigation).
+            if (existing && existing.nextElementSibling !== container) {
+              existing.remove();
+            }
+            if (!document.getElementById("nullfeed-quote-card")) {
+              mountQuoteCard(container, "before");
+            }
             break;
           }
         }

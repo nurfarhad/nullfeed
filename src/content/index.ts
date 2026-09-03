@@ -108,15 +108,27 @@ function apply(nextSettings: Settings): void {
 }
 
 if (adapter) {
+  // Keep cleanup handles so the 2-second route-polling interval and the
+  // MutationObserver can be torn down if needed (prevents leak across lifetime).
+  let stopObserver: (() => void) | null = null;
+  let stopRouteWatcher: (() => void) | null = null;
+
+  function teardown(): void {
+    stopObserver?.();
+    stopObserver = null;
+    stopRouteWatcher?.();
+    stopRouteWatcher = null;
+  }
+
   void getSettings()
     .then((loaded) => {
       apply(loaded);
-      observeDynamicContent((root) => {
+      stopObserver = observeDynamicContent((root) => {
         if (settings && !handleRoute(settings)) {
           scan(root);
         }
       });
-      watchRoutes(() => {
+      stopRouteWatcher = watchRoutes(() => {
         if (settings && !handleRoute(settings)) {
           scan(document);
         }
@@ -138,4 +150,10 @@ if (adapter) {
         );
     }
   });
+
+  // Expose teardown for diagnostics (accessible from the page-world via
+  // chrome.scripting in dev mode, no-op in production).
+  if (typeof window !== "undefined") {
+    Reflect.set(window, "__nullfeedTeardown", teardown);
+  }
 }
