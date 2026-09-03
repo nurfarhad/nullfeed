@@ -15,17 +15,16 @@
   --muted: #8b929c;
   --canvas: #111214;
   --surface: #1a1b1e;
-  --surface-raised: #23252a;
+  --surface-raised: #24262b;
   --surface-hover: rgba(255, 255, 255, 0.035);
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.13);
-  --border-glow: rgba(46, 216, 138, 0.25);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
   --accent: #2ed88a;
-  --accent-glow: rgba(46, 216, 138, 0.35);
   --accent-soft: rgba(46, 216, 138, 0.1);
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.12);
-  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-fast: cubic-bezier(0.2, 0, 0, 1);
 }
 
 * {
@@ -61,7 +60,6 @@ label {
 
 /* ── Shell ── */
 .popup-shell {
-  position: relative;
   display: flex;
   min-height: 460px;
   flex-direction: column;
@@ -69,9 +67,7 @@ label {
   padding: 18px 18px 14px;
   overflow-x: hidden;
   background-color: #111214;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(46, 216, 138, 0.08), transparent 70%),
-    #111214;
+  background: var(--canvas);
 }
 
 /* ── Header ── */
@@ -91,6 +87,7 @@ footer {
 .brand {
   position: relative;
   gap: 10px;
+  cursor: default;
 }
 
 .brand h1 {
@@ -108,19 +105,18 @@ footer {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2.2;
-  filter: drop-shadow(0 0 8px rgba(46, 216, 138, 0.28));
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 260ms var(--ease);
 }
 
 .brand:hover .null-mark {
-  transform: rotate(-10deg) scale(1.05);
+  transform: rotate(-12deg);
 }
 
 /* ── Status badge ── */
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   padding: 4px 12px;
   border-radius: 999px;
   font-size: 10.5px;
@@ -128,7 +124,10 @@ footer {
   line-height: 16px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  transition: all 0.25s ease;
+  transition:
+    color 240ms var(--ease),
+    background-color 240ms var(--ease),
+    border-color 240ms var(--ease);
 }
 
 .status::before {
@@ -138,19 +137,18 @@ footer {
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  transition: background-color 240ms var(--ease);
 }
 
 .status-active {
-  border: 1px solid rgba(46, 216, 138, 0.3);
+  border: 1px solid rgba(46, 216, 138, 0.35);
   color: var(--accent);
   background: rgba(46, 216, 138, 0.08);
-  box-shadow: 0 0 12px rgba(46, 216, 138, 0.12);
 }
 
 .status-active::before {
   background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
-  animation: pulse-dot 2s infinite ease-in-out;
+  animation: pulse-dot 2.2s infinite ease-in-out;
 }
 
 .status-neutral {
@@ -168,28 +166,20 @@ footer {
   0%, 100% {
     transform: scale(1);
     opacity: 1;
-    box-shadow: 0 0 6px var(--accent);
   }
   50% {
     transform: scale(0.8);
-    opacity: 0.6;
-    box-shadow: 0 0 2px var(--accent);
+    opacity: 0.45;
   }
 }
 
-/* ── Protection Hero card ── */
+/* ── Protection Card (Clean, minimal, no shadow, no hover effect) ── */
 .protection {
   padding: 6px 16px 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background-color: #1a1b1e;
   background: var(--surface);
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.protection:hover {
-  border-color: var(--border-strong);
 }
 
 .protection .switch-row {
@@ -210,9 +200,10 @@ footer {
   color: var(--muted);
   font-size: 12.5px;
   line-height: 17px;
+  transition: color 200ms var(--ease);
 }
 
-/* ── Platform tabs ── */
+/* ── Platform tabs (Flat segmented control) ── */
 .platform-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -221,7 +212,6 @@ footer {
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #16171a;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .platform-tab {
@@ -238,10 +228,9 @@ footer {
   line-height: 18px;
   text-align: center;
   transition:
-    color 180ms ease,
-    background-color 180ms ease,
-    box-shadow 180ms ease,
-    transform 120ms ease;
+    color 200ms var(--ease),
+    background-color 200ms var(--ease),
+    transform 120ms var(--ease-fast);
 }
 
 .platform-tab:hover {
@@ -249,23 +238,25 @@ footer {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.platform-tab:active {
+  transform: scale(0.96);
+}
+
 .platform-tab[aria-selected="true"] {
   color: var(--accent);
   background: var(--surface-raised);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .platform-tab[aria-selected="true"]:hover {
   background: var(--surface-raised);
 }
 
-/* ── Settings panel ── */
+/* ── Settings panel (Clean, flat) ── */
 .settings-panel {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: var(--shadow-card);
 }
 
 /* ── Switch rows ── */
@@ -279,7 +270,7 @@ footer {
   padding: 6px 16px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background-color 150ms ease;
+  transition: background-color 180ms var(--ease);
 }
 
 .switch-row:has(.switch-input:not(:disabled)):hover {
@@ -296,9 +287,10 @@ footer {
   font-weight: 500;
   line-height: 20px;
   letter-spacing: -0.01em;
+  transition: color 180ms var(--ease);
 }
 
-/* ── Toggle input (invisible — covers full row) ── */
+/* ── Toggle input ── */
 .switch-input {
   position: absolute;
   z-index: 1;
@@ -310,7 +302,7 @@ footer {
   cursor: inherit;
 }
 
-/* ── Toggle track ── */
+/* ── Toggle track (Flat, smooth) ── */
 .switch-control {
   position: relative;
   width: 44px;
@@ -320,12 +312,11 @@ footer {
   border-radius: 999px;
   background: #25272c;
   transition:
-    border-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 200ms cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    border-color 220ms var(--ease),
+    background-color 220ms var(--ease);
 }
 
-/* ── Toggle thumb ── */
+/* ── Toggle thumb (Flat pure white circle, no shadow) ── */
 .switch-thumb {
   position: absolute;
   top: 2px;
@@ -334,19 +325,28 @@ footer {
   height: 17px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    transform 220ms var(--ease),
+    width 160ms var(--ease);
 }
 
-/* ── Toggle ON state ── */
+/* Smooth micro-interaction: thumb slightly stretches on active press */
+.switch-row:active .switch-thumb {
+  width: 19px;
+}
+
+/* ── Toggle ON state (Flat accent color, no glow) ── */
 .switch-input:checked + .switch-control {
   border-color: var(--accent);
   background: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
 }
 
 .switch-input:checked + .switch-control .switch-thumb {
   transform: translateX(20px);
+}
+
+.switch-row:active .switch-input:checked + .switch-control .switch-thumb {
+  transform: translateX(18px);
 }
 
 /* ── Toggle focus ring ── */
@@ -361,13 +361,14 @@ footer {
 }
 
 .switch-input:disabled + .switch-control {
-  box-shadow: none;
   opacity: 0.35;
 }
 
-/* ── Preferences / paused ── */
+/* ── Preferences / paused (Smooth fade) ── */
 .preferences {
-  transition: opacity 220ms ease, filter 220ms ease;
+  transition:
+    opacity 240ms var(--ease),
+    filter 240ms var(--ease);
 }
 
 .preferences-paused {
@@ -389,6 +390,7 @@ footer {
   background: var(--danger-soft);
   font-size: 12px;
   line-height: 16px;
+  transition: opacity 200ms var(--ease);
 }
 
 /* ── Footer ── */
@@ -407,19 +409,34 @@ footer a {
   display: inline-flex;
   min-height: 32px;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   padding: 4px 8px;
   border-radius: 6px;
   color: var(--muted);
   font-weight: 600;
   text-decoration: none;
-  transition: color 150ms ease, background-color 150ms ease;
+  transition:
+    color 180ms var(--ease),
+    background-color 180ms var(--ease),
+    transform 120ms var(--ease-fast);
+}
+
+footer a span {
+  display: inline-block;
+  transition: transform 180ms var(--ease);
 }
 
 footer a:hover {
   color: var(--accent);
   background: var(--accent-soft);
-  text-decoration: none;
+}
+
+footer a:hover span {
+  transform: translate(1.5px, -1.5px);
+}
+
+footer a:active {
+  transform: scale(0.96);
 }
 
 footer a:focus-visible {
