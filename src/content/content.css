@@ -205,7 +205,9 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
 
 
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
-  [data-nullfeed-fb-ad="rail"] {
+  [data-nullfeed-fb-ad="rail"],
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  :is([role="complementary"], [data-pagelet="RightRail"]) div[data-visualcompletion="ignore-late-mutation"]:has(a[href*="/ads/about"], a[href*="/about/ads"], a[href*="facebook.com/ads/"], a[href*="l.facebook.com"]) {
   display: none !important;
 }
 

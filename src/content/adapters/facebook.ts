@@ -378,6 +378,23 @@ function containerHasSponsoredLabel(container: Element): boolean {
   return false;
 }
 
+let lastFullDocScan = 0;
+const FULL_DOC_SCAN_INTERVAL_MS = 60;
+
+/** Tags a feed post as an ad, pauses autoplaying videos, and injects attribution. */
+function tagFeedAd(container: Element): void {
+  if (container.hasAttribute(FB_AD_ATTR)) return;
+  container.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
+  container.querySelectorAll("video").forEach((v) => {
+    try {
+      (v as HTMLVideoElement).pause();
+    } catch {
+      /* ignore */
+    }
+  });
+  injectAdLabel(container);
+}
+
 /** Release every feed-ad placeholder — used by the sanity guard. */
 function releaseFeedAds(): void {
   document
@@ -409,26 +426,20 @@ function applyFeedAdHiding(): void {
   );
   if (feedPosts.length === 0) return;
 
-  const detectedAds: Element[] = [];
+  const ctaCandidateAds: Element[] = [];
 
   for (const post of feedPosts) {
     if (post.hasAttribute(FB_AD_ATTR) || post.closest(`[${FB_AD_ATTR}]`)) {
       continue;
     }
 
-    // 1. CTA role attributes
-    if (post.matches(FB_FEED_AD_SELECTORS)) {
-      detectedAds.push(post);
-      continue;
-    }
-
-    // 2. Ad / Sponsored header metadata text or aria-label
+    // 1. Explicit Ad / Sponsored header metadata text or aria-label (100% confident)
     if (containerHasSponsoredLabel(post)) {
-      detectedAds.push(post);
+      tagFeedAd(post);
       continue;
     }
 
-    // 3. AdChoices / ad-about link within post
+    // 2. Explicit AdChoices / ad-about link within post (100% confident)
     let hasAdLink = false;
     for (const selector of FB_AD_LINK_SELECTORS) {
       if (post.querySelector(selector)) {
@@ -437,30 +448,26 @@ function applyFeedAdHiding(): void {
       }
     }
     if (hasAdLink) {
-      detectedAds.push(post);
+      tagFeedAd(post);
       continue;
+    }
+
+    // 3. CTA role attributes (heuristic candidate — protected by sanity guard)
+    if (post.matches(FB_FEED_AD_SELECTORS)) {
+      ctaCandidateAds.push(post);
     }
   }
 
-  // Sanity guard
-  const totalPosts = document.querySelectorAll(FB_FEED_POST_SELECTOR).length;
-  if (
-    detectedAds.length >= FB_AD_RATIO_MIN_SAMPLE &&
-    totalPosts > 0 &&
-    detectedAds.length / totalPosts > FB_AD_MAX_FEED_SHARE
-  ) {
-    // Sanity guard triggered — selector is matching real posts, not just ads.
-    releaseFeedAds();
-    return;
-  }
-
-  for (const container of detectedAds) {
-    if (!container.hasAttribute(FB_AD_ATTR)) {
-      container.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
-      container.querySelectorAll("video").forEach((v) => {
-        try { (v as HTMLVideoElement).pause(); } catch { /* ignore */ }
-      });
-      injectAdLabel(container);
+  // Sanity check applied strictly to heuristic CTA candidates
+  if (ctaCandidateAds.length > 0) {
+    const totalPosts = feedPosts.length;
+    if (
+      totalPosts < 10 ||
+      ctaCandidateAds.length / totalPosts <= FB_AD_MAX_FEED_SHARE
+    ) {
+      for (const container of ctaCandidateAds) {
+        tagFeedAd(container);
+      }
     }
   }
 }
@@ -496,7 +503,20 @@ function applyRailAdHiding(): void {
     }
   }
 
-  // 2. Scan ignore-late-mutation containers (classic Facebook sidebar ad boxes)
+  // 2. Scan external ad / link-shim links in the sidebar
+  const railLinks = document.querySelectorAll(
+    ':is([role="complementary"], [data-pagelet="RightRail"]) a[href*="/ads/about"], :is([role="complementary"], [data-pagelet="RightRail"]) a[href*="l.facebook.com"]'
+  );
+  for (const link of railLinks) {
+    const item =
+      link.closest('li, div[data-visualcompletion="ignore-late-mutation"]') ??
+      link.parentElement;
+    if (item && !item.hasAttribute(FB_AD_ATTR)) {
+      item.setAttribute(FB_AD_ATTR, FB_AD_RAIL_VALUE);
+    }
+  }
+
+  // 3. Scan ignore-late-mutation containers (classic Facebook sidebar ad boxes)
   const labelled: Element[] = [];
   for (const wrapper of document.querySelectorAll(FB_RAIL_CONTAINER_SELECTOR)) {
     if (wrapper.hasAttribute(FB_AD_ATTR)) {
@@ -526,23 +546,50 @@ function applyLinkBasedAdHiding(root: ParentNode): void {
     queryAll(root, selector).forEach((link) => {
       const article = closestVerifiedFeedUnit(link);
       if (article && !article.hasAttribute(FB_AD_ATTR)) {
-        article.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
-        article.querySelectorAll("video").forEach((v) => {
-          try { (v as HTMLVideoElement).pause(); } catch { /* ignore */ }
-        });
-        injectAdLabel(article);
+        tagFeedAd(article);
       }
     });
   }
 }
 
+/** Fast, targeted scan on an inserted subtree (< 0.05ms) */
+function scanSubtreeForAds(root: Element): void {
+  const post =
+    closestVerifiedFeedUnit(root) ??
+    root.closest(
+      'div[data-virtualized="false"], [role="article"], [data-pagelet^="FeedUnit"], [aria-posinset]'
+    );
+  if (post && !post.hasAttribute(FB_AD_ATTR)) {
+    if (containerHasSponsoredLabel(post)) {
+      tagFeedAd(post);
+    }
+  }
+
+  // If in the sidebar, check if this node is or contains an ad label
+  const railParent = root.closest(
+    '[role="complementary"], [data-pagelet="RightRail"]'
+  );
+  if (railParent) {
+    if (isAdLabelElement(root)) {
+      root.setAttribute(FB_AD_ATTR, FB_AD_RAIL_VALUE);
+    }
+  }
+}
+
 function hideSponsoredEntries(root: ParentNode): void {
-  // Link-based detection uses the narrow subtree — fast on incremental scans.
+  // 1. Instant subtree link & element checks (zero latency, < 0.05ms)
   applyLinkBasedAdHiding(root);
-  // Rail and feed detections always need the full document for the sanity ratio,
-  // but we guard with hasAttribute checks so already-tagged elements are skipped.
-  applyRailAdHiding();
-  applyFeedAdHiding();
+  if (root instanceof Element) {
+    scanSubtreeForAds(root);
+  }
+
+  // 2. Throttled document sweep (runs at most once every 60ms)
+  const now = performance.now();
+  if (now - lastFullDocScan >= FULL_DOC_SCAN_INTERVAL_MS) {
+    lastFullDocScan = now;
+    applyRailAdHiding();
+    applyFeedAdHiding();
+  }
 }
 
 /** Remove all ad tags — called when the ads toggle is turned off or on cleanup. */
