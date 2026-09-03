@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 
-import { DEVELOPMENT, LINKEDIN_URL } from "../shared/constants";
+import { DEVELOPMENT, FACEBOOK_URL, LINKEDIN_URL } from "../shared/constants";
 import {
   DEFAULT_SETTINGS,
   hasActiveFilters,
@@ -225,7 +225,12 @@ export function App() {
       )}
 
       <footer>
-        <span>Made by Nur Farhad</span>
+        <span class="footer-author">Made by Nur Farhad</span>
+        <span class="footer-separator" aria-hidden="true">·</span>
+        <a href={FACEBOOK_URL} rel="noreferrer" target="_blank">
+          Facebook
+        </a>
+        <span class="footer-separator" aria-hidden="true">·</span>
         <a href={LINKEDIN_URL} rel="noreferrer" target="_blank">
           LinkedIn <span aria-hidden="true">↗</span>
         </a>
