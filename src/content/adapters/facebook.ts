@@ -304,34 +304,74 @@ const FB_RAIL_CONTAINER_SELECTOR = 'div[data-visualcompletion="ignore-late-mutat
 /** AdChoices and ad-about links — locale-independent, always in real ads. */
 const FB_AD_LINK_SELECTORS = [
   'a[href*="/ads/about"]',
-  'a[href*="/adpreferences/ad"]',
+  'a[href*="/about/ads"]',
+  'a[href*="facebook.com/ads/about"]',
+  'a[href*="facebook.com/about/ads"]',
+  'a[href*="/adpreferences"]',
+  'a[href*="adpreferences"]',
   'a[href*="about_ads"]',
   'a[href*="/privacy/policies/ads"]',
+  'a[href*="facebook.com/ads/"]',
+  'a[href*="facebook.com/ad_preferences"]'
 ] as const;
 
 /**
- * Strip zero-width characters Facebook injects into label text, then
- * normalise whitespace for an exact "sponsored" comparison.
+ * Regex matching ad label keywords in English and top localized variants.
+ * Handles "Ad", "Ad ·", "Sponsored", "Sponsored ·", "Paid partnership", etc.
+ */
+const AD_LABEL_REGEX =
+  /^(?:sponsored|ad|advertisement|promoted|paid\s+partnership|gesponsert|sponsoris[ée]|patrocinado|publicidad)(?:\s*[·•\.\:\-—]|\s*$)/i;
+
+/**
+ * Strip zero-width and directional control characters Facebook injects
+ * into label text to defeat simple substring searches, then normalise whitespace.
  */
 function normalizeSponsoredText(text: string): string {
   return text
-    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF\u00AD\u00C2]/g, "")
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }
 
 /**
- * True when the container has a dedicated "Sponsored" label element.
- * Only examines small elements (≤ 2 child elements) — this keeps a post
- * whose body copy merely mentions "sponsored" from being matched.
+ * Checks whether an individual DOM element functions as an ad/sponsored label.
+ * Checks both inner text and aria-label, guarding against long paragraph content.
+ */
+function isAdLabelElement(el: Element): boolean {
+  const text = el.textContent ?? "";
+  if (text.length > 0 && text.length <= 40) {
+    if (AD_LABEL_REGEX.test(normalizeSponsoredText(text))) {
+      return true;
+    }
+  }
+
+  const aria = el.getAttribute("aria-label");
+  if (aria && aria.length <= 40) {
+    if (AD_LABEL_REGEX.test(normalizeSponsoredText(aria))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * True when the container has a dedicated "Sponsored" or "Ad" label element.
+ * Skips text inside the user's organic post message body to prevent false positives.
  */
 function containerHasSponsoredLabel(container: Element): boolean {
-  for (const el of container.querySelectorAll("h3, h4, a, span")) {
-    if (el.childElementCount > 2) {
+  for (const el of container.querySelectorAll(
+    "h3, h4, a, span, [role='button'], [role='link']"
+  )) {
+    if (
+      el.closest(
+        '[data-ad-rendering-role="story_message"], [data-ad-comet-preview="message"]'
+      )
+    ) {
       continue;
     }
-    if (normalizeSponsoredText(el.textContent ?? "") === "sponsored") {
+    if (isAdLabelElement(el)) {
       return true;
     }
   }
@@ -362,25 +402,59 @@ function injectAdLabel(container: Element): void {
   container.appendChild(label);
 }
 
-/** Feed-ad detection via data-ad-rendering-role + sanity guard. */
+/** Feed-ad detection combining CTA queries, Ad/Sponsored text scan, and link heuristics. */
 function applyFeedAdHiding(): void {
-  const matches = document.querySelectorAll(FB_FEED_AD_SELECTORS);
-  const feedPosts = document.querySelectorAll(FB_FEED_POST_SELECTOR);
+  const feedPosts = document.querySelectorAll(
+    'div[data-virtualized="false"], [role="article"], [data-pagelet^="FeedUnit"], [aria-posinset]'
+  );
+  if (feedPosts.length === 0) return;
 
+  const detectedAds: Element[] = [];
+
+  for (const post of feedPosts) {
+    if (post.hasAttribute(FB_AD_ATTR) || post.closest(`[${FB_AD_ATTR}]`)) {
+      continue;
+    }
+
+    // 1. CTA role attributes
+    if (post.matches(FB_FEED_AD_SELECTORS)) {
+      detectedAds.push(post);
+      continue;
+    }
+
+    // 2. Ad / Sponsored header metadata text or aria-label
+    if (containerHasSponsoredLabel(post)) {
+      detectedAds.push(post);
+      continue;
+    }
+
+    // 3. AdChoices / ad-about link within post
+    let hasAdLink = false;
+    for (const selector of FB_AD_LINK_SELECTORS) {
+      if (post.querySelector(selector)) {
+        hasAdLink = true;
+        break;
+      }
+    }
+    if (hasAdLink) {
+      detectedAds.push(post);
+      continue;
+    }
+  }
+
+  // Sanity guard
+  const totalPosts = document.querySelectorAll(FB_FEED_POST_SELECTOR).length;
   if (
-    matches.length >= FB_AD_RATIO_MIN_SAMPLE &&
-    feedPosts.length > 0 &&
-    matches.length / feedPosts.length > FB_AD_MAX_FEED_SHARE
+    detectedAds.length >= FB_AD_RATIO_MIN_SAMPLE &&
+    totalPosts > 0 &&
+    detectedAds.length / totalPosts > FB_AD_MAX_FEED_SHARE
   ) {
     // Sanity guard triggered — selector is matching real posts, not just ads.
     releaseFeedAds();
     return;
   }
 
-  for (const container of matches) {
-    if (container.closest(`[${FB_AD_ATTR}]`)) {
-      continue; // already inside a tagged element
-    }
+  for (const container of detectedAds) {
     if (!container.hasAttribute(FB_AD_ATTR)) {
       container.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
       container.querySelectorAll("video").forEach((v) => {
@@ -391,10 +465,39 @@ function applyFeedAdHiding(): void {
   }
 }
 
-/** Rail/sidebar ad detection via text label scan. */
+/** Rail/sidebar ad detection scanning right-column pagelets and ignore-late-mutation containers. */
 function applyRailAdHiding(): void {
-  const labelled: Element[] = [];
+  // 1. Scan sidebar roots (role="complementary" and data-pagelet="RightRail")
+  const sidebarRoots = document.querySelectorAll(
+    '[role="complementary"], [data-pagelet="RightRail"]'
+  );
 
+  for (const rail of sidebarRoots) {
+    const candidates = rail.querySelectorAll(
+      "h3, h4, span, a, [role='button'], [role='link']"
+    );
+    for (const el of candidates) {
+      if (isAdLabelElement(el)) {
+        // Walk up to find the immediate section wrapper within the rail
+        let section: Element | null = el.parentElement;
+        while (
+          section &&
+          section.parentElement &&
+          section.parentElement !== rail &&
+          !section.parentElement.matches('[role="complementary"], [data-pagelet="RightRail"]') &&
+          section.parentElement !== document.body
+        ) {
+          section = section.parentElement;
+        }
+        if (section && !section.hasAttribute(FB_AD_ATTR) && section !== rail) {
+          section.setAttribute(FB_AD_ATTR, FB_AD_RAIL_VALUE);
+        }
+      }
+    }
+  }
+
+  // 2. Scan ignore-late-mutation containers (classic Facebook sidebar ad boxes)
+  const labelled: Element[] = [];
   for (const wrapper of document.querySelectorAll(FB_RAIL_CONTAINER_SELECTOR)) {
     if (wrapper.hasAttribute(FB_AD_ATTR)) {
       continue;
@@ -405,7 +508,6 @@ function applyRailAdHiding(): void {
   }
 
   for (const wrapper of labelled) {
-    // Only tag the innermost match — tagging an outer one blanks surrounding layout.
     const hasNestedMatch = labelled.some(
       (other) => other !== wrapper && wrapper.contains(other)
     );

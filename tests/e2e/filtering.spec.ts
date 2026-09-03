@@ -47,7 +47,7 @@ async function fixturePage(url: string, html: string): Promise<Page> {
   const page = await context.newPage();
   await page.route(url, (route) =>
     route.fulfill({
-      contentType: "text/html",
+      contentType: "text/html; charset=utf-8",
       body: `<!doctype html><html><body>${html}</body></html>`
     })
   );
@@ -182,6 +182,78 @@ test("Facebook hides Sponsored posts while leaving organic posts untouched", asy
   await expect(page.locator("#sponsored-post")).not.toHaveAttribute(
     "data-nullfeed-fb-ad"
   );
+});
+
+test("Facebook detects modern 'Ad · ' feed ads without CTAs and hides Right Rail sidebar ads", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    facebook: { reels: false, stories: false, videos: false, ads: true }
+  });
+
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `
+      <div role="main">
+        <!-- Feed Ad with "Ad · " label and no CTA (Grabgo format) -->
+        <div role="article" id="grabgo-ad">
+          <div>
+            <h4><a href="/grabgo/">Grabgo</a></h4>
+            <span dir="auto">Ad · </span>
+          </div>
+          <div data-ad-rendering-role="story_message">
+            <p>Are you looking for a bag?</p>
+          </div>
+        </div>
+
+        <!-- Organic Post with friend name and time -->
+        <div role="article" id="organic-friend-post">
+          <div>
+            <h4><a href="/friend/">Friend</a></h4>
+            <span dir="auto">Just now</span>
+          </div>
+          <p>Great weekend trip!</p>
+        </div>
+      </div>
+
+      <!-- Right Rail sidebar -->
+      <div role="complementary" id="sidebar">
+        <div id="sponsored-rail-section">
+          <div>
+            <span>Sponsored</span>
+          </div>
+          <ul>
+            <li><a href="https://domestika.org">Guided Course</a></li>
+            <li><a href="https://tiktok.com">TikTok Ads</a></li>
+          </ul>
+        </div>
+        <div id="friend-requests-section">
+          <span>Friend requests</span>
+          <p>Zahid Shouvo</p>
+        </div>
+      </div>
+    `
+  );
+
+  // Feed ad is tagged with feed placeholder
+  await expect(page.locator("#grabgo-ad")).toHaveAttribute(
+    "data-nullfeed-fb-ad",
+    "feed"
+  );
+  // Attribution link points to own.page
+  await expect(
+    page.locator("#grabgo-ad a[href='https://own.page/nurfarhad']")
+  ).toBeAttached();
+
+  // Organic post is unaffected
+  await expect(page.locator("#organic-friend-post")).toBeVisible();
+
+  // Right rail sponsored section is tagged for hiding
+  await expect(page.locator("#sponsored-rail-section")).toHaveAttribute(
+    "data-nullfeed-fb-ad",
+    "rail"
+  );
+  // Friend requests section in sidebar remains visible
+  await expect(page.locator("#friend-requests-section")).toBeVisible();
 });
 
 test("Facebook Stories never hide an unverified newsfeed wrapper", async () => {
