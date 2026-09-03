@@ -11,17 +11,21 @@
     sans-serif;
   font-synthesis: none;
   color-scheme: dark;
-  --ink: #f5f6f8;
-  --muted: #8e93a0;
-  --caption: #636773;
+  --ink: #ffffff;
+  --ink-secondary: #e2e4ea;
+  --muted: #828796;
+  --caption: #606472;
   --canvas: #111214;
   --surface: #1a1b1e;
-  --surface-raised: #252830;
+  --surface-raised: #24262e;
+  --surface-track: #141519;
   --surface-hover: rgba(255, 255, 255, 0.025);
-  --border: rgba(255, 255, 255, 0.075);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --inset-bevel: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --accent: #2ed88a;
-  --accent-soft: rgba(46, 216, 138, 0.12);
+  --accent-soft: rgba(46, 216, 138, 0.1);
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.12);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -69,7 +73,7 @@ label {
   background: var(--canvas);
 }
 
-/* ── Header (Inspired by Modal Title bar) ── */
+/* ── Header (UI8 Bento Pro Title Bar) ── */
 .header,
 .brand,
 footer {
@@ -111,19 +115,19 @@ footer {
   transform: rotate(-12deg);
 }
 
-/* ── Status badge (Inspired by token chip selector e.g. ETH / USDC) ── */
+/* ── Status badge (UI8 Capsule Chip Badge) ── */
 .status {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
-  border-radius: 8px;
+  padding: 4.5px 12px;
+  border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: var(--surface-raised);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 700;
   line-height: 16px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   transition:
     color 220ms var(--ease),
@@ -142,6 +146,8 @@ footer {
 }
 
 .status-active {
+  border-color: rgba(46, 216, 138, 0.3);
+  background: var(--surface-raised);
   color: var(--ink);
 }
 
@@ -151,9 +157,9 @@ footer {
 }
 
 .status-neutral {
-  color: var(--muted);
   border-color: var(--border);
-  background: #1c1d22;
+  background: #18191f;
+  color: var(--muted);
 }
 
 .status-neutral::before {
@@ -172,13 +178,14 @@ footer {
   }
 }
 
-/* ── Protection Card (Clean, minimal, compact) ── */
+/* ── Protection Card (UI8 Bento Squircle Tile) ── */
 .protection {
-  padding: 3px 16px;
+  padding: 4px 18px;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 18px;
   background-color: #1a1b1e;
   background: var(--surface);
+  box-shadow: var(--inset-bevel);
 }
 
 .protection .switch-row,
@@ -192,31 +199,31 @@ footer {
 .protection strong {
   font-size: 15px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--ink);
 }
 
-/* ── Platform tabs (Inspired by dark segmented control / slider track) ── */
+/* ── Platform tabs (UI8 Bento Pro Floating Capsule Segmented Bar) ── */
 .platform-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  gap: 3px;
   padding: 4px;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #141518;
+  border-radius: 999px;
+  background: var(--surface-track);
 }
 
 .platform-tab {
   min-width: 0;
-  min-height: 38px;
-  padding: 8px 10px;
+  min-height: 36px;
+  padding: 7px 10px;
   border: 1px solid transparent;
-  border-radius: 9px;
-  color: #727784;
+  border-radius: 999px;
+  color: var(--muted);
   background: transparent;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   line-height: 18px;
   text-align: center;
@@ -240,18 +247,20 @@ footer {
   color: var(--ink);
   background: var(--surface-raised);
   border-color: var(--border-strong);
+  box-shadow: var(--inset-bevel);
 }
 
 .platform-tab[aria-selected="true"]:hover {
   background: var(--surface-raised);
 }
 
-/* ── Settings panel (Inspired by Details card with clean dividers) ── */
+/* ── Settings panel (UI8 Bento Card Container) ── */
 .settings-panel {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--surface);
+  box-shadow: var(--inset-bevel);
 }
 
 /* ── Switch rows ── */
@@ -262,8 +271,8 @@ footer {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 8px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: background-color 160ms var(--ease);
 }
@@ -277,7 +286,7 @@ footer {
 }
 
 .switch-label {
-  color: #e4e6ea;
+  color: var(--ink-secondary);
   font-size: 13.5px;
   font-weight: 500;
   line-height: 20px;
@@ -297,21 +306,21 @@ footer {
   cursor: inherit;
 }
 
-/* ── Toggle track (Inspired by capsule slider in Dribbble design) ── */
+/* ── Toggle track (UI8 Capsule Switch) ── */
 .switch-control {
   position: relative;
   width: 44px;
   height: 24px;
   flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 999px;
-  background: #252830;
+  background: #22242c;
   transition:
     border-color 220ms var(--ease),
     background-color 220ms var(--ease);
 }
 
-/* ── Toggle thumb (Flat pure white circle, no shadow) ── */
+/* ── Toggle thumb (Smooth white circle) ── */
 .switch-thumb {
   position: absolute;
   top: 2px;
@@ -330,7 +339,7 @@ footer {
   width: 20px;
 }
 
-/* ── Toggle ON state (Flat accent green, no glow) ── */
+/* ── Toggle ON state (Signature Green, clean & flat) ── */
 .switch-input:checked + .switch-control {
   border-color: var(--accent);
   background: var(--accent);
@@ -388,12 +397,12 @@ footer {
   transition: opacity 200ms var(--ease);
 }
 
-/* ── Footer (Clean, secondary widget style) ── */
+/* ── Footer (UI8 Capsule Action Style) ── */
 footer {
   min-height: 38px;
   justify-content: space-between;
   padding-top: 10px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-subtle);
   color: var(--caption);
   font-size: 12px;
   line-height: 16px;
@@ -404,10 +413,10 @@ footer a {
   min-height: 28px;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
-  border-radius: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
   border: 1px solid var(--border);
-  background: #18191e;
+  background: #17181e;
   color: var(--muted);
   font-size: 11.5px;
   font-weight: 600;
@@ -444,7 +453,7 @@ footer a:focus-visible {
 
 /* ── Skeleton loading ── */
 .skeleton {
-  border-radius: 12px;
+  border-radius: 14px;
   background:
     linear-gradient(
       90deg,
@@ -461,11 +470,11 @@ footer a:focus-visible {
 }
 
 .skeleton-protection {
-  height: 78px;
+  height: 54px;
 }
 
 .skeleton-tabs {
-  height: 46px;
+  height: 44px;
 }
 
 .skeleton-list {
