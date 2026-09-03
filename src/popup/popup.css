@@ -12,18 +12,18 @@
   font-synthesis: none;
   color-scheme: dark;
   --ink: #ffffff;
-  --ink-secondary: #e2e4ea;
+  --ink-secondary: #e4e6ec;
   --muted: #828796;
   --caption: #606472;
   --canvas: #111214;
   --surface: #1a1b1e;
   --surface-raised: #24262e;
-  --surface-track: #141519;
+  --surface-track: #131418;
   --surface-hover: rgba(255, 255, 255, 0.025);
   --border: rgba(255, 255, 255, 0.08);
-  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.045);
   --border-strong: rgba(255, 255, 255, 0.13);
-  --inset-bevel: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.075);
   --accent: #2ed88a;
   --accent-soft: rgba(46, 216, 138, 0.1);
   --danger: #f87171;
@@ -124,6 +124,7 @@ footer {
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: var(--surface-raised);
+  box-shadow: var(--bevel-top);
   font-size: 10.5px;
   font-weight: 700;
   line-height: 16px;
@@ -146,9 +147,9 @@ footer {
 }
 
 .status-active {
-  border-color: rgba(46, 216, 138, 0.3);
-  background: var(--surface-raised);
-  color: var(--ink);
+  border-color: rgba(46, 216, 138, 0.35);
+  background: #15221c;
+  color: var(--accent);
 }
 
 .status-active::before {
@@ -184,8 +185,8 @@ footer {
   border: 1px solid var(--border);
   border-radius: 18px;
   background-color: #1a1b1e;
-  background: var(--surface);
-  box-shadow: var(--inset-bevel);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+  box-shadow: var(--bevel-top);
 }
 
 .protection .switch-row,
@@ -208,7 +209,7 @@ footer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 3px;
-  padding: 4px;
+  padding: 3px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface-track);
@@ -245,9 +246,10 @@ footer {
 
 .platform-tab[aria-selected="true"] {
   color: var(--ink);
-  background: var(--surface-raised);
+  background-color: var(--surface-raised);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
   border-color: var(--border-strong);
-  box-shadow: var(--inset-bevel);
+  box-shadow: var(--bevel-top);
 }
 
 .platform-tab[aria-selected="true"]:hover {
@@ -259,8 +261,9 @@ footer {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--surface);
-  box-shadow: var(--inset-bevel);
+  background-color: #1a1b1e;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+  box-shadow: var(--bevel-top);
 }
 
 /* ── Switch rows ── */
@@ -314,7 +317,7 @@ footer {
   flex: 0 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 999px;
-  background: #22242c;
+  background: #20222a;
   transition:
     border-color 220ms var(--ease),
     background-color 220ms var(--ease);
@@ -397,7 +400,7 @@ footer {
   transition: opacity 200ms var(--ease);
 }
 
-/* ── Footer (UI8 Capsule Action Style) ── */
+/* ── Footer (UI8 Capsule Pill Style) ── */
 footer {
   min-height: 38px;
   justify-content: space-between;
@@ -417,6 +420,7 @@ footer a {
   border-radius: 999px;
   border: 1px solid var(--border);
   background: #17181e;
+  box-shadow: var(--bevel-top);
   color: var(--muted);
   font-size: 11.5px;
   font-weight: 600;
