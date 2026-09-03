@@ -36,7 +36,6 @@ html,
 body,
 #app {
   width: 360px;
-  min-height: 460px;
   margin: 0;
   background-color: #111214;
   background: var(--canvas);
@@ -62,7 +61,6 @@ label {
 /* ── Shell ── */
 .popup-shell {
   display: flex;
-  min-height: 460px;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
@@ -394,8 +392,7 @@ footer {
 footer {
   min-height: 38px;
   justify-content: space-between;
-  margin-top: auto;
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
   color: var(--caption);
   font-size: 12px;
