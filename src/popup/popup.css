@@ -419,10 +419,10 @@ footer {
 
 /* ── Footer (UI8 Capsule Pill Style) ── */
 footer {
-  min-height: 38px;
+  min-height: 32px;
   justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-subtle);
+  padding: 0;
+  border-top: 0;
   color: var(--caption);
   font-size: 12px;
   line-height: 16px;
