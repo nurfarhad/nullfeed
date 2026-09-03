@@ -1,4 +1,4 @@
-# Nullfeed
+# Nullfeed `v3.0.0`
 
 <p align="center">
   <strong>Focus on what matters. Eliminate social media distractions for free.</strong>

@@ -3,7 +3,7 @@ import { defineManifest } from "@crxjs/vite-plugin";
 export default defineManifest({
   manifest_version: 3,
   name: "Nullfeed",
-  version: "2.0.0",
+  version: "3.0.0",
   description:
     "Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, Instagram, LinkedIn & Twitter/X.",
   permissions: ["storage", "alarms"],

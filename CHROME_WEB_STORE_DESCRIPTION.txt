@@ -1,5 +1,5 @@
 ================================================================================
-CHROME WEB STORE LISTING DETAILS — NULLFEED
+CHROME WEB STORE LISTING DETAILS — NULLFEED (v3.0.0)
 ================================================================================
 
 [1] EXTENSION NAME
