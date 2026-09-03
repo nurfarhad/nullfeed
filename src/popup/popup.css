@@ -11,16 +11,17 @@
     sans-serif;
   font-synthesis: none;
   color-scheme: dark;
-  --ink: #f0f2f5;
-  --muted: #8b929c;
+  --ink: #f5f6f8;
+  --muted: #8e93a0;
+  --caption: #636773;
   --canvas: #111214;
   --surface: #1a1b1e;
-  --surface-raised: #24262b;
-  --surface-hover: rgba(255, 255, 255, 0.035);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --surface-raised: #252830;
+  --surface-hover: rgba(255, 255, 255, 0.025);
+  --border: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.12);
   --accent: #2ed88a;
-  --accent-soft: rgba(46, 216, 138, 0.1);
+  --accent-soft: rgba(46, 216, 138, 0.12);
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.12);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -64,13 +65,13 @@ label {
   min-height: 460px;
   flex-direction: column;
   gap: 12px;
-  padding: 18px 18px 14px;
+  padding: 16px;
   overflow-x: hidden;
   background-color: #111214;
   background: var(--canvas);
 }
 
-/* ── Header ── */
+/* ── Header (Inspired by Modal Title bar) ── */
 .header,
 .brand,
 footer {
@@ -81,7 +82,7 @@ footer {
 .header {
   min-height: 36px;
   justify-content: space-between;
-  padding-bottom: 2px;
+  padding: 2px 2px 4px;
 }
 
 .brand {
@@ -92,7 +93,7 @@ footer {
 
 .brand h1 {
   margin: 0;
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 24px;
   letter-spacing: -0.025em;
@@ -112,22 +113,24 @@ footer {
   transform: rotate(-12deg);
 }
 
-/* ── Status badge ── */
+/* ── Status badge (Inspired by token chip selector e.g. ETH / USDC) ── */
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 10.5px;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-raised);
+  font-size: 11px;
   font-weight: 700;
   line-height: 16px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   transition:
-    color 240ms var(--ease),
-    background-color 240ms var(--ease),
-    border-color 240ms var(--ease);
+    color 220ms var(--ease),
+    background-color 220ms var(--ease),
+    border-color 220ms var(--ease);
 }
 
 .status::before {
@@ -137,28 +140,26 @@ footer {
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  transition: background-color 240ms var(--ease);
+  transition: background-color 220ms var(--ease);
 }
 
 .status-active {
-  border: 1px solid rgba(46, 216, 138, 0.35);
-  color: var(--accent);
-  background: rgba(46, 216, 138, 0.08);
+  color: var(--ink);
 }
 
 .status-active::before {
   background: var(--accent);
-  animation: pulse-dot 2.2s infinite ease-in-out;
+  animation: pulse-dot 2.4s infinite ease-in-out;
 }
 
 .status-neutral {
-  border: 1px solid var(--border-strong);
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border);
+  background: #1c1d22;
 }
 
 .status-neutral::before {
-  background: var(--muted);
+  background: var(--caption);
   opacity: 0.6;
 }
 
@@ -169,41 +170,42 @@ footer {
   }
   50% {
     transform: scale(0.8);
-    opacity: 0.45;
+    opacity: 0.4;
   }
 }
 
-/* ── Protection Card (Clean, minimal, no shadow, no hover effect) ── */
+/* ── Protection Card (Inspired by Collateral / Loan Card in Dribbble design) ── */
 .protection {
-  padding: 6px 16px 14px;
+  padding: 12px 16px 14px;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background-color: #1a1b1e;
   background: var(--surface);
 }
 
 .protection .switch-row {
-  min-height: 48px;
+  min-height: 44px;
   padding: 0;
   border: 0;
 }
 
 .protection strong {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   color: var(--ink);
 }
 
 .protection p {
-  margin: -2px 0 0;
-  color: var(--muted);
-  font-size: 12.5px;
-  line-height: 17px;
+  margin: 2px 0 0;
+  color: var(--caption);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
   transition: color 200ms var(--ease);
 }
 
-/* ── Platform tabs (Flat segmented control) ── */
+/* ── Platform tabs (Inspired by dark segmented control / slider track) ── */
 .platform-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -211,16 +213,16 @@ footer {
   padding: 4px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #16171a;
+  background: #141518;
 }
 
 .platform-tab {
   min-width: 0;
   min-height: 38px;
   padding: 8px 10px;
-  border: 0;
-  border-radius: 8px;
-  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #727784;
   background: transparent;
   cursor: pointer;
   font-size: 13px;
@@ -228,8 +230,9 @@ footer {
   line-height: 18px;
   text-align: center;
   transition:
-    color 200ms var(--ease),
-    background-color 200ms var(--ease),
+    color 180ms var(--ease),
+    background-color 180ms var(--ease),
+    border-color 180ms var(--ease),
     transform 120ms var(--ease-fast);
 }
 
@@ -243,19 +246,20 @@ footer {
 }
 
 .platform-tab[aria-selected="true"] {
-  color: var(--accent);
+  color: var(--ink);
   background: var(--surface-raised);
+  border-color: var(--border-strong);
 }
 
 .platform-tab[aria-selected="true"]:hover {
   background: var(--surface-raised);
 }
 
-/* ── Settings panel (Clean, flat) ── */
+/* ── Settings panel (Inspired by Details card with clean dividers) ── */
 .settings-panel {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--surface);
 }
 
@@ -267,10 +271,10 @@ footer {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
-  transition: background-color 180ms var(--ease);
+  transition: background-color 160ms var(--ease);
 }
 
 .switch-row:has(.switch-input:not(:disabled)):hover {
@@ -282,7 +286,7 @@ footer {
 }
 
 .switch-label {
-  color: var(--ink);
+  color: #e4e6ea;
   font-size: 13.5px;
   font-weight: 500;
   line-height: 20px;
@@ -302,15 +306,15 @@ footer {
   cursor: inherit;
 }
 
-/* ── Toggle track (Flat, smooth) ── */
+/* ── Toggle track (Inspired by capsule slider in Dribbble design) ── */
 .switch-control {
   position: relative;
   width: 44px;
   height: 24px;
   flex: 0 0 auto;
-  border: 1.5px solid var(--border-strong);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  background: #25272c;
+  background: #252830;
   transition:
     border-color 220ms var(--ease),
     background-color 220ms var(--ease);
@@ -321,8 +325,8 @@ footer {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #ffffff;
   transition:
@@ -332,10 +336,10 @@ footer {
 
 /* Smooth micro-interaction: thumb slightly stretches on active press */
 .switch-row:active .switch-thumb {
-  width: 19px;
+  width: 20px;
 }
 
-/* ── Toggle ON state (Flat accent color, no glow) ── */
+/* ── Toggle ON state (Flat accent green, no glow) ── */
 .switch-input:checked + .switch-control {
   border-color: var(--accent);
   background: var(--accent);
@@ -361,10 +365,10 @@ footer {
 }
 
 .switch-input:disabled + .switch-control {
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
-/* ── Preferences / paused (Smooth fade) ── */
+/* ── Preferences / paused ── */
 .preferences {
   transition:
     opacity 240ms var(--ease),
@@ -393,31 +397,35 @@ footer {
   transition: opacity 200ms var(--ease);
 }
 
-/* ── Footer ── */
+/* ── Footer (Clean, secondary widget style) ── */
 footer {
   min-height: 38px;
   justify-content: space-between;
   margin-top: auto;
   padding-top: 8px;
   border-top: 1px solid var(--border);
-  color: var(--muted);
+  color: var(--caption);
   font-size: 12px;
   line-height: 16px;
 }
 
 footer a {
   display: inline-flex;
-  min-height: 32px;
+  min-height: 28px;
   align-items: center;
-  gap: 3px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #18191e;
   color: var(--muted);
+  font-size: 11.5px;
   font-weight: 600;
   text-decoration: none;
   transition:
     color 180ms var(--ease),
     background-color 180ms var(--ease),
+    border-color 180ms var(--ease),
     transform 120ms var(--ease-fast);
 }
 
@@ -427,8 +435,9 @@ footer a span {
 }
 
 footer a:hover {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--ink);
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
 }
 
 footer a:hover span {
@@ -445,7 +454,7 @@ footer a:focus-visible {
 
 /* ── Skeleton loading ── */
 .skeleton {
-  border-radius: 10px;
+  border-radius: 12px;
   background:
     linear-gradient(
       90deg,
@@ -494,4 +503,5 @@ footer a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
 
