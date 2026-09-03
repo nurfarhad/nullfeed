@@ -5,6 +5,7 @@ const roots = ["src", "public", "manifest.config.ts", "popup.html"];
 const allowedUrls = new Set([
   "https://www.linkedin.com/in/nurfarhad/",
   "https://www.facebook.com/itsnurfarhad/",
+  "https://own.page/nurfarhad",
   "https://www.youtube.com/",
   "https://www.youtube.com/*",
   "https://*.youtube.com/*",

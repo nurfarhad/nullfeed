@@ -1,5 +1,5 @@
 import type { Settings } from "../../shared/settings";
-import { DEVELOPMENT } from "../../shared/constants";
+import { DEVELOPMENT, OWN_PAGE_URL } from "../../shared/constants";
 import type { SiteAdapter } from "../adapter";
 import { queryAll } from "../adapter";
 import {
@@ -358,7 +358,7 @@ function injectAdLabel(container: Element): void {
   label.className = "nullfeed-ad-label";
   label.innerHTML =
     'Sponsored &amp; ads hidden by '
-    + '<a href="https://www.linkedin.com/in/nurfarhad/" target="_blank" rel="noopener noreferrer">Nur Farhad</a>';
+    + `<a href="${OWN_PAGE_URL}" target="_blank" rel="noopener noreferrer">Nur Farhad</a>`;
   container.appendChild(label);
 }
 
