@@ -43,6 +43,8 @@ body,
   margin: 0;
   background-color: #111214;
   background: var(--canvas);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 button,
