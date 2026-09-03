@@ -6,10 +6,24 @@ const allowedUrls = new Set([
   "https://www.linkedin.com/in/nurfarhad/",
   "https://www.youtube.com/",
   "https://www.youtube.com/*",
+  "https://*.youtube.com/*",
+  "https://youtube.com/*",
   "https://www.facebook.com/",
   "https://www.facebook.com/*",
+  "https://*.facebook.com/*",
+  "https://facebook.com/*",
   "https://www.instagram.com/",
-  "https://www.instagram.com/*"
+  "https://www.instagram.com/*",
+  "https://*.instagram.com/*",
+  "https://instagram.com/*",
+  "https://www.linkedin.com/feed/",
+  "https://*.linkedin.com/*",
+  "https://linkedin.com/*",
+  "https://x.com/home",
+  "https://*.x.com/*",
+  "https://x.com/*",
+  "https://*.twitter.com/*",
+  "https://twitter.com/*"
 ]);
 const findings = [];
 

@@ -425,6 +425,9 @@ function applyLinkBasedAdHiding(root: ParentNode): void {
       const article = closestVerifiedFeedUnit(link);
       if (article && !article.hasAttribute(FB_AD_ATTR)) {
         article.setAttribute(FB_AD_ATTR, FB_AD_FEED_VALUE);
+        article.querySelectorAll("video").forEach((v) => {
+          try { (v as HTMLVideoElement).pause(); } catch { /* ignore */ }
+        });
         injectAdLabel(article);
       }
     });

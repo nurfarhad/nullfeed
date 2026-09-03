@@ -11,7 +11,14 @@ const SNOOZE_ALARM_NAME = "nullfeed-snooze-end";
 
 async function initialize(): Promise<void> {
   try {
-    await ensureSettings();
+    const settings = await ensureSettings();
+    if (
+      settings.snooze.active &&
+      settings.snooze.until !== null &&
+      Date.now() >= settings.snooze.until
+    ) {
+      await endSnooze(settings);
+    }
   } catch (error) {
     if (DEVELOPMENT) {
       console.error("Nullfeed could not initialize settings.", error);
