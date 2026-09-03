@@ -174,9 +174,9 @@ footer {
   }
 }
 
-/* ── Protection Card (Inspired by Collateral / Loan Card in Dribbble design) ── */
+/* ── Protection Card (Clean, minimal, compact) ── */
 .protection {
-  padding: 12px 16px 14px;
+  padding: 3px 16px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background-color: #1a1b1e;
@@ -184,25 +184,16 @@ footer {
 }
 
 .protection .switch-row {
-  min-height: 44px;
+  min-height: 48px;
   padding: 0;
   border: 0;
 }
 
 .protection strong {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--ink);
-}
-
-.protection p {
-  margin: 2px 0 0;
-  color: var(--caption);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 16px;
-  transition: color 200ms var(--ease);
 }
 
 /* ── Platform tabs (Inspired by dark segmented control / slider track) ── */

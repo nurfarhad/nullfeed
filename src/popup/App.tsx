@@ -199,7 +199,6 @@ export function App() {
         >
           <strong id="protection-heading">Protection</strong>
         </Switch>
-        <p>{status.sentence}</p>
       </section>
 
       <PlatformTabs active={platform} onChange={changePlatform} />
