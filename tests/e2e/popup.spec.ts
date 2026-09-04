@@ -207,4 +207,16 @@ test("popup automatically adapts to dark and light system themes", async () => {
     "background-color",
     "rgb(26, 27, 30)"
   );
+
+  // Switch to Instagram
+  await page.getByRole("tab", { name: "Instagram" }).click();
+  await page.screenshot({ path: "test-results/popup_ig_dark.png" });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.screenshot({ path: "test-results/popup_ig_light.png" });
+
+  // Switch to YouTube
+  await page.getByRole("tab", { name: "YouTube" }).click();
+  await page.screenshot({ path: "test-results/popup_yt_light.png" });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.screenshot({ path: "test-results/popup_yt_dark.png" });
 });

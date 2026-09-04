@@ -1,35 +1,51 @@
+import type { ComponentType } from "preact";
 import type {
   Platform,
   PlatformSettingKey,
   Settings
 } from "../../shared/settings";
+import {
+  ArticleIcon,
+  BellIcon,
+  BoltIcon,
+  CircleDashedIcon,
+  CompassIcon,
+  MovieIcon,
+  NavbarIcon,
+  SparklesIcon,
+  TimelineIcon,
+  TrendingIcon,
+  VideoIcon
+} from "./Icons";
 import { Switch } from "./Switch";
 
-const ROWS = {
+type RowDefinition = readonly [string, string, ComponentType];
+
+const ROWS: Record<Platform, readonly RowDefinition[]> = {
   facebook: [
-    ["reels", "Hide Reels"],
-    ["stories", "Hide Stories"],
-    ["videos", "Hide Videos"]
+    ["reels", "Hide Reels", MovieIcon],
+    ["stories", "Hide Stories", CircleDashedIcon],
+    ["videos", "Hide Videos", VideoIcon]
   ],
   instagram: [
-    ["reels", "Hide Reels"],
-    ["stories", "Hide Stories"],
-    ["explore", "Hide Explore"]
+    ["reels", "Hide Reels", MovieIcon],
+    ["stories", "Hide Stories", CircleDashedIcon],
+    ["explore", "Hide Explore", CompassIcon]
   ],
   youtube: [
-    ["shorts", "Hide Shorts"],
-    ["navigation", "Hide Short Navigation"],
-    ["sidebar", "Hide Recommended Videos"]
+    ["shorts", "Hide Shorts", BoltIcon],
+    ["navigation", "Hide Shorts Nav", NavbarIcon],
+    ["sidebar", "Hide Recommended", SparklesIcon]
   ],
   linkedin: [
-    ["feed", "Hide Main Feed"],
-    ["news", "Hide News Sidebar"]
+    ["feed", "Hide Main Feed", ArticleIcon],
+    ["news", "Hide News Sidebar", BellIcon]
   ],
   twitter: [
-    ["timeline", "Hide Home Timeline"],
-    ["trending", "Hide Trends & What's Happening"]
+    ["timeline", "Hide Home Timeline", TimelineIcon],
+    ["trending", "Hide Trends & What's Happening", TrendingIcon]
   ]
-} as const;
+};
 
 type SettingsPanelProps<P extends Platform> = {
   disabled: boolean;
@@ -51,10 +67,11 @@ export function SettingsPanel<P extends Platform>({
       id={`panel-${platform}`}
       role="tabpanel"
     >
-      {ROWS[platform].map(([key, label]) => (
+      {ROWS[platform].map(([key, label, IconComponent]) => (
         <Switch
           checked={Boolean(settings[key as keyof Settings[P]])}
           disabled={disabled}
+          icon={<IconComponent />}
           id={`${platform}-${key}`}
           key={key}
           onChange={(value) =>
