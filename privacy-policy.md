@@ -1,7 +1,7 @@
 # Nullfeed Privacy Policy
 
-Nullfeed does not collect, transmit, sell, or share personal information or browsing activity. The extension runs locally in your browser and stores only your feature preferences using the browser's extension storage.
+Nullfeed does not collect, transmit, sell, or share personal information or browsing activity. The extension runs 100% locally in your browser and stores only your feature preferences using the browser's local extension storage (`chrome.storage.sync`).
 
-Nullfeed does not use analytics, advertising, tracking, cookies, accounts, or remote servers. It accesses YouTube, Facebook, and Instagram pages only to hide the content categories you choose.
+Nullfeed does not use analytics, telemetry, advertising, tracking, cookies, user accounts, or remote servers. It accesses YouTube, Facebook, Instagram, LinkedIn, and Twitter/X pages strictly to hide the distracting feed content categories you explicitly choose.
 
-Clicking the LinkedIn link opens an external website governed by LinkedIn's own privacy policy.
+Any outbound links (such as author profile links) open external websites governed by their respective privacy policies.

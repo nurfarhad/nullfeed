@@ -7,8 +7,23 @@ if (fs.existsSync(zipPath)) {
   fs.unlinkSync(zipPath);
 }
 
-execSync(`powershell -NoProfile -Command "Compress-Archive -Path dist/* -DestinationPath Nullfeed_ChromeWebStore.zip"`, {
+const normalizedZipPath = zipPath.replace(/\\/g, "/");
+
+const psScript = `
+Add-Type -AssemblyName System.IO.Compression.FileSystem;
+$zip = [System.IO.Compression.ZipFile]::Open('${normalizedZipPath}', 'Create');
+$dist = (Resolve-Path 'dist').Path;
+Get-ChildItem -LiteralPath $dist -Recurse -File | ForEach-Object {
+  $rel = $_.FullName.Substring($dist.Length + 1).Replace('\\', '/');
+  [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $rel) | Out-Null;
+};
+$zip.Dispose();
+`;
+
+execSync(`powershell -NoProfile -Command "${psScript.replace(/\r?\n/g, " ")}"`, {
   stdio: "inherit"
 });
 
 console.log("Successfully packaged Nullfeed_ChromeWebStore.zip");
+
+
