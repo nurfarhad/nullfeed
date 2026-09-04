@@ -63,6 +63,7 @@ test("popup exposes the approved controls and pause state", async () => {
 
   const extensionId = new URL(worker.url()).host;
   const page = await context.newPage();
+  await page.emulateMedia({ colorScheme: "dark" });
   const outgoingRequests: string[] = [];
 
   page.on("request", (request) => {
@@ -142,4 +143,68 @@ test("popup exposes the approved controls and pause state", async () => {
     page.getByRole("switch", { name: "Hide Reels", exact: true })
   ).toBeEnabled();
   expect(outgoingRequests).toEqual([]);
+});
+
+test("popup automatically adapts to dark and light system themes", async () => {
+  let worker = context.serviceWorkers()[0];
+  if (!worker) {
+    worker = await context.waitForEvent("serviceworker");
+  }
+
+  const extensionId = new URL(worker.url()).host;
+  const page = await context.newPage();
+
+  // 1. Dark theme by default / when dark is preferred
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto(`chrome-extension://${extensionId}/popup.html`);
+
+  await expect(page.getByRole("heading", { name: "Nullfeed" })).toBeVisible();
+  await expect(page.locator(".popup-shell")).toHaveCSS(
+    "background-color",
+    "rgb(17, 18, 20)"
+  );
+  await expect(page.locator(".brand h1")).toHaveCSS(
+    "color",
+    "rgb(255, 255, 255)"
+  );
+  await expect(page.locator(".protection")).toHaveCSS(
+    "background-color",
+    "rgb(26, 27, 30)"
+  );
+  await page.screenshot({ path: "test-results/popup_dark_theme.png" });
+
+  // 2. Light theme when system/browser prefers light
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator(".popup-shell")).toHaveCSS(
+    "background-color",
+    "rgb(244, 245, 247)"
+  );
+  await expect(page.locator(".brand h1")).toHaveCSS(
+    "color",
+    "rgb(17, 24, 39)"
+  );
+  await expect(page.locator(".protection")).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)"
+  );
+  await expect(page.locator(".status-active")).toHaveCSS(
+    "color",
+    "rgb(16, 185, 129)"
+  );
+  await page.screenshot({ path: "test-results/popup_light_theme.png" });
+
+  // 3. Automatically switches back to dark theme when preference changes
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator(".popup-shell")).toHaveCSS(
+    "background-color",
+    "rgb(17, 18, 20)"
+  );
+  await expect(page.locator(".brand h1")).toHaveCSS(
+    "color",
+    "rgb(255, 255, 255)"
+  );
+  await expect(page.locator(".protection")).toHaveCSS(
+    "background-color",
+    "rgb(26, 27, 30)"
+  );
 });

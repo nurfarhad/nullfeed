@@ -577,13 +577,23 @@ function scanSubtreeForAds(root: Element): void {
 }
 
 function hideSponsoredEntries(root: ParentNode): void {
-  // 1. Instant subtree link & element checks (zero latency, < 0.05ms)
+  // 1. Instant subtree link checks
   applyLinkBasedAdHiding(root);
+
+  // 2. Full document scans (e.g. initial load) must execute immediately
+  if (root === document || root === document.documentElement) {
+    lastFullDocScan = performance.now();
+    applyRailAdHiding();
+    applyFeedAdHiding();
+    return;
+  }
+
+  // 3. Fast subtree check on inserted elements
   if (root instanceof Element) {
     scanSubtreeForAds(root);
   }
 
-  // 2. Throttled document sweep (runs at most once every 60ms)
+  // 4. Throttled document sweep for dynamic scroll mutations (at most once every 60ms)
   const now = performance.now();
   if (now - lastFullDocScan >= FULL_DOC_SCAN_INTERVAL_MS) {
     lastFullDocScan = now;

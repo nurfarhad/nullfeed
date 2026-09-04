@@ -20,6 +20,8 @@
   --surface-raised: #24262e;
   --surface-track: #131418;
   --surface-hover: rgba(255, 255, 255, 0.025);
+  --surface-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+  --tab-active-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
   --border: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.045);
   --border-strong: rgba(255, 255, 255, 0.13);
@@ -28,8 +30,51 @@
   --accent-soft: rgba(46, 216, 138, 0.1);
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.12);
+  --switch-track: #20222a;
+  --switch-track-border: rgba(255, 255, 255, 0.11);
+  --switch-thumb: #ffffff;
+  --switch-thumb-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --status-active-bg: #15221c;
+  --status-active-border: rgba(46, 216, 138, 0.35);
+  --status-neutral-bg: #18191f;
+  --grain-opacity: 0.038;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-fast: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #111827;
+    background: #f4f5f7;
+    color-scheme: light;
+    --ink: #111827;
+    --ink-secondary: #374151;
+    --muted: #6b7280;
+    --caption: #9ca3af;
+    --canvas: #f4f5f7;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-track: #e5e7eb;
+    --surface-hover: rgba(0, 0, 0, 0.035);
+    --surface-gradient: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+    --tab-active-gradient: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    --border: rgba(0, 0, 0, 0.08);
+    --border-subtle: rgba(0, 0, 0, 0.045);
+    --border-strong: rgba(0, 0, 0, 0.13);
+    --bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    --accent: #10b981;
+    --accent-soft: rgba(16, 185, 129, 0.12);
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.1);
+    --switch-track: #d1d5db;
+    --switch-track-border: rgba(0, 0, 0, 0.08);
+    --switch-thumb: #ffffff;
+    --switch-thumb-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    --status-active-bg: #ecfdf5;
+    --status-active-border: rgba(16, 185, 129, 0.35);
+    --status-neutral-bg: #f3f4f6;
+    --grain-opacity: 0.022;
+  }
 }
 
 * {
@@ -41,7 +86,7 @@ body,
 #app {
   width: 360px;
   margin: 0;
-  background-color: #111214;
+  background-color: var(--canvas);
   background: var(--canvas);
   user-select: none;
   -webkit-user-select: none;
@@ -72,8 +117,11 @@ label {
   gap: 12px;
   padding: 16px;
   overflow-x: hidden;
-  background-color: #111214;
+  background-color: var(--canvas);
   background: var(--canvas);
+  transition:
+    background-color 220ms var(--ease),
+    color 220ms var(--ease);
 }
 
 .popup-shell::before {
@@ -82,9 +130,10 @@ label {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.038;
+  opacity: var(--grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   background-repeat: repeat;
+  transition: opacity 220ms var(--ease);
 }
 
 .popup-shell > * {
@@ -119,6 +168,7 @@ footer {
   line-height: 24px;
   letter-spacing: -0.025em;
   color: var(--ink);
+  transition: color 220ms var(--ease);
 }
 
 .null-mark {
@@ -127,7 +177,9 @@ footer {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2.2;
-  transition: transform 260ms var(--ease);
+  transition:
+    stroke 220ms var(--ease),
+    transform 260ms var(--ease);
 }
 
 .brand:hover .null-mark {
@@ -152,7 +204,8 @@ footer {
   transition:
     color 220ms var(--ease),
     background-color 220ms var(--ease),
-    border-color 220ms var(--ease);
+    border-color 220ms var(--ease),
+    box-shadow 220ms var(--ease);
 }
 
 .status::before {
@@ -166,8 +219,8 @@ footer {
 }
 
 .status-active {
-  border-color: rgba(46, 216, 138, 0.35);
-  background: #15221c;
+  border-color: var(--status-active-border);
+  background: var(--status-active-bg);
   color: var(--accent);
 }
 
@@ -178,7 +231,7 @@ footer {
 
 .status-neutral {
   border-color: var(--border);
-  background: #18191f;
+  background: var(--status-neutral-bg);
   color: var(--muted);
 }
 
@@ -203,9 +256,13 @@ footer {
   padding: 4px 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background-color: #1a1b1e;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%);
+  background-color: var(--surface);
+  background-image: var(--surface-gradient);
   box-shadow: var(--bevel-top);
+  transition:
+    background-color 220ms var(--ease),
+    border-color 220ms var(--ease),
+    box-shadow 220ms var(--ease);
 }
 
 .protection .switch-row,
@@ -256,7 +313,7 @@ footer {
 
 .platform-tab:hover {
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-hover);
 }
 
 .platform-tab:active {
@@ -266,13 +323,14 @@ footer {
 .platform-tab[aria-selected="true"] {
   color: var(--ink);
   background-color: var(--surface-raised);
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
+  background-image: var(--tab-active-gradient);
   border-color: var(--border-strong);
   box-shadow: var(--bevel-top);
 }
 
 .platform-tab[aria-selected="true"]:hover {
   background: var(--surface-raised);
+  background-image: var(--tab-active-gradient);
 }
 
 /* ── Settings panel (UI8 Bento Card Container) ── */
@@ -280,9 +338,13 @@ footer {
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background-color: #1a1b1e;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+  background-color: var(--surface);
+  background-image: var(--surface-gradient);
   box-shadow: var(--bevel-top);
+  transition:
+    background-color 220ms var(--ease),
+    border-color 220ms var(--ease),
+    box-shadow 220ms var(--ease);
 }
 
 /* ── Switch rows ── */
@@ -334,9 +396,9 @@ footer {
   width: 44px;
   height: 24px;
   flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid var(--switch-track-border);
   border-radius: 999px;
-  background: #20222a;
+  background: var(--switch-track);
   transition:
     border-color 220ms var(--ease),
     background-color 220ms var(--ease);
@@ -350,7 +412,8 @@ footer {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--switch-thumb);
+  box-shadow: var(--switch-thumb-shadow);
   transition:
     transform 220ms var(--ease),
     width 160ms var(--ease);
@@ -468,7 +531,7 @@ footer a span {
 
 footer a:hover {
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-hover);
 }
 
 footer a:hover span {

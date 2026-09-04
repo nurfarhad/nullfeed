@@ -12,7 +12,7 @@ export function NullMark({ size = 24 }: NullMarkProps) {
       width={size}
     >
       <path d="M18.4 5.6a9 9 0 1 0 0 12.8" />
-      <path d="M17.7 6.3 21 3" stroke="#2ed88a" />
+      <path d="M17.7 6.3 21 3" stroke="var(--accent)" />
     </svg>
   );
 }
