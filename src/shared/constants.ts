@@ -5,9 +5,7 @@ export const OWN_PAGE_URL = "https://own.page/nurfarhad" as const;
 export const PLATFORM_LABELS = {
   facebook: "Facebook",
   instagram: "Instagram",
-  youtube: "YouTube",
-  linkedin: "LinkedIn",
-  twitter: "Twitter/X"
+  youtube: "YouTube"
 } as const;
 
 export const DEVELOPMENT =

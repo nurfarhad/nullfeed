@@ -128,11 +128,9 @@ export const youtubeAdapter: SiteAdapter = {
       });
     }
 
-    // NOTE: No quote card on YouTube. YouTube's Polymer grid and sticky
+    // NOTE: No in-feed quote card on YouTube. YouTube's Polymer grid and sticky
     // category chip bar conflict with injected elements placed above the
-    // grid, causing layout thrashing and visible glitching. The quote card
-    // is only mounted on platforms where the feed is fully eradicated
-    // (LinkedIn, Twitter/X).
+    // grid, causing layout thrashing and visible glitching.
   },
 
   cleanup() {

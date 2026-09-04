@@ -257,32 +257,6 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   display: none !important;
 }
 
-/* LinkedIn feed & news sidebar */
-html[data-nullfeed-enabled][data-nullfeed-platform="linkedin"][data-nullfeed-filter-feed]
-  .scaffold-finite-scroll,
-html[data-nullfeed-enabled][data-nullfeed-platform="linkedin"][data-nullfeed-filter-feed]
-  div[componentkey^="container-update-list_mainFeed"],
-html[data-nullfeed-enabled][data-nullfeed-platform="linkedin"][data-nullfeed-filter-news]
-  #feed-news-module,
-html[data-nullfeed-enabled][data-nullfeed-platform="linkedin"][data-nullfeed-filter-news]
-  div[data-view-name="news-module"],
-html[data-nullfeed-enabled][data-nullfeed-platform="linkedin"][data-nullfeed-filter-news]
-  aside.feed-right-column {
-  display: none !important;
-}
-
-/* Twitter / X timeline & trending sidebar */
-html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filter-timeline]
-  div[data-testid="primaryColumn"] section[role="region"],
-html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filter-trending]
-  section:has(div[aria-label="Timeline: Trending now"]),
-html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filter-trending]
-  div[aria-label="Timeline: Trending now"],
-html[data-nullfeed-enabled][data-nullfeed-platform="twitter"][data-nullfeed-filter-trending]
-  div:has(> div[data-testid="news_sidebar"]) {
-  display: none !important;
-}
-
 /* Nullfeed Mindful Focus Quote Card */
 .nullfeed-quote-card {
   display: flex !important;

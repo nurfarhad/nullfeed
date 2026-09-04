@@ -36,14 +36,6 @@ const ROWS: Record<Platform, readonly RowDefinition[]> = {
     ["shorts", "Hide Shorts", BoltIcon],
     ["navigation", "Hide Shorts Nav", NavbarIcon],
     ["sidebar", "Hide Recommended", SparklesIcon]
-  ],
-  linkedin: [
-    ["feed", "Hide Main Feed", ArticleIcon],
-    ["news", "Hide News Sidebar", BellIcon]
-  ],
-  twitter: [
-    ["timeline", "Hide Home Timeline", TimelineIcon],
-    ["trending", "Hide Trends & What's Happening", TrendingIcon]
   ]
 };
 

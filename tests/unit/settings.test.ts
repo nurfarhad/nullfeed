@@ -27,9 +27,7 @@ describe("settings validation", () => {
       sites: {
         facebook: true,
         instagram: true,
-        youtube: true,
-        linkedin: true,
-        twitter: true
+        youtube: true
       }
     });
   });
@@ -53,17 +51,13 @@ describe("settings validation", () => {
       facebook: { reels: true, stories: true, videos: true, ads: true },
       instagram: { reels: true, stories: true, explore: true },
       youtube: { shorts: false, navigation: true, redirect: true, sidebar: true },
-      linkedin: { feed: true, news: true },
-      twitter: { timeline: true, trending: true },
       snooze: {
         active: false,
         until: null,
         sites: {
           facebook: true,
           instagram: true,
-          youtube: true,
-          linkedin: true,
-          twitter: true
+          youtube: true
         }
       }
     });
@@ -84,9 +78,7 @@ describe("settings validation", () => {
       sites: {
         facebook: true,
         instagram: true,
-        youtube: true,
-        linkedin: true,
-        twitter: true
+        youtube: true
       }
     });
   });
@@ -107,8 +99,7 @@ describe("settings validation", () => {
     expect(result.snooze.until).toBe(ts);
     expect(result.snooze.sites.facebook).toBe(false);
     expect(result.snooze.sites.instagram).toBe(true);
-    expect(result.snooze.sites.linkedin).toBe(true);
-    expect(result.snooze.sites.twitter).toBe(true);
+    expect(result.snooze.sites.youtube).toBe(true);
   });
 
   it("detects whether any granular filter is active", () => {
@@ -118,9 +109,18 @@ describe("settings validation", () => {
         ...DEFAULT_SETTINGS,
         youtube: { shorts: false, navigation: false, redirect: false, sidebar: false },
         facebook: { reels: false, stories: false, videos: false, ads: false },
-        instagram: { reels: false, stories: false, explore: false },
-        linkedin: { feed: false, news: false },
-        twitter: { timeline: false, trending: false }
+        instagram: { reels: false, stories: false, explore: false }
+      })
+    ).toBe(false);
+  });
+
+  it("returns false if all visible toggles are off even if background ads are on", () => {
+    expect(
+      hasActiveFilters({
+        ...DEFAULT_SETTINGS,
+        youtube: { shorts: false, navigation: false, redirect: true, sidebar: false },
+        facebook: { reels: false, stories: false, videos: false, ads: true },
+        instagram: { reels: false, stories: false, explore: false }
       })
     ).toBe(false);
   });

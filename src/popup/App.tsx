@@ -9,12 +9,14 @@ import {
   type Settings
 } from "../shared/settings";
 import {
+  endSnooze,
   getSettings,
   isStorageQuotaError,
   SETTINGS_STORAGE_KEY,
   setEnabled,
   setLastPlatform,
-  setPlatformPreference
+  setPlatformPreference,
+  startSnooze
 } from "../shared/storage";
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
@@ -22,6 +24,21 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { Switch } from "./components/Switch";
 
 const SKELETON_MINIMUM_MS = 150;
+
+const SNOOZE_DURATIONS = [
+  { label: "5m", ms: 5 * 60_000 },
+  { label: "15m", ms: 15 * 60_000 },
+  { label: "30m", ms: 30 * 60_000 },
+  { label: "1h", ms: 60 * 60_000 }
+] as const;
+
+function formatCountdown(until: number): string {
+  const remaining = Math.max(0, until - Date.now());
+  const totalSeconds = Math.floor(remaining / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
 
 type Status = {
   label: string;
@@ -56,10 +73,38 @@ function getStatus(settings: Settings): Status {
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState("");
   const status = useMemo(
     () => getStatus(settings ?? DEFAULT_SETTINGS),
     [settings]
   );
+
+  const isSnoozing =
+    settings !== null &&
+    settings.snooze.active &&
+    settings.snooze.until !== null &&
+    settings.snooze.until > Date.now();
+
+  useEffect(() => {
+    if (!isSnoozing || settings?.snooze.until === null || settings?.snooze.until === undefined) {
+      setCountdown("");
+      return;
+    }
+
+    const until = settings.snooze.until;
+    setCountdown(formatCountdown(until));
+
+    const interval = setInterval(() => {
+      if (Date.now() >= until) {
+        setCountdown("0:00");
+        clearInterval(interval);
+      } else {
+        setCountdown(formatCountdown(until));
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSnoozing, settings?.snooze.until]);
 
   useEffect(() => {
     const started = performance.now();
@@ -175,11 +220,35 @@ export function App() {
     );
   }
 
-  const rawPlatform = currentSettings.lastPlatform;
-  const platform: "facebook" | "instagram" | "youtube" =
-    rawPlatform === "linkedin" || rawPlatform === "twitter"
-      ? "facebook"
-      : rawPlatform;
+  function handleStartSnooze(durationMs: number) {
+    const optimistic = {
+      ...currentSettings,
+      snooze: {
+        active: true,
+        until: Date.now() + durationMs,
+        sites: {
+          facebook: true,
+          instagram: true,
+          youtube: true
+        }
+      }
+    };
+    void commit(optimistic, () => startSnooze(currentSettings, durationMs));
+  }
+
+  function handleEndSnooze() {
+    const optimistic = {
+      ...currentSettings,
+      snooze: {
+        ...currentSettings.snooze,
+        active: false,
+        until: null
+      }
+    };
+    void commit(optimistic, () => endSnooze(currentSettings));
+  }
+
+  const platform = currentSettings.lastPlatform;
 
   return (
     <main class="popup-shell">
@@ -199,6 +268,48 @@ export function App() {
         >
           <strong id="protection-heading">Protection</strong>
         </Switch>
+      </section>
+
+      <section
+        class={isSnoozing ? "snooze-card snooze-card-active" : "snooze-card"}
+        aria-label="Snooze controls"
+      >
+        {isSnoozing ? (
+          <div class="snooze-active-row">
+            <div class="snooze-active-info">
+              <span class="snooze-pulse-dot" aria-hidden="true" />
+              <span class="snooze-active-text">
+                Snoozing · <strong class="snooze-countdown">{countdown}</strong>
+              </span>
+            </div>
+            <button
+              class="snooze-resume-btn"
+              id="snooze-resume"
+              onClick={handleEndSnooze}
+              type="button"
+            >
+              Resume now
+            </button>
+          </div>
+        ) : (
+          <div class="snooze-inactive-row">
+            <span class="snooze-title" id="snooze-heading">Snooze</span>
+            <div class="snooze-durations" role="group" aria-labelledby="snooze-heading">
+              {SNOOZE_DURATIONS.map(({ label, ms }) => (
+                <button
+                  class="snooze-pill"
+                  disabled={!currentSettings.enabled}
+                  id={`snooze-${label}`}
+                  key={label}
+                  onClick={() => handleStartSnooze(ms)}
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       <PlatformTabs active={platform} onChange={changePlatform} />

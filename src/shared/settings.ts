@@ -1,6 +1,6 @@
 export const CURRENT_SCHEMA_VERSION = 1 as const;
 
-export type Platform = "facebook" | "instagram" | "youtube" | "linkedin" | "twitter";
+export type Platform = "facebook" | "instagram" | "youtube";
 
 export type FacebookSettings = {
   reels: boolean;
@@ -22,22 +22,10 @@ export type YouTubeSettings = {
   sidebar: boolean;
 };
 
-export type LinkedInSettings = {
-  feed: boolean;
-  news: boolean;
-};
-
-export type TwitterSettings = {
-  timeline: boolean;
-  trending: boolean;
-};
-
 export type SnoozeSites = {
   facebook: boolean;
   instagram: boolean;
   youtube: boolean;
-  linkedin: boolean;
-  twitter: boolean;
 };
 
 export type SnoozeSettings = {
@@ -54,8 +42,6 @@ export type Settings = {
   facebook: FacebookSettings;
   instagram: InstagramSettings;
   youtube: YouTubeSettings;
-  linkedin: LinkedInSettings;
-  twitter: TwitterSettings;
   snooze: SnoozeSettings;
 };
 
@@ -63,8 +49,6 @@ export type PlatformSettings = {
   facebook: FacebookSettings;
   instagram: InstagramSettings;
   youtube: YouTubeSettings;
-  linkedin: LinkedInSettings;
-  twitter: TwitterSettings;
 };
 
 export type PlatformSettingKey<P extends Platform> = keyof PlatformSettings[P];
@@ -91,23 +75,13 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     redirect: true,
     sidebar: true
   }),
-  linkedin: Object.freeze({
-    feed: true,
-    news: true
-  }),
-  twitter: Object.freeze({
-    timeline: true,
-    trending: true
-  }),
   snooze: Object.freeze({
     active: false,
     until: null,
     sites: Object.freeze({
       facebook: true,
       instagram: true,
-      youtube: true,
-      linkedin: true,
-      twitter: true
+      youtube: true
     })
   })
 });
@@ -115,9 +89,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
 const PLATFORMS = new Set<Platform>([
   "facebook",
   "instagram",
-  "youtube",
-  "linkedin",
-  "twitter"
+  "youtube"
 ]);
 
 function booleanOrDefault(value: unknown, fallback: boolean): boolean {
@@ -135,8 +107,6 @@ export function validateSettings(value: unknown): Settings {
   const facebook = recordOrEmpty(source.facebook);
   const instagram = recordOrEmpty(source.instagram);
   const youtube = recordOrEmpty(source.youtube);
-  const linkedin = recordOrEmpty(source.linkedin);
-  const twitter = recordOrEmpty(source.twitter);
   const snooze = recordOrEmpty(source.snooze);
   const snoozeSites = recordOrEmpty(snooze.sites);
   const platform = source.lastPlatform;
@@ -205,26 +175,6 @@ export function validateSettings(value: unknown): Settings {
         DEFAULT_SETTINGS.youtube.sidebar
       )
     },
-    linkedin: {
-      feed: booleanOrDefault(
-        linkedin.feed,
-        DEFAULT_SETTINGS.linkedin.feed
-      ),
-      news: booleanOrDefault(
-        linkedin.news,
-        DEFAULT_SETTINGS.linkedin.news
-      )
-    },
-    twitter: {
-      timeline: booleanOrDefault(
-        twitter.timeline,
-        DEFAULT_SETTINGS.twitter.timeline
-      ),
-      trending: booleanOrDefault(
-        twitter.trending,
-        DEFAULT_SETTINGS.twitter.trending
-      )
-    },
     snooze: {
       active: booleanOrDefault(
         snooze.active,
@@ -243,14 +193,6 @@ export function validateSettings(value: unknown): Settings {
         youtube: booleanOrDefault(
           snoozeSites.youtube,
           DEFAULT_SETTINGS.snooze.sites.youtube
-        ),
-        linkedin: booleanOrDefault(
-          snoozeSites.linkedin,
-          DEFAULT_SETTINGS.snooze.sites.linkedin
-        ),
-        twitter: booleanOrDefault(
-          snoozeSites.twitter,
-          DEFAULT_SETTINGS.snooze.sites.twitter
         )
       }
     }
@@ -259,10 +201,9 @@ export function validateSettings(value: unknown): Settings {
 
 export function hasActiveFilters(settings: Settings): boolean {
   return (
-    Object.values(settings.facebook).some(Boolean) ||
-    Object.values(settings.instagram).some(Boolean) ||
-    Object.values(settings.youtube).some(Boolean) ||
-    Object.values(settings.linkedin).some(Boolean) ||
-    Object.values(settings.twitter).some(Boolean)
+    Boolean(settings.facebook.reels || settings.facebook.stories || settings.facebook.videos) ||
+    Boolean(settings.instagram.reels || settings.instagram.stories || settings.instagram.explore) ||
+    Boolean(settings.youtube.shorts || settings.youtube.navigation || settings.youtube.sidebar)
   );
 }
+

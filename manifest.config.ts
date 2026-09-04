@@ -5,7 +5,7 @@ export default defineManifest({
   name: "Nullfeed",
   version: "3.0.0",
   description:
-    "Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, Instagram, LinkedIn & Twitter/X.",
+    "Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, and Instagram.",
   permissions: ["storage", "alarms"],
   host_permissions: [
     "https://*.facebook.com/*",
@@ -13,13 +13,7 @@ export default defineManifest({
     "https://*.instagram.com/*",
     "https://instagram.com/*",
     "https://*.youtube.com/*",
-    "https://youtube.com/*",
-    "https://*.linkedin.com/*",
-    "https://linkedin.com/*",
-    "https://*.x.com/*",
-    "https://x.com/*",
-    "https://*.twitter.com/*",
-    "https://twitter.com/*"
+    "https://youtube.com/*"
   ],
   background: {
     service_worker: "src/background/serviceWorker.ts",
@@ -49,13 +43,7 @@ export default defineManifest({
         "https://*.instagram.com/*",
         "https://instagram.com/*",
         "https://*.youtube.com/*",
-        "https://youtube.com/*",
-        "https://*.linkedin.com/*",
-        "https://linkedin.com/*",
-        "https://*.x.com/*",
-        "https://x.com/*",
-        "https://*.twitter.com/*",
-        "https://twitter.com/*"
+        "https://youtube.com/*"
       ],
       js: ["src/content/routeSignal.ts"],
       run_at: "document_start",
@@ -68,13 +56,7 @@ export default defineManifest({
         "https://*.instagram.com/*",
         "https://instagram.com/*",
         "https://*.youtube.com/*",
-        "https://youtube.com/*",
-        "https://*.linkedin.com/*",
-        "https://linkedin.com/*",
-        "https://*.x.com/*",
-        "https://x.com/*",
-        "https://*.twitter.com/*",
-        "https://twitter.com/*"
+        "https://youtube.com/*"
       ],
       css: ["src/content/content.css"],
       js: ["src/content/index.ts"],

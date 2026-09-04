@@ -131,9 +131,7 @@ export async function startSnooze(
       sites: {
         facebook: true,
         instagram: true,
-        youtube: true,
-        linkedin: true,
-        twitter: true
+        youtube: true
       }
     }
   });

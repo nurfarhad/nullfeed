@@ -136,7 +136,7 @@ label {
   transition: opacity 220ms var(--ease);
 }
 
-.popup-shell > * {
+.popup-shell>* {
   position: relative;
   z-index: 1;
 }
@@ -241,10 +241,13 @@ footer {
 }
 
 @keyframes pulse-dot {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(0.8);
     opacity: 0.4;
@@ -278,6 +281,125 @@ footer {
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--ink);
+}
+
+/* ── Snooze Card (UI8 Bento Squircle Tile) ── */
+.snooze-card {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background-color: var(--surface);
+  background-image: var(--surface-gradient);
+  box-shadow: var(--bevel-top);
+  transition:
+    background-color 220ms var(--ease),
+    border-color 220ms var(--ease),
+    box-shadow 220ms var(--ease);
+}
+
+.snooze-inactive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.snooze-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-secondary);
+}
+
+.snooze-durations {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.snooze-pill {
+  padding: 5px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-track);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition:
+    color 180ms var(--ease),
+    background-color 180ms var(--ease),
+    border-color 180ms var(--ease);
+}
+
+.snooze-pill:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+.snooze-pill:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.snooze-active-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.snooze-active-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.snooze-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse-dot 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.snooze-active-text {
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+}
+
+.snooze-countdown {
+  color: var(--accent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.snooze-resume-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+  transition:
+    background-color 180ms var(--ease),
+    color 180ms var(--ease),
+    transform 120ms var(--ease-fast);
+}
+
+.snooze-resume-btn:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.snooze-card-active {
+  border-color: var(--status-active-border);
 }
 
 /* ── Platform tabs (UI8 Bento Pro Floating Capsule Segmented Bar) ── */
@@ -457,21 +579,21 @@ footer {
 }
 
 /* ── Toggle ON state (Signature Green, clean & flat) ── */
-.switch-input:checked + .switch-control {
+.switch-input:checked+.switch-control {
   border-color: var(--accent);
   background: var(--accent);
 }
 
-.switch-input:checked + .switch-control .switch-thumb {
+.switch-input:checked+.switch-control .switch-thumb {
   transform: translateX(20px);
 }
 
-.switch-row:active .switch-input:checked + .switch-control .switch-thumb {
+.switch-row:active .switch-input:checked+.switch-control .switch-thumb {
   transform: translateX(18px);
 }
 
 /* ── Toggle focus ring ── */
-.switch-input:focus-visible + .switch-control {
+.switch-input:focus-visible+.switch-control {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -481,7 +603,7 @@ footer {
   cursor: not-allowed;
 }
 
-.switch-input:disabled + .switch-control {
+.switch-input:disabled+.switch-control {
   opacity: 0.3;
 }
 
@@ -582,12 +704,10 @@ footer a:focus-visible {
 .skeleton {
   border-radius: 14px;
   background:
-    linear-gradient(
-      90deg,
+    linear-gradient(90deg,
       var(--surface) 25%,
       var(--surface-raised) 37%,
-      var(--surface) 63%
-    );
+      var(--surface) 63%);
   background-size: 400% 100%;
   animation: skeleton 1.2s ease infinite;
 }
@@ -620,6 +740,7 @@ footer a:focus-visible {
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -629,5 +750,3 @@ footer a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
-
-

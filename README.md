@@ -8,14 +8,18 @@
   <img src="public/icons/icon-128.png" alt="Nullfeed Logo" width="96" height="96" />
 </p>
 
-Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed to hide distracting short-form video feeds, algorithmic rabbit holes, stories, and advertisements across **YouTube**, **Facebook**, **Instagram**, **LinkedIn**, and **Twitter/X** — replacing endless feed voids with mindful focus quotes.
+Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed to hide distracting short-form video feeds, algorithmic rabbit holes, stories, and advertisements across **YouTube**, **Facebook**, and **Instagram** — replacing endless feed voids with mindful focus quotes.
 
 ---
 
 ## Key Features
 
+### Automatic Dark & Light Theme
+* **System-Aware Adaptation**: Automatically detects and matches your device or Chrome browser preference (dark or light mode).
+* **UI8 Bento Pro Minimalist Design**: Physical matte borders, tactile toggles, and seamless styling with zero configuration needed.
+
 ### Mindful Focus Quotes
-* **Serene Feed Replacement**: When algorithmic feeds are hidden, Nullfeed replaces the distraction void with a sleek, dark-mode glassmorphic Focus Card featuring inspiring quotes from Marcus Aurelius, Seneca, Naval Ravikant, Steve Jobs, and more.
+* **Serene Feed Replacement**: When algorithmic feeds are hidden, Nullfeed replaces the distraction void with an elegant Focus Card featuring inspiring quotes from Marcus Aurelius, Seneca, Naval Ravikant, Steve Jobs, and more.
 * **Interactive Refresh**: Click the subtle refresh button to cycle to a new quote anytime.
 
 ### YouTube
@@ -23,14 +27,6 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **Hide Shorts Navigation**: Cleans up the left sidebar and mini-guide by removing the Shorts icon and quick-access buttons.
 * **Instant Shorts Redirect**: Automatically redirects direct `/shorts/...` URLs back to your clean YouTube home feed.
 * **Hide Recommended Sidebar**: Removes the "Up Next / Recommended Videos" sidebar on watch pages to stop endless video rabbit holes.
-
-### LinkedIn
-* **Hide Main Feed**: Replaces the infinite home feed with a Mindful Focus Card while keeping Search, Messages, Jobs, and Notifications 100% active.
-* **Hide News Sidebar**: Removes trending news modules and sidebar engagement bait.
-
-### Twitter / X
-* **Hide Home Timeline**: Hides the algorithmic "For You" timeline while keeping Direct Messages, Notifications, Search, Lists, and Profiles active.
-* **Hide Trends & What's Happening**: Removes the right-hand trending topics module.
 
 ### Facebook
 * **Hide Reels**: Removes Reels carousels, feed cards, and sidebar items without affecting the main navigation.
@@ -44,7 +40,7 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **Hide Explore**: Hides the Explore navigation icon from the sidebar.
 
 ### Productivity Controls
-* **Selective Snooze**: Pause protection on any combination of platforms for custom durations (`1m`, `2m`, `5m`, `10m`, `30m`, `1h`, `24h`) with a non-intrusive resume indicator.
+* **Smart Snooze**: Pause protection across supported platforms for quick intervals (`5m`, `15m`, `30m`, `1h`) with an on-screen countdown and "Resume now" button.
 * **Master Switch**: One-click protection toggle to pause or restore all original platform layouts instantly.
 * **Zero Telemetry & 100% Privacy**: No trackers, no external network requests, no account required. All settings are stored locally on your machine via Chrome Storage API.
 

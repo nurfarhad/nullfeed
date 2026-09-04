@@ -9,7 +9,7 @@ Nullfeed - Eradicate Distractions & Focus
 
 [2] SUMMARY / SHORT DESCRIPTION (Under 132 characters)
 --------------------------------------------------------------------------------
-Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, Instagram, LinkedIn & Twitter/X. Replace voids with quotes.
+Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook & Instagram. Replace voids with mindful focus quotes.
 
 
 [3] DETAILED DESCRIPTION
@@ -18,14 +18,14 @@ Take back control of your focus, time, and mental clarity.
 
 Nullfeed is a 100% free, privacy-first Chrome extension that eradicates addictive short-form video feeds, algorithmic rabbit holes, and distracting advertisements across your favorite web platforms — replacing the endless feed void with mindful focus quotes.
 
-Use social media for its true purpose — messaging, professional networking, intentional search, and productive collaboration — without getting trapped in endless algorithmic scrolling loops.
+Use social media for its true purpose — messaging, intentional search, and productive connection — without getting trapped in endless algorithmic scrolling loops.
 
 --------------------------------------------------------------------------------
 🚀 WHAT'S NEW IN VERSION 3.0.0
 --------------------------------------------------------------------------------
 • 🌓 Automatic Dark & Light Theme: Automatically senses and adapts to your device or Chrome system appearance with an elegant, physical UI8 Bento Pro minimalist design. Zero configuration required.
-• 🎨 Sleek Feature Icons: Added refined, minimalist Tabler icons to every platform toggle for quick, intuitive navigation.
-• ⏱️ Smart Snooze Mode: Need temporary access? Pause protection on any platform for 5m, 15m, 30m, or 1h with an on-screen resume overlay.
+• 🎨 Sleek Feature Icons: Refined, minimalist Tabler icons on every platform toggle for quick, intuitive navigation.
+• ⏱️ Smart Snooze Mode: Need temporary access? Pause protection on supported platforms for 5m, 15m, 30m, or 1h with an on-screen resume overlay.
 • 🛡️ Enhanced Ad & Sponsored Blocker: Immediate, zero-flicker suppression of sponsored feed posts and commercial sidebar rails.
 • ⚡ Blazing Fast Manifest V3 Engine: Pre-emptive CSS injection eliminates screen flickering and layout shifting completely.
 
@@ -56,16 +56,8 @@ Use social media for its true purpose — messaging, professional networking, in
 • Hide Stories & Highlights: Hides story trays and profile story highlights smoothly without layout gaps.
 • Clean Explore: Hides the Explore button to prevent doomscrolling while leaving Messages, Search, and Profile posts completely intact.
 
-💼 5. LINKEDIN
-• Hide Feed: Replaces the noisy algorithmic news feed with a mindful focus card.
-• Clean News: Removes the "Trending News" and engagement modules while keeping Search, Messages, Jobs, and Notifications 100% functional.
-
-🐦 6. TWITTER / X
-• Hide Home Timeline: Removes the algorithmic "For You" feed.
-• Hide What's Happening & Trends: Removes trending rabbit holes while keeping Direct Messages, Notifications, and Search active.
-
-⏱️ 7. SMART SNOOZE & CONTROLS
-• Snooze Mode: Temporarily disable filtering on any platform for 5m, 15m, 30m, or 1h when you need a quick break.
+⏱️ 5. SMART SNOOZE & CONTROLS
+• Snooze Mode: Temporarily disable filtering on supported platforms for 5m, 15m, 30m, or 1h when you need a quick break.
 • Master Protection Toggle: Pause or re-enable the entire extension with a single click.
 • Non-Intrusive Resume Banner: Quickly resume protection ahead of schedule right from the page.
 
@@ -105,7 +97,7 @@ Single Purpose:
 Permission Justifications:
 • storage: Required to store user toggle preferences locally on the browser using chrome.storage.sync.
 • alarms: Required to manage local background snooze intervals.
-• Host Permissions (youtube.com, facebook.com, instagram.com, linkedin.com, x.com, twitter.com): Required to inject content filtering scripts and styles to hide distracting feed elements on supported websites.
+• Host Permissions (youtube.com, facebook.com, instagram.com): Required to inject content filtering scripts and styles to hide distracting feed elements on supported websites.
 
 Data Usage & Disclosures:
 • Does Nullfeed collect user data? -> Select "NO" ("I do not collect or use any user data").

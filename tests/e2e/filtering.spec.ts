@@ -16,17 +16,13 @@ const DEFAULT_SETTINGS = {
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
   youtube: { shorts: true, navigation: true, redirect: true, sidebar: true },
-  linkedin: { feed: true, news: true },
-  twitter: { timeline: true, trending: true },
   snooze: {
     active: false,
     until: null as number | null,
     sites: {
       facebook: true,
       instagram: true,
-      youtube: true,
-      linkedin: true,
-      twitter: true
+      youtube: true
     }
   }
 };
@@ -76,6 +72,12 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await context.close();
+});
+
+test.afterEach(async () => {
+  for (const page of context.pages()) {
+    await page.close().catch(() => {});
+  }
 });
 
 test.beforeEach(async () => {
@@ -654,15 +656,19 @@ test("History API navigation is blocked without waiting for the polling backstop
 
 test("blocked routes use replacement navigation to the platform home", async () => {
   const page = await context.newPage();
-  await page.route("https://www.youtube.com/**", (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: "<!doctype html><html><body>Fixture</body></html>"
-    })
-  );
+  try {
+    await page.route("https://www.youtube.com/**", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "<!doctype html><html><body>Fixture</body></html>"
+      })
+    );
 
-  await page.goto("https://www.youtube.com/shorts/abc");
-  await expect(page).toHaveURL("https://www.youtube.com/");
+    await page.goto("https://www.youtube.com/shorts/abc");
+    await expect(page).toHaveURL("https://www.youtube.com/");
+  } finally {
+    await page.close().catch(() => {});
+  }
 });
 
 test("Snooze overlay shows on snoozed platform and hides on resume", async () => {
@@ -746,58 +752,5 @@ test("Quote card does NOT mount on YouTube home (prevents layout thrashing)", as
   await expect(page.locator("#nullfeed-quote-card")).toHaveCount(0);
   // Feed content should remain visible and untouched
   await expect(page.locator("#contents")).toBeVisible();
-});
-
-test("LinkedIn hides feed and news module when enabled", async () => {
-  const page = await fixturePage(
-    "https://www.linkedin.com/feed/",
-    `
-      <header id="nav">LinkedIn Nav</header>
-      <div class="core-rail">
-        <div class="scaffold-finite-scroll" id="linkedin-scroll">
-          <div class="scaffold-finite-scroll__content">
-            <ul id="linkedin-feed">
-              <li id="post-1" class="occludable-update">Post 1</li>
-              <li id="post-2" class="occludable-update">Post 2</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <aside class="feed-right-column" id="linkedin-news">
-        <div id="feed-news-module">Trending News</div>
-      </aside>
-    `
-  );
-
-  await expect(page.locator("#nav")).toBeVisible();
-  await expect(page.locator("#post-1")).toBeHidden();
-  await expect(page.locator("#post-2")).toBeHidden();
-  await expect(page.locator("#linkedin-news")).toBeHidden();
-  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
-});
-
-
-test("Twitter/X hides home timeline and trending sidebar when enabled", async () => {
-  const page = await fixturePage(
-    "https://x.com/home",
-    `
-      <nav id="twitter-nav">Nav</nav>
-      <div data-testid="primaryColumn">
-        <section role="region" id="twitter-timeline">
-          <div>Tweet 1</div>
-        </section>
-      </div>
-      <div data-testid="sidebarColumn">
-        <section role="region" id="twitter-trending">
-          <div aria-label="Timeline: Trending now">Trends</div>
-        </section>
-      </div>
-    `
-  );
-
-  await expect(page.locator("#twitter-nav")).toBeVisible();
-  await expect(page.locator("#twitter-timeline")).toBeHidden();
-  await expect(page.locator("#twitter-trending")).toBeHidden();
-  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
 });
 

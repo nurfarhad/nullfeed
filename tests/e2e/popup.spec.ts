@@ -9,17 +9,13 @@ const DEFAULT_SETTINGS = {
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
   youtube: { shorts: true, navigation: true, redirect: true, sidebar: true },
-  linkedin: { feed: true, news: true },
-  twitter: { timeline: true, trending: true },
   snooze: {
     active: false,
     until: null,
     sites: {
       facebook: true,
       instagram: true,
-      youtube: true,
-      linkedin: true,
-      twitter: true
+      youtube: true
     }
   }
 };
@@ -45,6 +41,22 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   await context.close();
+});
+
+test.afterEach(async () => {
+  for (const page of context.pages()) {
+    await page.close().catch(() => {});
+  }
+});
+
+test.beforeEach(async () => {
+  let worker = context.serviceWorkers()[0];
+  if (!worker) {
+    worker = await context.waitForEvent("serviceworker");
+  }
+  await worker.evaluate(async (defaults) => {
+    await chrome.storage.sync.set({ settings: defaults });
+  }, DEFAULT_SETTINGS);
 });
 
 test("popup exposes the approved controls and pause state", async () => {
@@ -142,6 +154,49 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect(
     page.getByRole("switch", { name: "Hide Reels", exact: true })
   ).toBeEnabled();
+
+  // Verify Snooze controls are visible
+  await expect(page.getByRole("region", { name: "Snooze controls" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "5m", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "15m", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "30m", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "1h", exact: true })).toBeVisible();
+
+  // Test starting a 5m snooze
+  await page.getByRole("button", { name: "5m", exact: true }).click();
+  await expect(page.getByText(/Snoozing ·/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Resume now" })).toBeVisible();
+
+  // Verify storage updated
+  await expect
+    .poll(() =>
+      worker.evaluate(async () => {
+        const stored = (await chrome.storage.sync.get("settings")) as {
+          settings?: { snooze?: { active?: boolean; until?: number | null } };
+        };
+        return stored.settings?.snooze?.active;
+      })
+    )
+    .toBe(true);
+
+  // Click Resume now
+  await page.getByRole("button", { name: "Resume now" }).click();
+  await expect(page.getByRole("button", { name: "5m", exact: true })).toBeVisible();
+
+  // Verify P1 fix: turning off all granular toggles displays "No filters selected"
+  await page.getByRole("switch", { name: "Hide Reels", exact: true }).click();
+  await page.getByRole("switch", { name: "Hide Stories", exact: true }).click();
+  await page.getByRole("tab", { name: "Instagram" }).click();
+  await page.getByRole("switch", { name: "Hide Reels", exact: true }).click();
+  await page.getByRole("switch", { name: "Hide Stories", exact: true }).click();
+  await page.getByRole("switch", { name: "Hide Explore", exact: true }).click();
+  await page.getByRole("tab", { name: "YouTube" }).click();
+  await page.getByRole("switch", { name: "Hide Shorts", exact: true }).click();
+  await page.getByRole("switch", { name: "Hide Shorts Nav", exact: true }).click();
+  await page.getByRole("switch", { name: "Hide Recommended", exact: true }).click();
+
+  await expect(page.getByText("No filters selected", { exact: true })).toBeVisible();
+
   expect(outgoingRequests).toEqual([]);
 });
 

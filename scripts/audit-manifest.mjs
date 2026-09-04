@@ -11,13 +11,7 @@ const allowedHosts = [
   "https://*.instagram.com/*",
   "https://instagram.com/*",
   "https://*.youtube.com/*",
-  "https://youtube.com/*",
-  "https://*.linkedin.com/*",
-  "https://linkedin.com/*",
-  "https://*.x.com/*",
-  "https://x.com/*",
-  "https://*.twitter.com/*",
-  "https://twitter.com/*"
+  "https://youtube.com/*"
 ].sort();
 
 const actualPermissions = [...(manifest.permissions ?? [])].sort();
