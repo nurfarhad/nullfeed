@@ -12,7 +12,15 @@ export type CycleConfig = {
 export const CYCLE_PLATFORMS: Record<CyclePlatform, CycleConfig> = {
   facebook: {
     hostnamePattern: /(?:^|\.)facebook\.com$/i,
-    feedSelectors: ['[role="feed"]']
+    feedSelectors: [
+      '[role="feed"]',
+      '[data-pagelet="Feed"]',
+      '[data-pagelet*="Feed"]',
+      'div[role="main"] [role="feed"]',
+      'div[role="main"] [data-pagelet*="Feed"]',
+      'div[role="main"] [data-pagelet^="FeedUnit"]',
+      'div[role="main"] [role="article"]'
+    ]
   },
   linkedin: {
     hostnamePattern: /(?:^|\.)linkedin\.com$/i,
@@ -47,6 +55,31 @@ export function findFeedContainer(
   for (const selector of selectors) {
     const match = root.querySelector(selector);
     if (match) {
+      // If the matched selector is a single article / unit, climb up to its containing feed container
+      if (
+        typeof match.matches === "function" &&
+        match.matches('[data-pagelet^="FeedUnit"], [role="article"]')
+      ) {
+        const feedAncestor = match.closest(
+          '[role="feed"], [data-pagelet*="Feed"], div[data-virtualized="false"]'
+        );
+        if (
+          feedAncestor &&
+          !feedAncestor.matches(
+            'main, [role="main"], body, html, [role="navigation"], [role="banner"]'
+          )
+        ) {
+          return feedAncestor;
+        }
+        if (
+          match.parentElement &&
+          !match.parentElement.matches(
+            'main, [role="main"], body, html, [role="navigation"], [role="banner"]'
+          )
+        ) {
+          return match.parentElement;
+        }
+      }
       return match;
     }
   }

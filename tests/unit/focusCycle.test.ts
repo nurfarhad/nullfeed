@@ -98,21 +98,42 @@ describe("Focus Cycle - Storage", () => {
     (globalThis as any).chrome = {
       storage: {
         local: {
-          get: vi.fn(async (key: string) => ({ [key]: store[key] })),
+          get: vi.fn(async (keys: string | string[]) => {
+            if (Array.isArray(keys)) {
+              return Object.fromEntries(keys.map((k) => [k, store[k]]));
+            }
+            return { [keys]: store[keys] };
+          }),
           set: vi.fn(async (items: Record<string, unknown>) => {
             Object.assign(store, items);
+          }),
+          remove: vi.fn(async (keys: string | string[]) => {
+            const arr = Array.isArray(keys) ? keys : [keys];
+            arr.forEach((k) => delete store[k]);
           })
         }
       }
     };
   });
 
-  it("persists a newly generated anchor and reuses it on subsequent calls", async () => {
-    const anchor1 = await getOrCreateAnchor("facebook");
-    expect(typeof anchor1).toBe("number");
-    expect(anchor1).toBeGreaterThan(0);
+  it("persists a newly generated anchor and reuses it during active continuous browsing", async () => {
+    const now = 1_000_000;
+    const anchor1 = await getOrCreateAnchor("facebook", now);
+    expect(anchor1).toBe(now);
 
-    const anchor2 = await getOrCreateAnchor("facebook");
+    // 5 minutes later in active browsing -> reuses same anchor
+    const anchor2 = await getOrCreateAnchor("facebook", now + 5 * 60_000);
     expect(anchor2).toBe(anchor1);
+  });
+
+  it("starts a fresh session anchor if user returns after being inactive for > 30 minutes", async () => {
+    const start = 1_000_000;
+    const anchor1 = await getOrCreateAnchor("facebook", start);
+    expect(anchor1).toBe(start);
+
+    // User comes back 45 minutes later (> 30 min session gap)
+    const returnTime = start + 45 * 60_000;
+    const anchor2 = await getOrCreateAnchor("facebook", returnTime);
+    expect(anchor2).toBe(returnTime);
   });
 });

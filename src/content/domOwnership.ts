@@ -53,14 +53,25 @@ export function restoreElement(element: Element): void {
   element.removeAttribute(PREVIOUS_PRIORITY_ATTRIBUTE);
 }
 
-export function cleanupOwnedElements(root: ParentNode = document): void {
-  if (root instanceof Element && root.hasAttribute(HIDDEN_ATTRIBUTE)) {
+export function cleanupOwnedElements(
+  root: ParentNode = document,
+  excludeFeature = "focus-cycle"
+): void {
+  if (
+    root instanceof Element &&
+    root.hasAttribute(HIDDEN_ATTRIBUTE) &&
+    root.getAttribute(FEATURE_ATTRIBUTE) !== excludeFeature
+  ) {
     restoreElement(root);
   }
 
   root
     .querySelectorAll?.(`[${HIDDEN_ATTRIBUTE}]`)
-    .forEach((element) => restoreElement(element));
+    .forEach((element) => {
+      if (element.getAttribute(FEATURE_ATTRIBUTE) !== excludeFeature) {
+        restoreElement(element);
+      }
+    });
 }
 
 export function cleanupOwnedFeature(feature: string, root: ParentNode = document): void {

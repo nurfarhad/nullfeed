@@ -149,11 +149,13 @@ if (cyclePlatform) {
       if (currentCyclePhase !== null) {
         applyCyclePhase(cyclePlatform!, "off");
         currentCyclePhase = null;
+        document.documentElement.removeAttribute("data-nullfeed-cycle-phase");
       }
       return;
     }
     const anchor = await getOrCreateAnchor(cyclePlatform!);
     const phase = getPhase(anchor);
+    document.documentElement.setAttribute("data-nullfeed-cycle-phase", phase);
     applyCyclePhase(cyclePlatform!, phase);
     currentCyclePhase = phase;
   }
@@ -162,7 +164,7 @@ if (cyclePlatform) {
 
   setInterval(() => {
     void getSettings().then((s) => tickCycle(s.enabled));
-  }, 5000);
+  }, 3000);
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (

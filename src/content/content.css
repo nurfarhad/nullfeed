@@ -361,3 +361,23 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   white-space: nowrap !important;
 }
 
+/*
+ * Focus Cycle — instantaneous CSS hiding during focus phase
+ */
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="facebook"] :is([role="feed"], [data-pagelet="Feed"], [data-pagelet*="Feed"]) {
+  display: none !important;
+}
+
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] .scaffold-finite-scroll {
+  display: none !important;
+}
+
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] shreddit-feed {
+  display: none !important;
+}
+
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] div[data-testid="primaryColumn"] section[role="region"] {
+  display: none !important;
+}
+
+

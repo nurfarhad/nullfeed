@@ -91,6 +91,14 @@ export async function setEnabled(
   settings: Settings,
   enabled: boolean
 ): Promise<Settings> {
+  if (enabled) {
+    try {
+      const { resetCycleAnchors } = await import("./focusCycleStorage");
+      await resetCycleAnchors();
+    } catch {
+      // Non-fatal
+    }
+  }
   return saveSettings({ ...settings, enabled });
 }
 
