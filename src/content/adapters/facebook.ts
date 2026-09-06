@@ -177,6 +177,12 @@ function hideStoryEntries(root: ParentNode): void {
     root,
     '[data-pagelet*="Stories"], div[aria-label*="Stories" i], div[aria-label*="stories" i]'
   ).forEach((el) => {
+    // Facebook reuses "story"/"stories" internally to mean "a single post,"
+    // including on ordinary post permalink modals. Only trust this signal
+    // when a real Stories-feature link is actually present nearby.
+    if (el.querySelectorAll(STORY_LINK_SELECTOR).length === 0) {
+      return;
+    }
     const tray = findStoryTray(el);
     if (tray) {
       trays.add(tray);

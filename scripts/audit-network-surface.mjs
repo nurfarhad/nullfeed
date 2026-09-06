@@ -25,7 +25,9 @@ const allowedUrls = new Set([
   "https://*.x.com/*",
   "https://x.com/*",
   "https://*.twitter.com/*",
-  "https://twitter.com/*"
+  "https://twitter.com/*",
+  "https://*.reddit.com/*",
+  "https://reddit.com/*"
 ]);
 const findings = [];
 

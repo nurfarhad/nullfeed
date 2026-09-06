@@ -8,16 +8,7 @@ const DEFAULT_SETTINGS = {
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true },
-  snooze: {
-    active: false,
-    until: null,
-    sites: {
-      facebook: true,
-      instagram: true,
-      youtube: true
-    }
-  }
+  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true }
 };
 
 let context: BrowserContext;
@@ -155,33 +146,8 @@ test("popup exposes the approved controls and pause state", async () => {
     page.getByRole("switch", { name: "Hide Reels", exact: true })
   ).toBeEnabled();
 
-  // Verify Snooze controls are visible
-  await expect(page.getByRole("region", { name: "Snooze controls" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "5m", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "15m", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "30m", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "1h", exact: true })).toBeVisible();
-
-  // Test starting a 5m snooze
-  await page.getByRole("button", { name: "5m", exact: true }).click();
-  await expect(page.getByText(/Snoozing ·/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Resume now" })).toBeVisible();
-
-  // Verify storage updated
-  await expect
-    .poll(() =>
-      worker.evaluate(async () => {
-        const stored = (await chrome.storage.sync.get("settings")) as {
-          settings?: { snooze?: { active?: boolean; until?: number | null } };
-        };
-        return stored.settings?.snooze?.active;
-      })
-    )
-    .toBe(true);
-
-  // Click Resume now
-  await page.getByRole("button", { name: "Resume now" }).click();
-  await expect(page.getByRole("button", { name: "5m", exact: true })).toBeVisible();
+  // Verify Snooze controls are completely removed (PRD Part B)
+  await expect(page.getByRole("region", { name: "Snooze controls" })).toHaveCount(0);
 
   // Verify P1 fix: turning off all granular toggles displays "No filters selected"
   await page.getByRole("switch", { name: "Hide Reels", exact: true }).click();

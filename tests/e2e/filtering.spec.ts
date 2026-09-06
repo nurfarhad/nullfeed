@@ -15,16 +15,7 @@ const DEFAULT_SETTINGS = {
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true },
-  snooze: {
-    active: false,
-    until: null as number | null,
-    sites: {
-      facebook: true,
-      instagram: true,
-      youtube: true
-    }
-  }
+  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true }
 };
 
 let context: BrowserContext;
@@ -671,54 +662,79 @@ test("blocked routes use replacement navigation to the platform home", async () 
   }
 });
 
-test("Snooze overlay shows on snoozed platform and hides on resume", async () => {
-  const until = Date.now() + 60_000;
-  await setSettings({
-    ...DEFAULT_SETTINGS,
-    snooze: {
-      active: true,
-      until,
-      sites: { ...DEFAULT_SETTINGS.snooze.sites }
-    }
-  });
-
+test("Facebook Stories fix: post permalink modal with legacy stories label is not hidden", async () => {
   const page = await fixturePage(
-    "https://www.facebook.com/",
-    `<div role="article" id="post">Normal post</div>`
+    "https://www.facebook.com/permalink",
+    `
+      <div data-pagelet="Stories" id="modal-post-container">
+        <div role="dialog" id="comment-modal">
+          <div role="article" id="modal-post">
+            <h2>Permalink post content</h2>
+            <p>User comment dialog</p>
+          </div>
+        </div>
+      </div>
+      <div data-pagelet="Stories" id="real-stories-tray">
+        <a href="/stories/create">Create story</a>
+        <a href="/stories/123">Story 1</a>
+      </div>
+    `
   );
 
-  await expect(page.locator("#nullfeed-snooze-overlay")).toBeVisible();
-
-  // Resume clears the overlay
-  await setSettings({
-    ...DEFAULT_SETTINGS,
-    snooze: {
-      active: false,
-      until: null,
-      sites: { ...DEFAULT_SETTINGS.snooze.sites }
-    }
-  });
-  await expect(page.locator("#nullfeed-snooze-overlay")).toBeHidden();
+  // The modal post must NOT be hidden despite data-pagelet="Stories"
+  await expect(page.locator("#modal-post")).toBeVisible();
+  // The real stories tray MUST be hidden
+  await expect(page.locator("#real-stories-tray")).toBeHidden();
 });
 
-test("Snooze overlay does not show for unchecked platforms", async () => {
-  const until = Date.now() + 60_000;
-  await setSettings({
-    ...DEFAULT_SETTINGS,
-    snooze: {
-      active: true,
-      until,
-      sites: { ...DEFAULT_SETTINGS.snooze.sites, facebook: false }
-    }
+test("Focus Cycle: hides feed container on covered platforms when phase is 'on'", async () => {
+  // Seed an anchor in chrome.storage.local where (now - anchor) is 1 min in ("on" phase)
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      "nullfeed-focus-cycle-anchors": {
+        facebook: Date.now() - 60_000
+      }
+    });
   });
 
   const page = await fixturePage(
     "https://www.facebook.com/",
-    `<div role="article" id="post">Normal post</div>`
+    `
+      <div role="feed" id="fb-feed">
+        <div role="article">Post 1</div>
+      </div>
+    `
   );
 
-  await expect(page.locator("#nullfeed-snooze-overlay")).toHaveCount(0);
-  await expect(page.locator("#post")).toBeVisible();
+  // Feed should be hidden by focus-cycle
+  await expect(page.locator("#fb-feed")).toBeHidden();
+  // Quote card should be mounted
+  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
+});
+
+test("Focus Cycle: restores feed container on covered platforms when phase is 'off'", async () => {
+  // Seed an anchor where (now - anchor) is 20 minutes in ("off" phase)
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      "nullfeed-focus-cycle-anchors": {
+        facebook: Date.now() - 20 * 60_000
+      }
+    });
+  });
+
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `
+      <div role="feed" id="fb-feed">
+        <div role="article">Post 1</div>
+      </div>
+    `
+  );
+
+  // Feed should remain visible
+  await expect(page.locator("#fb-feed")).toBeVisible();
+  // Quote card should not be mounted
+  await expect(page.locator("#nullfeed-quote-card")).toHaveCount(0);
 });
 
 test("YouTube hides watch page recommended sidebar when enabled", async () => {

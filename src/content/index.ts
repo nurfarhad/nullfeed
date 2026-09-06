@@ -1,15 +1,18 @@
 import type { Settings } from "../shared/settings";
 import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
+import { getOrCreateAnchor } from "../shared/focusCycleStorage";
 import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
 import { instagramAdapter } from "./adapters/instagram";
 import { youtubeAdapter } from "./adapters/youtube";
+import { applyCyclePhase, detectCyclePlatform, getPhase } from "./focusCycle";
 import { observeDynamicContent } from "./observer";
 import { watchRoutes } from "./routeWatcher";
-import { hideSnoozeOverlay, showSnoozeOverlay } from "./snoozeOverlay";
 
 const adapter = selectAdapter(location.hostname);
+const cyclePlatform = detectCyclePlatform(location.hostname);
 let settings: Settings | null = null;
+let currentCyclePhase: "on" | "off" | null = null;
 
 function selectAdapter(hostname: string): SiteAdapter | null {
   if (/(?:^|\.)youtube\.com$/i.test(hostname)) return youtubeAdapter;
@@ -75,23 +78,6 @@ function apply(nextSettings: Settings): void {
   }
 
   try {
-    // Guard against malformed snooze data (e.g. old schema without snooze field)
-    const snooze = nextSettings.snooze;
-    const snoozed =
-      snooze != null &&
-      snooze.active === true &&
-      typeof snooze.until === "number" &&
-      Date.now() < snooze.until &&
-      snooze.sites?.[adapter.platform] === true;
-
-    if (snoozed) {
-      settings = nextSettings;
-      updateRootState(nextSettings);
-      showSnoozeOverlay(nextSettings.snooze.until!);
-      return;
-    }
-
-    hideSnoozeOverlay();
     adapter.cleanup();
     settings = nextSettings;
     updateRootState(nextSettings);
@@ -123,6 +109,9 @@ if (adapter) {
         if (settings && !handleRoute(settings)) {
           scan(root);
         }
+        if (cyclePlatform && settings?.enabled && currentCyclePhase === "on") {
+          applyCyclePhase(cyclePlatform, "on");
+        }
       });
       stopRouteWatcher = watchRoutes(() => {
         if (settings && !handleRoute(settings)) {
@@ -151,5 +140,48 @@ if (adapter) {
   // chrome.scripting in dev mode, no-op in production).
   if (typeof window !== "undefined") {
     Reflect.set(window, "__nullfeedTeardown", teardown);
+  }
+}
+
+if (cyclePlatform) {
+  async function tickCycle(settingsEnabled: boolean): Promise<void> {
+    if (!settingsEnabled) {
+      if (currentCyclePhase !== null) {
+        applyCyclePhase(cyclePlatform!, "off");
+        currentCyclePhase = null;
+      }
+      return;
+    }
+    const anchor = await getOrCreateAnchor(cyclePlatform!);
+    const phase = getPhase(anchor);
+    applyCyclePhase(cyclePlatform!, phase);
+    currentCyclePhase = phase;
+  }
+
+  void getSettings().then((s) => tickCycle(s.enabled));
+
+  setInterval(() => {
+    void getSettings().then((s) => tickCycle(s.enabled));
+  }, 5000);
+
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (
+      areaName === "sync" &&
+      changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
+    ) {
+      void getSettings().then((s) => tickCycle(s.enabled));
+    }
+  });
+
+  // For platforms without an adapter (e.g. LinkedIn, Twitter, Reddit),
+  // observe dynamic DOM mutations to ensure the feed remains hidden in "on" phase.
+  if (!adapter) {
+    observeDynamicContent(() => {
+      void getSettings().then((s) => {
+        if (s.enabled && currentCyclePhase === "on") {
+          applyCyclePhase(cyclePlatform!, "on");
+        }
+      });
+    });
   }
 }

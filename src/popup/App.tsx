@@ -9,14 +9,12 @@ import {
   type Settings
 } from "../shared/settings";
 import {
-  endSnooze,
   getSettings,
   isStorageQuotaError,
   SETTINGS_STORAGE_KEY,
   setEnabled,
   setLastPlatform,
-  setPlatformPreference,
-  startSnooze
+  setPlatformPreference
 } from "../shared/storage";
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
@@ -24,21 +22,6 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { Switch } from "./components/Switch";
 
 const SKELETON_MINIMUM_MS = 150;
-
-const SNOOZE_DURATIONS = [
-  { label: "5m", ms: 5 * 60_000 },
-  { label: "15m", ms: 15 * 60_000 },
-  { label: "30m", ms: 30 * 60_000 },
-  { label: "1h", ms: 60 * 60_000 }
-] as const;
-
-function formatCountdown(until: number): string {
-  const remaining = Math.max(0, until - Date.now());
-  const totalSeconds = Math.floor(remaining / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
 
 type Status = {
   label: string;
@@ -73,38 +56,10 @@ function getStatus(settings: Settings): Status {
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState("");
   const status = useMemo(
     () => getStatus(settings ?? DEFAULT_SETTINGS),
     [settings]
   );
-
-  const isSnoozing =
-    settings !== null &&
-    settings.snooze.active &&
-    settings.snooze.until !== null &&
-    settings.snooze.until > Date.now();
-
-  useEffect(() => {
-    if (!isSnoozing || settings?.snooze.until === null || settings?.snooze.until === undefined) {
-      setCountdown("");
-      return;
-    }
-
-    const until = settings.snooze.until;
-    setCountdown(formatCountdown(until));
-
-    const interval = setInterval(() => {
-      if (Date.now() >= until) {
-        setCountdown("0:00");
-        clearInterval(interval);
-      } else {
-        setCountdown(formatCountdown(until));
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isSnoozing, settings?.snooze.until]);
 
   useEffect(() => {
     const started = performance.now();
@@ -138,28 +93,40 @@ export function App() {
     chrome.storage.onChanged.addListener(handleStorageChange);
 
     void getSettings()
-      .then(async (loaded) => {
-        const remaining = SKELETON_MINIMUM_MS - (performance.now() - started);
-        if (remaining > 0) {
-          await new Promise((resolve) => window.setTimeout(resolve, remaining));
-        }
-        setSettings(loaded);
+      .then((loaded) => {
+        const elapsed = performance.now() - started;
+        const remaining = Math.max(0, SKELETON_MINIMUM_MS - elapsed);
+        window.setTimeout(() => {
+          setSettings(loaded);
+          setError(null);
+        }, remaining);
       })
-      .catch(() => {
-        setSettings(DEFAULT_SETTINGS);
-        setError("Could not load settings. Try again.");
+      .catch((storageError) => {
+        if (DEVELOPMENT) {
+          console.error("Nullfeed popup could not read settings.", storageError);
+        }
+        setError("Settings could not be loaded. Please reopen the popup.");
       });
 
-    return () => chrome.storage.onChanged.removeListener(handleStorageChange);
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
   }, []);
 
-  if (settings === null) {
+  if (!settings) {
     return (
-      <main aria-busy="true" aria-label="Loading Nullfeed" class="popup-shell">
-        <div class="skeleton skeleton-header" />
-        <div class="skeleton skeleton-protection" />
-        <div class="skeleton skeleton-tabs" />
-        <div class="skeleton skeleton-list" />
+      <main class="popup-shell popup-skeleton" aria-busy="true">
+        <header class="header">
+          <div class="brand">
+            <NullMark />
+            <h1>Nullfeed</h1>
+          </div>
+          <span class="status status-neutral">Loading...</span>
+        </header>
+
+        <section class="protection skeleton-card" />
+        <div class="skeleton-tabs" />
+        <div class="preferences skeleton-card" />
       </main>
     );
   }
@@ -169,22 +136,24 @@ export function App() {
   async function commit(
     optimistic: Settings,
     operation: () => Promise<Settings>
-  ) {
+  ): Promise<void> {
     const previous = currentSettings;
-    setError(null);
     setSettings(optimistic);
+    setError(null);
 
     try {
-      setSettings(await operation());
+      const saved = await operation();
+      setSettings(saved);
     } catch (saveError) {
       setSettings(previous);
-      setError(
-        isStorageQuotaError(saveError)
-          ? "Saving too quickly. Wait a moment and try again."
-          : "Could not save. Try again."
-      );
-      if (DEVELOPMENT) {
-        console.error("Nullfeed popup could not save settings.", saveError);
+      if (isStorageQuotaError(saveError)) {
+        setError(
+          "Settings could not be saved because storage sync quota was exceeded. Changes were reverted."
+        );
+      } else {
+        setError(
+          "Settings could not be saved to your browser profile. Changes were reverted."
+        );
       }
     }
   }
@@ -220,34 +189,6 @@ export function App() {
     );
   }
 
-  function handleStartSnooze(durationMs: number) {
-    const optimistic = {
-      ...currentSettings,
-      snooze: {
-        active: true,
-        until: Date.now() + durationMs,
-        sites: {
-          facebook: true,
-          instagram: true,
-          youtube: true
-        }
-      }
-    };
-    void commit(optimistic, () => startSnooze(currentSettings, durationMs));
-  }
-
-  function handleEndSnooze() {
-    const optimistic = {
-      ...currentSettings,
-      snooze: {
-        ...currentSettings.snooze,
-        active: false,
-        until: null
-      }
-    };
-    void commit(optimistic, () => endSnooze(currentSettings));
-  }
-
   const platform = currentSettings.lastPlatform;
 
   return (
@@ -270,48 +211,6 @@ export function App() {
         </Switch>
       </section>
 
-      <section
-        class={isSnoozing ? "snooze-card snooze-card-active" : "snooze-card"}
-        aria-label="Snooze controls"
-      >
-        {isSnoozing ? (
-          <div class="snooze-active-row">
-            <div class="snooze-active-info">
-              <span class="snooze-pulse-dot" aria-hidden="true" />
-              <span class="snooze-active-text">
-                Snoozing · <strong class="snooze-countdown">{countdown}</strong>
-              </span>
-            </div>
-            <button
-              class="snooze-resume-btn"
-              id="snooze-resume"
-              onClick={handleEndSnooze}
-              type="button"
-            >
-              Resume now
-            </button>
-          </div>
-        ) : (
-          <div class="snooze-inactive-row">
-            <span class="snooze-title" id="snooze-heading">Snooze</span>
-            <div class="snooze-durations" role="group" aria-labelledby="snooze-heading">
-              {SNOOZE_DURATIONS.map(({ label, ms }) => (
-                <button
-                  class="snooze-pill"
-                  disabled={!currentSettings.enabled}
-                  id={`snooze-${label}`}
-                  key={label}
-                  onClick={() => handleStartSnooze(ms)}
-                  type="button"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
       <PlatformTabs active={platform} onChange={changePlatform} />
 
       <div
@@ -329,24 +228,37 @@ export function App() {
         />
       </div>
 
-      {error && (
-        <p aria-live="polite" class="inline-error" role="status">
-          {error}
-        </p>
-      )}
+      <p class="status-summary" aria-live="polite">
+        {status.sentence}
+      </p>
 
-      <footer>
-        <span class="footer-author">Made by Nur Farhad</span>
-        <span class="footer-separator" aria-hidden="true">·</span>
-        <a href={FACEBOOK_URL} rel="noreferrer" target="_blank">
+      {error ? (
+        <div class="error-banner" role="alert">
+          {error}
+        </div>
+      ) : null}
+
+      <footer class="footer">
+        <a
+          class="footer-link"
+          href={FACEBOOK_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
           Facebook
         </a>
-        <span class="footer-separator" aria-hidden="true">·</span>
-        <a href={LINKEDIN_URL} rel="noreferrer" target="_blank">
-          LinkedIn <span aria-hidden="true">↗</span>
+        <span class="footer-separator" aria-hidden="true">
+          ·
+        </span>
+        <a
+          class="footer-link"
+          href={LINKEDIN_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Support
         </a>
       </footer>
     </main>
   );
 }
-

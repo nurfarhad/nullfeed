@@ -22,18 +22,6 @@ export type YouTubeSettings = {
   sidebar: boolean;
 };
 
-export type SnoozeSites = {
-  facebook: boolean;
-  instagram: boolean;
-  youtube: boolean;
-};
-
-export type SnoozeSettings = {
-  active: boolean;
-  until: number | null;
-  sites: SnoozeSites;
-};
-
 export type Settings = {
   schemaVersion: typeof CURRENT_SCHEMA_VERSION;
   enabled: boolean;
@@ -42,7 +30,6 @@ export type Settings = {
   facebook: FacebookSettings;
   instagram: InstagramSettings;
   youtube: YouTubeSettings;
-  snooze: SnoozeSettings;
 };
 
 export type PlatformSettings = {
@@ -74,15 +61,6 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     navigation: true,
     redirect: true,
     sidebar: true
-  }),
-  snooze: Object.freeze({
-    active: false,
-    until: null,
-    sites: Object.freeze({
-      facebook: true,
-      instagram: true,
-      youtube: true
-    })
   })
 });
 
@@ -107,15 +85,7 @@ export function validateSettings(value: unknown): Settings {
   const facebook = recordOrEmpty(source.facebook);
   const instagram = recordOrEmpty(source.instagram);
   const youtube = recordOrEmpty(source.youtube);
-  const snooze = recordOrEmpty(source.snooze);
-  const snoozeSites = recordOrEmpty(snooze.sites);
   const platform = source.lastPlatform;
-
-  const untilRaw = snooze.until;
-  const untilValid =
-    typeof untilRaw === "number" && Number.isFinite(untilRaw)
-      ? untilRaw
-      : null;
 
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
@@ -174,27 +144,6 @@ export function validateSettings(value: unknown): Settings {
         youtube.sidebar,
         DEFAULT_SETTINGS.youtube.sidebar
       )
-    },
-    snooze: {
-      active: booleanOrDefault(
-        snooze.active,
-        DEFAULT_SETTINGS.snooze.active
-      ),
-      until: untilValid,
-      sites: {
-        facebook: booleanOrDefault(
-          snoozeSites.facebook,
-          DEFAULT_SETTINGS.snooze.sites.facebook
-        ),
-        instagram: booleanOrDefault(
-          snoozeSites.instagram,
-          DEFAULT_SETTINGS.snooze.sites.instagram
-        ),
-        youtube: booleanOrDefault(
-          snoozeSites.youtube,
-          DEFAULT_SETTINGS.snooze.sites.youtube
-        )
-      }
     }
   };
 }

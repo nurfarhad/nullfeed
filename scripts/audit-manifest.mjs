@@ -4,14 +4,22 @@ import { resolve } from "node:path";
 const manifestPath = resolve("dist", "manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 
-const allowedPermissions = ["alarms", "storage"].sort();
+const allowedPermissions = ["storage"].sort();
 const allowedHosts = [
   "https://*.facebook.com/*",
   "https://facebook.com/*",
   "https://*.instagram.com/*",
   "https://instagram.com/*",
   "https://*.youtube.com/*",
-  "https://youtube.com/*"
+  "https://youtube.com/*",
+  "https://*.reddit.com/*",
+  "https://reddit.com/*",
+  "https://*.linkedin.com/*",
+  "https://linkedin.com/*",
+  "https://*.x.com/*",
+  "https://x.com/*",
+  "https://*.twitter.com/*",
+  "https://twitter.com/*"
 ].sort();
 
 const actualPermissions = [...(manifest.permissions ?? [])].sort();

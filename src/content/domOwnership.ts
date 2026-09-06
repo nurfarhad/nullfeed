@@ -63,6 +63,16 @@ export function cleanupOwnedElements(root: ParentNode = document): void {
     .forEach((element) => restoreElement(element));
 }
 
+export function cleanupOwnedFeature(feature: string, root: ParentNode = document): void {
+  if (root instanceof Element && root.getAttribute(FEATURE_ATTRIBUTE) === feature) {
+    restoreElement(root);
+  }
+
+  root
+    .querySelectorAll?.(`[${FEATURE_ATTRIBUTE}="${feature}"]`)
+    .forEach((element) => restoreElement(element));
+}
+
 export function hideClosest(
   element: Element,
   containers: readonly string[],
