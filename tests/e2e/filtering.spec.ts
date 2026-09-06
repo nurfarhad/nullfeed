@@ -688,11 +688,11 @@ test("Facebook Stories fix: post permalink modal with legacy stories label is no
 });
 
 test("Focus Cycle: hides feed container on covered platforms when phase is 'on'", async () => {
-  // Seed an anchor in chrome.storage.local where (now - anchor) is 1 min in ("on" phase)
+  // Seed an anchor in chrome.storage.local where (now - anchor) is 20 mins in ("on" / focus phase)
   await worker.evaluate(async () => {
     await chrome.storage.local.set({
       "nullfeed-focus-cycle-anchors": {
-        facebook: Date.now() - 60_000
+        facebook: Date.now() - 20 * 60_000
       }
     });
   });
@@ -713,11 +713,11 @@ test("Focus Cycle: hides feed container on covered platforms when phase is 'on'"
 });
 
 test("Focus Cycle: restores feed container on covered platforms when phase is 'off'", async () => {
-  // Seed an anchor where (now - anchor) is 20 minutes in ("off" phase)
+  // Seed an anchor where (now - anchor) is 1 minute in ("off" / break phase)
   await worker.evaluate(async () => {
     await chrome.storage.local.set({
       "nullfeed-focus-cycle-anchors": {
-        facebook: Date.now() - 20 * 60_000
+        facebook: Date.now() - 60_000
       }
     });
   });

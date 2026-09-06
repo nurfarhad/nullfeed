@@ -31,6 +31,7 @@ export const CYCLE_PLATFORMS: Record<CyclePlatform, CycleConfig> = {
   }
 };
 
+export const CYCLE_BREAK_MS = 15 * 60_000;
 export const CYCLE_ON_MS = 15 * 60_000;
 export const CYCLE_TOTAL_MS = 30 * 60_000;
 
@@ -66,7 +67,7 @@ export function detectCyclePlatform(hostname: string): CyclePlatform | null {
 
 export function getPhase(anchor: number, now = Date.now()): "on" | "off" {
   const elapsed = Math.max(0, now - anchor);
-  return elapsed % CYCLE_TOTAL_MS < CYCLE_ON_MS ? "on" : "off";
+  return elapsed % CYCLE_TOTAL_MS < CYCLE_BREAK_MS ? "off" : "on";
 }
 
 export function applyCyclePhase(

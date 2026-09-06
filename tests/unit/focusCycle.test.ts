@@ -40,35 +40,35 @@ describe("Focus Cycle - Platform Detection", () => {
 });
 
 describe("Focus Cycle - Phase Calculations", () => {
-  it("computes 'on' (blocked/focus) for the first 15 minutes of each 30-minute block", () => {
+  it("computes 'off' (break phase) for the first 15 minutes and 'on' (focus phase) for 15-30 minutes", () => {
     const anchor = 1_000_000;
 
-    // At anchor
-    expect(getPhase(anchor, anchor)).toBe("on");
+    // At anchor (0 minutes in) -> "off" (break phase)
+    expect(getPhase(anchor, anchor)).toBe("off");
 
-    // 5 minutes in
-    expect(getPhase(anchor, anchor + 5 * 60_000)).toBe("on");
+    // 5 minutes in -> "off" (break phase)
+    expect(getPhase(anchor, anchor + 5 * 60_000)).toBe("off");
 
-    // 14 minutes 59 seconds in
-    expect(getPhase(anchor, anchor + 14 * 60_000 + 59_000)).toBe("on");
+    // 14 minutes 59 seconds in -> "off" (break phase)
+    expect(getPhase(anchor, anchor + 14 * 60_000 + 59_000)).toBe("off");
 
-    // Exactly 15 minutes in -> switches to "off" (open phase)
-    expect(getPhase(anchor, anchor + CYCLE_ON_MS)).toBe("off");
+    // Exactly 15 minutes in -> switches to "on" (focus phase)
+    expect(getPhase(anchor, anchor + CYCLE_ON_MS)).toBe("on");
 
-    // 20 minutes in
-    expect(getPhase(anchor, anchor + 20 * 60_000)).toBe("off");
+    // 20 minutes in -> "on" (focus phase)
+    expect(getPhase(anchor, anchor + 20 * 60_000)).toBe("on");
 
-    // 29 minutes 59 seconds in
-    expect(getPhase(anchor, anchor + 29 * 60_000 + 59_000)).toBe("off");
+    // 29 minutes 59 seconds in -> "on" (focus phase)
+    expect(getPhase(anchor, anchor + 29 * 60_000 + 59_000)).toBe("on");
 
-    // Exactly 30 minutes in -> new cycle begins, switches back to "on"
-    expect(getPhase(anchor, anchor + CYCLE_TOTAL_MS)).toBe("on");
+    // Exactly 30 minutes in -> new cycle begins, switches back to "off" (break phase)
+    expect(getPhase(anchor, anchor + CYCLE_TOTAL_MS)).toBe("off");
 
-    // 35 minutes in (5 mins into cycle 2)
-    expect(getPhase(anchor, anchor + 35 * 60_000)).toBe("on");
+    // 35 minutes in (5 mins into cycle 2) -> "off" (break phase)
+    expect(getPhase(anchor, anchor + 35 * 60_000)).toBe("off");
 
-    // 45 minutes in (15 mins into cycle 2) -> "off"
-    expect(getPhase(anchor, anchor + 45 * 60_000)).toBe("off");
+    // 45 minutes in (15 mins into cycle 2) -> "on" (focus phase)
+    expect(getPhase(anchor, anchor + 45 * 60_000)).toBe("on");
   });
 });
 
