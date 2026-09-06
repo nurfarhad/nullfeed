@@ -163,6 +163,10 @@ test("popup exposes the approved controls and pause state", async () => {
 
   await expect(page.getByText("No filters selected", { exact: true })).toBeVisible();
 
+  await expect(page.getByRole("link", { name: "Made by Nur Farhad" })).toHaveAttribute("href", "https://own.page/nurfarhad");
+  await expect(page.getByRole("link", { name: "Facebook" })).toHaveAttribute("href", "https://www.facebook.com/itsnurfarhad/");
+  await expect(page.getByRole("link", { name: /LinkedIn/ })).toHaveAttribute("href", "https://www.linkedin.com/in/nurfarhad/");
+
   expect(outgoingRequests).toEqual([]);
 });
 

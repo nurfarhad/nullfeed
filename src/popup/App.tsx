@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
 
-import { DEVELOPMENT, FACEBOOK_URL, LINKEDIN_URL } from "../shared/constants";
+import { DEVELOPMENT, FACEBOOK_URL, LINKEDIN_URL, OWN_PAGE_URL } from "../shared/constants";
 import {
   DEFAULT_SETTINGS,
   hasActiveFilters,
@@ -25,7 +25,6 @@ const SKELETON_MINIMUM_MS = 150;
 
 type Status = {
   label: string;
-  sentence: string;
   tone: "active" | "neutral";
 };
 
@@ -33,7 +32,6 @@ function getStatus(settings: Settings): Status {
   if (!settings.enabled) {
     return {
       label: "Paused",
-      sentence: "Filtering is paused on supported sites",
       tone: "neutral"
     };
   }
@@ -41,14 +39,12 @@ function getStatus(settings: Settings): Status {
   if (!hasActiveFilters(settings)) {
     return {
       label: "No filters selected",
-      sentence: "Choose content to hide.",
       tone: "neutral"
     };
   }
 
   return {
     label: "Protected",
-    sentence: "Filtering is active on supported sites",
     tone: "active"
   };
 }
@@ -228,19 +224,25 @@ export function App() {
         />
       </div>
 
-      <p class="status-summary" aria-live="polite">
-        {status.sentence}
-      </p>
-
       {error ? (
         <div class="error-banner" role="alert">
           {error}
         </div>
       ) : null}
 
-      <footer class="footer">
+      <footer>
         <a
-          class="footer-link"
+          class="footer-author"
+          href={OWN_PAGE_URL}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Made by Nur Farhad
+        </a>
+        <span class="footer-separator" aria-hidden="true">
+          ·
+        </span>
+        <a
           href={FACEBOOK_URL}
           rel="noopener noreferrer"
           target="_blank"
@@ -251,12 +253,11 @@ export function App() {
           ·
         </span>
         <a
-          class="footer-link"
           href={LINKEDIN_URL}
           rel="noopener noreferrer"
           target="_blank"
         >
-          Support
+          LinkedIn <span aria-hidden="true">↗</span>
         </a>
       </footer>
     </main>

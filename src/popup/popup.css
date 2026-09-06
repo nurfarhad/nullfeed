@@ -533,8 +533,14 @@ footer {
   letter-spacing: -0.01em;
 }
 
-.footer-author {
+.footer-author,
+footer a.footer-author {
   color: var(--caption);
+  font-weight: 400;
+}
+
+footer a.footer-author:hover {
+  color: var(--ink);
 }
 
 .footer-separator {
