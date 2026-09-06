@@ -81,21 +81,21 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
  * Hiding the feed container directly prevents any empty card shell or "See all" button from showing.
  */
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
-  [data-pagelet*="Stories"],
+  [data-pagelet*="Stories"]:has(a[href^="/stories/"], a[href*="/stories/create"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
-  [data-pagelet^="FeedUnit"]:has([data-pagelet*="Stories"]),
+  [data-pagelet^="FeedUnit"]:has([data-pagelet*="Stories"]:has(a[href^="/stories/"], a[href*="/stories/create"])),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
   [data-pagelet^="FeedUnit"]:has(a[href^="/stories/"], a[href*="/stories/create"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
   div[data-virtualized="false"]:has(a[href^="/stories/"], a[href*="/stories/create"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
-  [role="feed"] > div:has([data-pagelet*="Stories"]),
+  [role="feed"] > div:has([data-pagelet*="Stories"]:has(a[href^="/stories/"], a[href*="/stories/create"])),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
   [role="feed"] > div:has(a[href^="/stories/"], a[href*="/stories/create"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
-  div[aria-label*="Stories" i],
+  div[aria-label*="Stories" i]:has(a[href^="/stories/"], a[href*="/stories/create"]),
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-stories]
-  div[aria-label*="stories" i],
+  div[aria-label*="stories" i]:has(a[href^="/stories/"], a[href*="/stories/create"]),
 /*
  * Videos — cover articles, virtualized post wrappers, FeedUnits, and direct feed children.
  */

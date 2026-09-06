@@ -1,5 +1,5 @@
 ================================================================================
-CHROME WEB STORE LISTING DETAILS — NULLFEED (v3.0.0)
+CHROME WEB STORE LISTING DETAILS — NULLFEED (v3.5.0)
 ================================================================================
 
 [1] EXTENSION NAME
@@ -21,7 +21,7 @@ Nullfeed is a 100% free, privacy-first Chrome extension that eradicates addictiv
 Use social media for its true purpose — messaging, intentional search, and productive connection — without getting trapped in endless algorithmic scrolling loops.
 
 --------------------------------------------------------------------------------
-🚀 WHAT'S NEW IN VERSION 3.0.0
+🚀 WHAT'S NEW IN VERSION 3.5.0
 --------------------------------------------------------------------------------
 • 🌓 Automatic Dark & Light Theme: Automatically senses and adapts to your device or Chrome system appearance with an elegant, physical UI8 Bento Pro minimalist design. Zero configuration required.
 • 🎨 Sleek Feature Icons: Refined, minimalist Tabler icons on every platform toggle for quick, intuitive navigation.
