@@ -1,12 +1,14 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import {
+  CYCLE_BREAK_MS,
   CYCLE_ON_MS,
   CYCLE_TOTAL_MS,
   detectCyclePlatform,
   findFeedContainer,
-  getPhase
+  getPhase,
+  triggerEarlyBlock
 } from "../../src/content/focusCycle";
-import { getOrCreateAnchor } from "../../src/shared/focusCycleStorage";
+import { getOrCreateAnchor, setAnchor } from "../../src/shared/focusCycleStorage";
 
 describe("Focus Cycle - Platform Detection", () => {
   it("detects Facebook", () => {
@@ -135,5 +137,33 @@ describe("Focus Cycle - Storage", () => {
     const returnTime = start + 45 * 60_000;
     const anchor2 = await getOrCreateAnchor("facebook", returnTime);
     expect(anchor2).toBe(returnTime);
+  });
+
+  it("setAnchor overwrites only the given platform's anchor", async () => {
+    await getOrCreateAnchor("facebook", 1_000_000);
+    await getOrCreateAnchor("reddit", 1_000_000);
+
+    await setAnchor("facebook", 1_010_000, 1_010_000);
+
+    const facebookAnchor = await getOrCreateAnchor("facebook", 1_010_100);
+    const redditAnchor = await getOrCreateAnchor("reddit", 1_010_100);
+    expect(facebookAnchor).toBe(1_010_000);
+    expect(redditAnchor).toBe(1_000_000);
+  });
+
+  it("triggerEarlyBlock shifts the anchor so getPhase reads 'on' immediately", async () => {
+    const now = 10_000_000;
+    await getOrCreateAnchor("facebook", now); // fresh "off" phase
+    expect(getPhase(now, now)).toBe("off");
+
+    await triggerEarlyBlock("facebook", now);
+    const anchor = await getOrCreateAnchor("facebook", now);
+    expect(anchor).toBe(now - CYCLE_BREAK_MS);
+    expect(getPhase(anchor, now)).toBe("on");
+
+    // And it rides out a normal ~15-minute block from there before
+    // returning to "off" on the usual 30-minute rhythm.
+    expect(getPhase(anchor, now + CYCLE_ON_MS - 1000)).toBe("on");
+    expect(getPhase(anchor, now + CYCLE_ON_MS)).toBe("off");
   });
 });

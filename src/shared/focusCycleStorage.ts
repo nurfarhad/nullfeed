@@ -44,3 +44,27 @@ export async function getOrCreateAnchor(
 export async function resetCycleAnchors(): Promise<void> {
   await chrome.storage.local.remove([ANCHORS_KEY, LAST_SEEN_KEY]);
 }
+
+/**
+ * Overwrite a single platform's anchor with an explicit value, leaving
+ * other platforms' anchors untouched. Intentionally has no opinion on cycle
+ * timing (that's focusCycle.ts's job) — callers pass whatever anchor value
+ * produces the phase they want from getPhase(). Used by the Scroll Detector
+ * to shift a platform straight into the "on" (blocked) phase early.
+ */
+export async function setAnchor(
+  platform: CyclePlatform,
+  anchor: number,
+  now = Date.now()
+): Promise<void> {
+  const result = await chrome.storage.local.get([ANCHORS_KEY, LAST_SEEN_KEY]);
+  const anchors: Partial<Record<CyclePlatform, number>> =
+    (result[ANCHORS_KEY] as Partial<Record<CyclePlatform, number>>) ?? {};
+  const lastSeenMap: Partial<Record<CyclePlatform, number>> =
+    (result[LAST_SEEN_KEY] as Partial<Record<CyclePlatform, number>>) ?? {};
+
+  await chrome.storage.local.set({
+    [ANCHORS_KEY]: { ...anchors, [platform]: anchor },
+    [LAST_SEEN_KEY]: { ...lastSeenMap, [platform]: now }
+  });
+}

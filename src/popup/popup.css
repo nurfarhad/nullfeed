@@ -283,6 +283,18 @@ footer {
   color: var(--ink);
 }
 
+.smart-trigger {
+  padding: 4px 18px 14px;
+}
+
+.smart-trigger-hint {
+  margin: 0;
+  padding: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--caption);
+}
+
 /* ── Platform tabs (UI8 Bento Pro Floating Capsule Segmented Bar) ── */
 .platform-tabs {
   display: grid;

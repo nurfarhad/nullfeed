@@ -1,6 +1,6 @@
 import { cleanupOwnedFeature, hideElement } from "./domOwnership";
-import { mountQuoteCard, unmountQuoteCard } from "./quoteCard";
-import type { CyclePlatform } from "../shared/focusCycleStorage";
+import { mountQuoteCard, unmountQuoteCard, type QuoteCardReason } from "./quoteCard";
+import { setAnchor, type CyclePlatform } from "../shared/focusCycleStorage";
 
 export type { CyclePlatform };
 
@@ -103,16 +103,32 @@ export function getPhase(anchor: number, now = Date.now()): "on" | "off" {
   return elapsed % CYCLE_TOTAL_MS < CYCLE_BREAK_MS ? "off" : "on";
 }
 
+/**
+ * Called by the Scroll Detector when it decides the current "off" (free
+ * browsing) window should end early. Shifts the stored anchor back by
+ * exactly CYCLE_BREAK_MS so getPhase() reads "on" (blocked) starting right
+ * now, then rides out the normal ~15-minute block and resumes the regular
+ * 30-minute rhythm from there — it nudges the existing cycle forward rather
+ * than starting a parallel timer.
+ */
+export async function triggerEarlyBlock(
+  platform: CyclePlatform,
+  now = Date.now()
+): Promise<void> {
+  await setAnchor(platform, now - CYCLE_BREAK_MS, now);
+}
+
 export function applyCyclePhase(
   platform: CyclePlatform,
-  phase: "on" | "off"
+  phase: "on" | "off",
+  reason: QuoteCardReason = "cycle"
 ): void {
   const config = CYCLE_PLATFORMS[platform];
   if (phase === "on") {
     const feed = findFeedContainer(config.feedSelectors);
     if (feed) {
       hideElement(feed, "focus-cycle");
-      mountQuoteCard(feed, "before");
+      mountQuoteCard(feed, "before", reason);
     }
   } else {
     unmountQuoteCard();

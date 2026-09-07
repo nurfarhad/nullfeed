@@ -1,30 +1,59 @@
 import { getRandomQuote } from "../shared/quotes";
+import { getRandomNudge } from "../shared/nudges";
 
 const CARD_ID = "nullfeed-quote-card";
 let currentQuoteIndex = 0;
 
-export function createQuoteCardElement(): HTMLElement {
+/** "cycle" = the regular timed Focus Cycle break. "smart" = the Scroll
+ * Detector cut the "on" phase short. Both reuse the same card shell so the
+ * feature feels like one consistent product, not a bolted-on extra. */
+export type QuoteCardReason = "cycle" | "smart";
+
+function pickLine(reason: QuoteCardReason): { text: string; author: string; index: number } {
+  if (reason === "smart") {
+    const { nudge, index } = getRandomNudge();
+    return { text: nudge.text, author: "Nullfeed", index };
+  }
+  const { quote, index } = getRandomQuote();
+  return { text: quote.text, author: quote.author, index };
+}
+
+function pickNextLine(reason: QuoteCardReason, excludeIndex: number): { text: string; author: string; index: number } {
+  if (reason === "smart") {
+    const { nudge, index } = getRandomNudge(excludeIndex);
+    return { text: nudge.text, author: "Nullfeed", index };
+  }
+  const { quote, index } = getRandomQuote(excludeIndex);
+  return { text: quote.text, author: quote.author, index };
+}
+
+export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLElement {
   const existing = document.getElementById(CARD_ID);
   if (existing) {
     return existing;
   }
 
-  const { quote, index } = getRandomQuote();
+  const { text, author, index } = pickLine(reason);
   currentQuoteIndex = index;
 
   const card = document.createElement("div");
   card.id = CARD_ID;
-  card.className = "nullfeed-quote-card";
+  card.className =
+    reason === "smart" ? "nullfeed-quote-card nullfeed-quote-card--smart" : "nullfeed-quote-card";
+  card.dataset.nullfeedReason = reason;
+
+  const badgeLabel = reason === "smart" ? "MINDFUL PAUSE" : "NULLFEED FOCUS";
+  const refreshTitle = reason === "smart" ? "New nudge" : "New Quote";
 
   card.innerHTML = `
     <div class="nullfeed-quote-header">
-      <span class="nullfeed-quote-badge">NULLFEED FOCUS</span>
+      <span class="nullfeed-quote-badge">${badgeLabel}</span>
     </div>
     <div class="nullfeed-quote-body">
-      <blockquote class="nullfeed-quote-text">“${quote.text}”</blockquote>
-      <cite class="nullfeed-quote-author">— ${quote.author}</cite>
+      <blockquote class="nullfeed-quote-text">“${text}”</blockquote>
+      <cite class="nullfeed-quote-author">— ${author}</cite>
     </div>
-    <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
+    <button type="button" class="nullfeed-quote-refresh" title="${refreshTitle}" aria-label="${refreshTitle}">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
       </svg>
@@ -36,24 +65,28 @@ export function createQuoteCardElement(): HTMLElement {
     refreshBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const { quote: newQuote, index: newIdx } = getRandomQuote(currentQuoteIndex);
-      currentQuoteIndex = newIdx;
+      const next = pickNextLine(reason, currentQuoteIndex);
+      currentQuoteIndex = next.index;
       const textEl = card.querySelector(".nullfeed-quote-text");
       const authorEl = card.querySelector(".nullfeed-quote-author");
-      if (textEl) textEl.textContent = `“${newQuote.text}”`;
-      if (authorEl) authorEl.textContent = `— ${newQuote.author}`;
+      if (textEl) textEl.textContent = `“${next.text}”`;
+      if (authorEl) authorEl.textContent = `— ${next.author}`;
     });
   }
 
   return card;
 }
 
-export function mountQuoteCard(target: Element, position: "before" | "append" = "before"): void {
+export function mountQuoteCard(
+  target: Element,
+  position: "before" | "append" = "before",
+  reason: QuoteCardReason = "cycle"
+): void {
   if (document.getElementById(CARD_ID)) {
     return;
   }
 
-  const card = createQuoteCardElement();
+  const card = createQuoteCardElement(reason);
   if (position === "before") {
     target.parentElement?.insertBefore(card, target);
   } else {

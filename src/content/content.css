@@ -308,6 +308,22 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   white-space: nowrap !important;
 }
 
+/* Scroll Detector variant — same card, a distinct accent so it reads as
+   "this one fired for a reason" rather than the regular timed break. */
+.nullfeed-quote-card--smart {
+  border-color: rgba(45, 212, 191, 0.18) !important;
+}
+
+.nullfeed-quote-card--smart:hover {
+  border-color: rgba(45, 212, 191, 0.35) !important;
+}
+
+.nullfeed-quote-card--smart .nullfeed-quote-badge {
+  color: #2dd4bf !important;
+  background: rgba(45, 212, 191, 0.12) !important;
+  border-color: rgba(45, 212, 191, 0.2) !important;
+}
+
 .nullfeed-quote-body {
   flex: 1 !important;
   display: flex !important;

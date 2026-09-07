@@ -5,6 +5,7 @@ const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   enabled: true,
   showQuotes: true,
+  smartTrigger: true,
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
@@ -110,7 +111,7 @@ test("popup exposes the approved controls and pause state", async () => {
     "background-color",
     "rgb(17, 18, 20)"
   );
-  await expect(page.locator(".protection")).toHaveCSS(
+  await expect(page.locator(".protection").first()).toHaveCSS(
     "background-color",
     "rgb(26, 27, 30)"
   );
@@ -208,7 +209,7 @@ test("popup automatically adapts to dark and light system themes", async () => {
     "color",
     "rgb(17, 24, 39)"
   );
-  await expect(page.locator(".protection")).toHaveCSS(
+  await expect(page.locator(".protection").first()).toHaveCSS(
     "background-color",
     "rgb(255, 255, 255)"
   );
@@ -228,7 +229,7 @@ test("popup automatically adapts to dark and light system themes", async () => {
     "color",
     "rgb(255, 255, 255)"
   );
-  await expect(page.locator(".protection")).toHaveCSS(
+  await expect(page.locator(".protection").first()).toHaveCSS(
     "background-color",
     "rgb(26, 27, 30)"
   );

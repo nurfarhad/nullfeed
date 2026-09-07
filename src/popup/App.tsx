@@ -14,8 +14,10 @@ import {
   SETTINGS_STORAGE_KEY,
   setEnabled,
   setLastPlatform,
-  setPlatformPreference
+  setPlatformPreference,
+  setSmartTrigger
 } from "../shared/storage";
+import { TrendingIcon } from "./components/Icons";
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
 import { SettingsPanel } from "./components/SettingsPanel";
@@ -160,6 +162,12 @@ export function App() {
     );
   }
 
+  function changeSmartTrigger(smartTrigger: boolean) {
+    void commit({ ...currentSettings, smartTrigger }, () =>
+      setSmartTrigger(currentSettings, smartTrigger)
+    );
+  }
+
   function changePlatform(platform: Platform) {
     if (platform === currentSettings.lastPlatform) {
       return;
@@ -205,6 +213,22 @@ export function App() {
         >
           <strong id="protection-heading">Protection</strong>
         </Switch>
+      </section>
+
+      <section class="protection smart-trigger" aria-labelledby="smart-trigger-heading">
+        <Switch
+          checked={settings.smartTrigger}
+          disabled={!currentSettings.enabled}
+          icon={<TrendingIcon />}
+          id="smart-trigger"
+          onChange={changeSmartTrigger}
+        >
+          <strong id="smart-trigger-heading">Smart Trigger</strong>
+        </Switch>
+        <p class="smart-trigger-hint">
+          Ends a Focus Cycle break early if scrolling looks compulsive, on
+          Facebook, LinkedIn, X, and Reddit.
+        </p>
       </section>
 
       <PlatformTabs active={platform} onChange={changePlatform} />

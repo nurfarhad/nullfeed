@@ -5,9 +5,23 @@ import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
 import { instagramAdapter } from "./adapters/instagram";
 import { youtubeAdapter } from "./adapters/youtube";
-import { applyCyclePhase, detectCyclePlatform, getPhase } from "./focusCycle";
+import {
+  applyCyclePhase,
+  CYCLE_BREAK_MS,
+  CYCLE_TOTAL_MS,
+  detectCyclePlatform,
+  getPhase,
+  triggerEarlyBlock
+} from "./focusCycle";
 import { observeDynamicContent } from "./observer";
 import { watchRoutes } from "./routeWatcher";
+import {
+  canTriggerEarlyBlock,
+  createDetectorState,
+  isDoomscrolling,
+  recordScrollSample,
+  type DetectorState
+} from "./scrollDetector";
 
 const adapter = selectAdapter(location.hostname);
 const cyclePlatform = detectCyclePlatform(location.hostname);
@@ -144,26 +158,43 @@ if (adapter) {
 }
 
 if (cyclePlatform) {
-  async function tickCycle(settingsEnabled: boolean): Promise<void> {
-    if (!settingsEnabled) {
+  // Last-known anchor + smartTrigger preference, refreshed on every tick.
+  // Deliberately NOT reusing the module-level `settings` variable above —
+  // that one is only populated inside apply(), which returns early when
+  // there's no adapter. LinkedIn, X, and Reddit have no adapter, so this
+  // block needs its own settings tracking or it silently never fires there.
+  let currentAnchor: number | null = null;
+  let smartTriggerEnabled = false;
+  let detectorState: DetectorState = createDetectorState();
+
+  async function tickCycle(current: Settings): Promise<void> {
+    smartTriggerEnabled = current.smartTrigger;
+
+    if (!current.enabled) {
       if (currentCyclePhase !== null) {
         applyCyclePhase(cyclePlatform!, "off");
         currentCyclePhase = null;
+        currentAnchor = null;
         document.documentElement.removeAttribute("data-nullfeed-cycle-phase");
       }
       return;
     }
     const anchor = await getOrCreateAnchor(cyclePlatform!);
     const phase = getPhase(anchor);
+    currentAnchor = anchor;
     document.documentElement.setAttribute("data-nullfeed-cycle-phase", phase);
     applyCyclePhase(cyclePlatform!, phase);
+    if (phase !== "off") {
+      // Nothing to scroll while blocked — start the next "off" window clean.
+      detectorState = createDetectorState();
+    }
     currentCyclePhase = phase;
   }
 
-  void getSettings().then((s) => tickCycle(s.enabled));
+  void getSettings().then(tickCycle);
 
   setInterval(() => {
-    void getSettings().then((s) => tickCycle(s.enabled));
+    void getSettings().then(tickCycle);
   }, 3000);
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -171,7 +202,7 @@ if (cyclePlatform) {
       areaName === "sync" &&
       changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
     ) {
-      void getSettings().then((s) => tickCycle(s.enabled));
+      void getSettings().then(tickCycle);
     }
   });
 
@@ -186,4 +217,63 @@ if (cyclePlatform) {
       });
     });
   }
+
+  // --- Scroll Detector: end an "off" (free-browsing) window early when the
+  // scroll pace looks compulsive, instead of waiting for the fixed timer.
+  // Reads scroll position only — never page content — and only runs while
+  // the feed is actually visible.
+  let scrollRafScheduled = false;
+  let triggering = false;
+
+  function handleScrollSample(): void {
+    scrollRafScheduled = false;
+
+    // currentCyclePhase is null whenever protection is off (see tickCycle
+    // above), so this one check also covers the "extension disabled" case.
+    if (
+      currentCyclePhase !== "off" ||
+      currentAnchor === null ||
+      triggering ||
+      !smartTriggerEnabled
+    ) {
+      return;
+    }
+
+    const now = Date.now();
+    detectorState = recordScrollSample(
+      detectorState,
+      { t: now, y: window.scrollY },
+      window.innerHeight
+    );
+
+    if (
+      isDoomscrolling(detectorState, now) &&
+      canTriggerEarlyBlock(currentAnchor, now, CYCLE_BREAK_MS, CYCLE_TOTAL_MS)
+    ) {
+      triggering = true;
+      void triggerEarlyBlock(cyclePlatform!, now)
+        .then(() => {
+          currentAnchor = now - CYCLE_BREAK_MS;
+          currentCyclePhase = "on";
+          detectorState = createDetectorState();
+          document.documentElement.setAttribute("data-nullfeed-cycle-phase", "on");
+          applyCyclePhase(cyclePlatform!, "on", "smart");
+        })
+        .catch((error) => logFailure("Nullfeed smart trigger failed.", error))
+        .finally(() => {
+          triggering = false;
+        });
+    }
+  }
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!scrollRafScheduled) {
+        scrollRafScheduled = true;
+        requestAnimationFrame(handleScrollSample);
+      }
+    },
+    { passive: true }
+  );
 }
