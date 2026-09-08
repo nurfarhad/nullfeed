@@ -7,7 +7,7 @@ import {
   hideClosest,
   hideElement
 } from "../domOwnership";
-import { mountQuoteCard, unmountQuoteCard } from "../quoteCard";
+import { unmountQuoteCard } from "../quoteCard";
 
 const SHORTS_CONTAINERS = [
   "grid-shelf-view-model",
@@ -64,12 +64,16 @@ const ENDSCREEN_SELECTORS = [
   ".ytp-pause-overlay-container"
 ] as const;
 
-const HOME_FEED_SELECTORS = [
-  'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer',
-  'ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer',
-  'ytd-browse[page-subtype="home"] #chips-wrapper',
-  'ytd-browse[page-subtype="home"] ytd-feed-filter-chip-bar-renderer'
+const HOME_RECOMMENDED_SHELVES = [
+  'ytd-rich-section-renderer[aria-label*="Watch it again" i]',
+  'ytd-rich-section-renderer:has([aria-label*="Watch it again" i])',
+  'ytd-rich-section-renderer[aria-label*="Mixes" i]',
+  'ytd-rich-section-renderer:has([aria-label*="Mixes" i])',
+  'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer:has([title*="Watch it again" i]))',
+  'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer:has([title*="Mixes" i]))'
 ] as const;
+
+let lastNewChipClickTime = 0;
 
 function isYouTubeHomePage(): boolean {
   if (typeof location === "undefined") {
@@ -141,9 +145,7 @@ export const youtubeAdapter: SiteAdapter = {
           }
         }
       );
-    }
 
-    if (settings.youtube.shorts) {
       queryAll(root, SHORTS_NAV_SELECTORS).forEach((el) => {
         const nav = el.closest(
           "ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item, yt-list-item-view-model, yt-chip-cloud-chip-renderer"
@@ -161,19 +163,61 @@ export const youtubeAdapter: SiteAdapter = {
     }
 
     if (settings.youtube.feed && isYouTubeHomePage()) {
-      HOME_FEED_SELECTORS.forEach((selector) => {
+      // 1. Hide algorithmic history-based recommendation shelves
+      HOME_RECOMMENDED_SHELVES.forEach((selector) => {
         queryAll(root, selector).forEach((element) =>
-          hideElement(element, "youtube-feed")
+          hideElement(element, "youtube-recommended-shelf")
         );
       });
 
-      if (settings.showQuotes) {
-        const doc = root instanceof Document ? root : document;
-        const homeContainer =
-          doc.querySelector('ytd-browse[page-subtype="home"] #primary') ??
-          doc.querySelector('ytd-browse[page-subtype="home"]');
-        if (homeContainer) {
-          mountQuoteCard(homeContainer, "append", "cycle");
+      // 2. Process chips bar: hide the "All" chip and auto-activate "New for you" / "New to you"
+      const chips = queryAll(
+        root,
+        "ytd-feed-filter-chip-bar-renderer yt-chip-cloud-chip-renderer, yt-chip-cloud-chip-renderer"
+      );
+
+      let isAllSelected = false;
+      let newForYouChip: Element | null = null;
+
+      for (const chip of chips) {
+        const text = chip.textContent?.trim().toLowerCase() ?? "";
+        const title = chip.getAttribute("chip-title")?.toLowerCase() ?? "";
+        const combined = `${text} ${title}`;
+
+        if (text === "all") {
+          hideElement(chip, "youtube-all-chip");
+          if (
+            chip.classList.contains("iron-selected") ||
+            chip.getAttribute("aria-selected") === "true" ||
+            chip.hasAttribute("selected")
+          ) {
+            isAllSelected = true;
+          }
+        } else if (
+          combined.includes("new for you") ||
+          combined.includes("new to you")
+        ) {
+          newForYouChip = chip;
+        }
+      }
+
+      // If "All" was active (or user just landed on home), auto-activate the "New for you" filter
+      if (newForYouChip && (isAllSelected || Date.now() - lastNewChipClickTime > 10_000)) {
+        const isNewSelected =
+          newForYouChip.classList.contains("iron-selected") ||
+          newForYouChip.getAttribute("aria-selected") === "true" ||
+          newForYouChip.hasAttribute("selected");
+
+        if (!isNewSelected) {
+          const now = Date.now();
+          if (now - lastNewChipClickTime > 2500) {
+            lastNewChipClickTime = now;
+            const clickTarget =
+              newForYouChip.querySelector<HTMLElement>(
+                "button, a, yt-formatted-string"
+              ) ?? (newForYouChip as HTMLElement);
+            clickTarget.click();
+          }
         }
       }
     } else if (!settings.youtube.feed || !isYouTubeHomePage()) {
@@ -181,10 +225,8 @@ export const youtubeAdapter: SiteAdapter = {
         root instanceof Document
           ? root
           : (root as Element).ownerDocument ?? document;
-      cleanupOwnedFeature("youtube-feed", doc);
-      if (!isYouTubeHomePage() || !settings.youtube.feed) {
-        unmountQuoteCard();
-      }
+      cleanupOwnedFeature("youtube-all-chip", doc);
+      cleanupOwnedFeature("youtube-recommended-shelf", doc);
     }
 
     if (settings.youtube.comments) {
@@ -205,6 +247,7 @@ export const youtubeAdapter: SiteAdapter = {
   },
 
   cleanup() {
+    lastNewChipClickTime = 0;
     cleanupOwnedElements();
     unmountQuoteCard();
   }

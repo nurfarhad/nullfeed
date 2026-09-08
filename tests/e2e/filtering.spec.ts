@@ -778,7 +778,7 @@ test("Quote card does NOT mount on YouTube home (prevents layout thrashing)", as
   await expect(page.locator("#contents")).toBeVisible();
 });
 
-test("YouTube hides home feed recommendations and mounts mindful quote card when feed is enabled", async () => {
+test("YouTube filters home feed by hiding 'All' chip, auto-activating 'New for you', and preserving video grid", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
     youtube: { ...DEFAULT_SETTINGS.youtube, feed: true }
@@ -788,7 +788,23 @@ test("YouTube hides home feed recommendations and mounts mindful quote card when
     "https://www.youtube.com/",
     `
       <ytd-browse page-subtype="home" id="home-browse">
+        <div id="chips-wrapper">
+          <ytd-feed-filter-chip-bar-renderer>
+            <yt-chip-cloud-chip-renderer class="iron-selected" id="chip-all">
+              <yt-formatted-string title="All">All</yt-formatted-string>
+            </yt-chip-cloud-chip-renderer>
+            <yt-chip-cloud-chip-renderer id="chip-music">
+              <yt-formatted-string title="Music">Music</yt-formatted-string>
+            </yt-chip-cloud-chip-renderer>
+            <yt-chip-cloud-chip-renderer id="chip-new">
+              <button id="btn-new">New for you</button>
+            </yt-chip-cloud-chip-renderer>
+          </ytd-feed-filter-chip-bar-renderer>
+        </div>
         <div id="primary">
+          <ytd-rich-section-renderer id="watch-again-shelf" aria-label="Watch it again">
+            <div>Watch it again</div>
+          </ytd-rich-section-renderer>
           <ytd-rich-grid-renderer id="rich-grid">
             <div id="contents">Home Feed Videos</div>
           </ytd-rich-grid-renderer>
@@ -797,8 +813,20 @@ test("YouTube hides home feed recommendations and mounts mindful quote card when
     `
   );
 
-  await expect(page.locator("#rich-grid")).toBeHidden();
-  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
+  // 'All' chip and recommendation shelves are hidden
+  await expect(page.locator("#chip-all")).toBeHidden();
+  await expect(page.locator("#watch-again-shelf")).toBeHidden();
+
+  // Grid and other chips stay completely visible (no empty void!)
+  await expect(page.locator("#rich-grid")).toBeVisible();
+  await expect(page.locator("#contents")).toBeVisible();
+  await expect(page.locator("#chip-music")).toBeVisible();
+  await expect(page.locator("#chip-new")).toBeVisible();
+
+  // Restores on pause
+  await setSettings({ ...DEFAULT_SETTINGS, enabled: false });
+  await expect(page.locator("#chip-all")).toBeVisible();
+  await expect(page.locator("#watch-again-shelf")).toBeVisible();
 });
 
 test("YouTube hides comments on watch page in background whenever protection is active", async () => {

@@ -167,21 +167,21 @@ test("Snooze protection temporarily unpauses filters without modifying persisten
 });
 
 test("Mindful Intent Prompt persists goal in sessionStorage and allows clearing", async () => {
-  await setSettings({
-    ...DEFAULT_SETTINGS,
-    youtube: { ...DEFAULT_SETTINGS.youtube, feed: true }
+  // Seed focus cycle in 'on' (focus) phase
+  await worker.evaluate(async () => {
+    await chrome.storage.local.set({
+      "nullfeed-focus-cycle-anchors": {
+        facebook: Date.now() - 20 * 60_000
+      }
+    });
   });
 
   const page = await fixturePage(
-    "https://www.youtube.com/",
+    "https://www.facebook.com/",
     `
-      <ytd-browse page-subtype="home" id="home-browse">
-        <div id="primary">
-          <ytd-rich-grid-renderer id="rich-grid">
-            <div id="contents">Feed videos</div>
-          </ytd-rich-grid-renderer>
-        </div>
-      </ytd-browse>
+      <div role="feed" id="fb-feed">
+        <div role="article">Post 1</div>
+      </div>
     `
   );
 

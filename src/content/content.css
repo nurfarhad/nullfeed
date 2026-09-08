@@ -257,23 +257,16 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   display: none !important;
 }
 
-/* YouTube home feed recommendations */
+/* YouTube home feed recommendation shelves */
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-browse[page-subtype="home"] ytd-rich-grid-renderer,
+  ytd-browse[page-subtype="home"] ytd-rich-section-renderer[aria-label*="Watch it again" i],
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer,
+  ytd-browse[page-subtype="home"] ytd-rich-section-renderer:has([aria-label*="Watch it again" i]),
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-browse[page-subtype="home"] #chips-wrapper,
+  ytd-browse[page-subtype="home"] ytd-rich-section-renderer[aria-label*="Mixes" i],
 html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-browse[page-subtype="home"] ytd-feed-filter-chip-bar-renderer {
+  ytd-browse[page-subtype="home"] ytd-rich-section-renderer:has([aria-label*="Mixes" i]) {
   display: none !important;
-}
-
-/* YouTube home feed centered mindful quote card */
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-browse[page-subtype="home"] #nullfeed-quote-card {
-  max-width: 620px !important;
-  margin: 72px auto 0 auto !important;
 }
 
 /* YouTube watch page comments */
