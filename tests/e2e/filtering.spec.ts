@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   showQuotes: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false },
+  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false, interactions: false },
   instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
@@ -875,4 +875,61 @@ test("YouTube hides end screen tiles and autoplay overlays in background wheneve
   await expect(page.locator("#endscreen-card")).toBeVisible();
   await expect(page.locator("#autonav-overlay")).toBeVisible();
 });
+
+test("Facebook hides interaction bar (like, comment, share, reaction counters, comment composer) when enabled", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    facebook: { ...DEFAULT_SETTINGS.facebook, interactions: true }
+  });
+
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `
+      <div role="feed" id="fb-feed">
+        <div role="article" id="post-1">
+          <header>
+            <h2 id="author">John Doe</h2>
+            <span id="timestamp">2 hrs ago</span>
+          </header>
+          <div data-ad-preview="message" id="post-body">Hello world, this is a clean post!</div>
+          <div id="reactions-summary">
+            <span role="toolbar" aria-label="Reactions: 42 people">42 reactions</span>
+            <span aria-label="10 comments">10 comments</span>
+          </div>
+          <div role="toolbar" id="action-bar" aria-label="Actions for this post">
+            <div aria-label="Like" role="button" id="btn-like">Like</div>
+            <div aria-label="Comment" role="button" id="btn-comment">Comment</div>
+            <div aria-label="Share" role="button" id="btn-share">Share</div>
+          </div>
+          <form aria-label="Write a comment" id="comment-form">
+            <input type="text" placeholder="Write a comment..." />
+          </form>
+        </div>
+      </div>
+    `
+  );
+
+  // Author and post content remain visible
+  await expect(page.locator("#author")).toBeVisible();
+  await expect(page.locator("#post-body")).toBeVisible();
+
+  // Interaction bar, reaction counters, and comment composer are hidden
+  await expect(page.locator("#btn-like")).toBeHidden();
+  await expect(page.locator("#btn-comment")).toBeHidden();
+  await expect(page.locator("#btn-share")).toBeHidden();
+  await expect(page.locator("#reactions-summary")).toBeHidden();
+  await expect(page.locator("#comment-form")).toBeHidden();
+
+  // Restores when disabled
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    facebook: { ...DEFAULT_SETTINGS.facebook, interactions: false }
+  });
+  await expect(page.locator("#btn-like")).toBeVisible();
+  await expect(page.locator("#btn-comment")).toBeVisible();
+  await expect(page.locator("#btn-share")).toBeVisible();
+  await expect(page.locator("#reactions-summary")).toBeVisible();
+  await expect(page.locator("#comment-form")).toBeVisible();
+});
+
 

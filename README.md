@@ -36,6 +36,7 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **Hide Reels**: Removes Reels carousels, feed cards, and sidebar items without affecting the main navigation.
 * **Hide Stories**: Collapses empty story shells and trays with zero layout gaps.
 * **Hide Videos & Auto-Pause**: Hides video posts from the feed and automatically pauses background video playback.
+* **Hide Interaction Bar**: Collapses post action bars (Like, Comment, Share buttons), reaction counters, and comment composers so you can read feed posts without reacting or getting sucked into comment threads.
 * **Sponsored & Ad Blocker**: Seamlessly identifies and removes sponsored feed posts, ads, and sponsored side rails.
 
 ### Instagram

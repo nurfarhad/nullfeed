@@ -211,3 +211,24 @@ export function PlayerStopIcon() {
     </svg>
   );
 }
+
+export function HeartOffIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      class="switch-icon"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      <path d="M3 3l18 18" />
+      <path d="M19.5 12.572l-1.5 1.428m-2 2l-4 4l-7.5 -7.428a5 5 0 0 1 -1.288 -5.068a4.976 4.976 0 0 1 1.788 -2.504m3 -1a4.944 4.944 0 0 1 3.5 1.5a5 5 0 0 1 6.045 -.777" />
+    </svg>
+  );
+}
+
