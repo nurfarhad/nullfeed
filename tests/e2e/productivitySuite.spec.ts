@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
     redirect: true,
     sidebar: true,
     feed: false,
-    comments: false,
+    comments: true,
     endscreen: true
   }
 };

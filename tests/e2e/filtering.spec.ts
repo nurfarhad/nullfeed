@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
     redirect: true,
     sidebar: true,
     feed: false,
-    comments: false,
+    comments: true,
     endscreen: true
   }
 };
@@ -801,12 +801,7 @@ test("YouTube hides home feed recommendations and mounts mindful quote card when
   await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
 });
 
-test("YouTube hides comments on watch page when comments filter is enabled", async () => {
-  await setSettings({
-    ...DEFAULT_SETTINGS,
-    youtube: { ...DEFAULT_SETTINGS.youtube, comments: true }
-  });
-
+test("YouTube hides comments on watch page in background whenever protection is active", async () => {
   const page = await fixturePage(
     "https://www.youtube.com/watch?v=54321",
     `
@@ -819,9 +814,13 @@ test("YouTube hides comments on watch page when comments filter is enabled", asy
 
   await expect(page.locator("#player")).toBeVisible();
   await expect(page.locator("#comments")).toBeHidden();
+
+  // Restores when protection is paused
+  await setSettings({ ...DEFAULT_SETTINGS, enabled: false });
+  await expect(page.locator("#comments")).toBeVisible();
 });
 
-test("YouTube hides end screen tiles and autoplay overlays when endscreen filter is enabled", async () => {
+test("YouTube hides end screen tiles and autoplay overlays in background whenever protection is active", async () => {
   const page = await fixturePage(
     "https://www.youtube.com/watch?v=99999",
     `
@@ -834,5 +833,10 @@ test("YouTube hides end screen tiles and autoplay overlays when endscreen filter
 
   await expect(page.locator("#endscreen-card")).toBeHidden();
   await expect(page.locator("#autonav-overlay")).toBeHidden();
+
+  // Restores when protection is paused
+  await setSettings({ ...DEFAULT_SETTINGS, enabled: false });
+  await expect(page.locator("#endscreen-card")).toBeVisible();
+  await expect(page.locator("#autonav-overlay")).toBeVisible();
 });
 

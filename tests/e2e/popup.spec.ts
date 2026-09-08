@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS = {
     redirect: true,
     sidebar: true,
     feed: false,
-    comments: false,
+    comments: true,
     endscreen: true
   }
 };
@@ -169,9 +169,10 @@ test("popup exposes the approved controls and pause state", async () => {
   await page.getByRole("switch", { name: "Hide Explore", exact: true }).click();
   await page.getByRole("tab", { name: "YouTube" }).click();
   await expect(page.getByRole("switch", { name: "Hide Shorts Nav" })).toHaveCount(0);
+  await expect(page.getByRole("switch", { name: "Hide Comments" })).toHaveCount(0);
+  await expect(page.getByRole("switch", { name: "Hide End Screens" })).toHaveCount(0);
   await page.getByRole("switch", { name: "Hide Shorts", exact: true }).click();
   await page.getByRole("switch", { name: "Hide Recommended", exact: true }).click();
-  await page.getByRole("switch", { name: "Hide End Screens", exact: true }).click();
 
   await expect(page.getByText("No filters selected", { exact: true })).toBeVisible();
 
