@@ -40,7 +40,6 @@ describe("settings validation", () => {
       instagram: { reels: true, stories: true, explore: true, messages: false },
       youtube: {
         shorts: false,
-        navigation: true,
         redirect: true,
         sidebar: true,
         feed: true,
@@ -69,7 +68,6 @@ describe("settings validation", () => {
         ...DEFAULT_SETTINGS,
         youtube: {
           shorts: false,
-          navigation: false,
           redirect: false,
           sidebar: false,
           feed: false,
@@ -86,7 +84,6 @@ describe("settings validation", () => {
         ...DEFAULT_SETTINGS,
         youtube: {
           shorts: false,
-          navigation: false,
           redirect: false,
           sidebar: false,
           feed: false,
@@ -105,7 +102,6 @@ describe("settings validation", () => {
         ...DEFAULT_SETTINGS,
         youtube: {
           shorts: false,
-          navigation: false,
           redirect: true,
           sidebar: false,
           feed: false,

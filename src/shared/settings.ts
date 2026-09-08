@@ -19,7 +19,6 @@ export type InstagramSettings = {
 
 export type YouTubeSettings = {
   shorts: boolean;
-  navigation: boolean;
   redirect: boolean;
   sidebar: boolean;
   feed: boolean;
@@ -65,7 +64,6 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   }),
   youtube: Object.freeze({
     shorts: true,
-    navigation: true,
     redirect: true,
     sidebar: true,
     feed: false,
@@ -150,10 +148,6 @@ export function validateSettings(value: unknown): Settings {
         youtube.shorts,
         DEFAULT_SETTINGS.youtube.shorts
       ),
-      navigation: booleanOrDefault(
-        youtube.navigation,
-        DEFAULT_SETTINGS.youtube.navigation
-      ),
       redirect: booleanOrDefault(
         youtube.redirect,
         DEFAULT_SETTINGS.youtube.redirect
@@ -184,7 +178,6 @@ export function hasActiveFilters(settings: Settings): boolean {
     Boolean(settings.instagram.reels || settings.instagram.stories || settings.instagram.explore || settings.instagram.messages) ||
     Boolean(
       settings.youtube.shorts ||
-      settings.youtube.navigation ||
       settings.youtube.sidebar ||
       settings.youtube.feed ||
       settings.youtube.comments ||

@@ -11,7 +11,6 @@ import {
   LayoutGridIcon,
   MessageCircleIcon,
   MovieIcon,
-  NavbarIcon,
   PlayerStopIcon,
   SparklesIcon,
   VideoIcon
@@ -35,7 +34,6 @@ const ROWS: Record<Platform, readonly RowDefinition[]> = {
   ],
   youtube: [
     ["shorts", "Hide Shorts", BoltIcon],
-    ["navigation", "Hide Shorts Nav", NavbarIcon],
     ["sidebar", "Hide Recommended", SparklesIcon],
     ["feed", "Hide Home Feed", LayoutGridIcon],
     ["comments", "Hide Comments", MessageCircleIcon],

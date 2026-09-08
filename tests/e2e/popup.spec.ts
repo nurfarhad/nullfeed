@@ -10,7 +10,6 @@ const DEFAULT_SETTINGS = {
   instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
-    navigation: true,
     redirect: true,
     sidebar: true,
     feed: false,
@@ -169,8 +168,8 @@ test("popup exposes the approved controls and pause state", async () => {
   await page.getByRole("switch", { name: "Hide Stories", exact: true }).click();
   await page.getByRole("switch", { name: "Hide Explore", exact: true }).click();
   await page.getByRole("tab", { name: "YouTube" }).click();
+  await expect(page.getByRole("switch", { name: "Hide Shorts Nav" })).toHaveCount(0);
   await page.getByRole("switch", { name: "Hide Shorts", exact: true }).click();
-  await page.getByRole("switch", { name: "Hide Shorts Nav", exact: true }).click();
   await page.getByRole("switch", { name: "Hide Recommended", exact: true }).click();
   await page.getByRole("switch", { name: "Hide End Screens", exact: true }).click();
 

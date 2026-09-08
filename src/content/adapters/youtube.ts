@@ -143,7 +143,7 @@ export const youtubeAdapter: SiteAdapter = {
       );
     }
 
-    if (settings.youtube.navigation || settings.youtube.shorts) {
+    if (settings.youtube.shorts) {
       queryAll(root, SHORTS_NAV_SELECTORS).forEach((el) => {
         const nav = el.closest(
           "ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item, yt-list-item-view-model, yt-chip-cloud-chip-renderer"

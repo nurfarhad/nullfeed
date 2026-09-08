@@ -17,7 +17,6 @@ const DEFAULT_SETTINGS = {
   instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
-    navigation: true,
     redirect: true,
     sidebar: true,
     feed: false,
