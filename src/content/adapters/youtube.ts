@@ -3,9 +3,11 @@ import type { SiteAdapter } from "../adapter";
 import { queryAll } from "../adapter";
 import {
   cleanupOwnedElements,
+  cleanupOwnedFeature,
   hideClosest,
   hideElement
 } from "../domOwnership";
+import { mountQuoteCard, unmountQuoteCard } from "../quoteCard";
 
 const SHORTS_CONTAINERS = [
   "grid-shelf-view-model",
@@ -45,6 +47,36 @@ const SIDEBAR_RECOMMENDED_SELECTORS = [
   "ytd-watch-next-secondary-results-renderer",
   "#secondary.ytd-watch-flexy"
 ] as const;
+
+const COMMENTS_SELECTORS = [
+  "ytd-comments#comments",
+  "#comments.ytd-watch-flexy",
+  "ytd-comments",
+  "ytd-item-section-renderer#sections.ytd-comments"
+] as const;
+
+const ENDSCREEN_SELECTORS = [
+  ".ytp-ce-element",
+  ".ytp-endscreen-content",
+  ".ytp-autonav-endscreen-countdown-overlay",
+  ".ytp-autonav-endscreen-button-container",
+  ".ytp-pause-overlay",
+  ".ytp-pause-overlay-container"
+] as const;
+
+const HOME_FEED_SELECTORS = [
+  'ytd-browse[page-subtype="home"] ytd-rich-grid-renderer',
+  'ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer',
+  'ytd-browse[page-subtype="home"] #chips-wrapper',
+  'ytd-browse[page-subtype="home"] ytd-feed-filter-chip-bar-renderer'
+] as const;
+
+function isYouTubeHomePage(): boolean {
+  if (typeof location === "undefined") {
+    return false;
+  }
+  return location.pathname === "/" || location.pathname === "";
+}
 
 export const youtubeAdapter: SiteAdapter = {
   platform: "youtube",
@@ -128,12 +160,52 @@ export const youtubeAdapter: SiteAdapter = {
       });
     }
 
-    // NOTE: No in-feed quote card on YouTube. YouTube's Polymer grid and sticky
-    // category chip bar conflict with injected elements placed above the
-    // grid, causing layout thrashing and visible glitching.
+    if (settings.youtube.feed && isYouTubeHomePage()) {
+      HOME_FEED_SELECTORS.forEach((selector) => {
+        queryAll(root, selector).forEach((element) =>
+          hideElement(element, "youtube-feed")
+        );
+      });
+
+      if (settings.showQuotes) {
+        const doc = root instanceof Document ? root : document;
+        const homeContainer =
+          doc.querySelector('ytd-browse[page-subtype="home"] #primary') ??
+          doc.querySelector('ytd-browse[page-subtype="home"]');
+        if (homeContainer) {
+          mountQuoteCard(homeContainer, "append", "cycle");
+        }
+      }
+    } else if (!settings.youtube.feed || !isYouTubeHomePage()) {
+      const doc =
+        root instanceof Document
+          ? root
+          : (root as Element).ownerDocument ?? document;
+      cleanupOwnedFeature("youtube-feed", doc);
+      if (!isYouTubeHomePage() || !settings.youtube.feed) {
+        unmountQuoteCard();
+      }
+    }
+
+    if (settings.youtube.comments) {
+      COMMENTS_SELECTORS.forEach((selector) => {
+        queryAll(root, selector).forEach((element) =>
+          hideElement(element, "youtube-comments")
+        );
+      });
+    }
+
+    if (settings.youtube.endscreen) {
+      ENDSCREEN_SELECTORS.forEach((selector) => {
+        queryAll(root, selector).forEach((element) =>
+          hideElement(element, "youtube-endscreen")
+        );
+      });
+    }
   },
 
   cleanup() {
     cleanupOwnedElements();
+    unmountQuoteCard();
   }
 };

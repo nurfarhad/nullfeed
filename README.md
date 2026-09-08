@@ -27,6 +27,9 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **Hide Shorts Navigation**: Cleans up the left sidebar and mini-guide by removing the Shorts icon and quick-access buttons.
 * **Instant Shorts Redirect**: Automatically redirects direct `/shorts/...` URLs back to your clean YouTube home feed.
 * **Hide Recommended Sidebar**: Removes the "Up Next / Recommended Videos" sidebar on watch pages to stop endless video rabbit holes.
+* **Hide Home Feed**: Replaces the algorithmic recommendation grid on YouTube's home page with an inspiring focus quote card, turning YouTube into an intentional search-driven tool.
+* **Hide Comments**: Collapses the comments section on video watch pages to prevent comment-section doomscrolling.
+* **Hide End Screens & Autoplay**: Removes intrusive end-screen recommendation tiles and autoplay countdown overlays inside the video player.
 
 ### Facebook
 * **Hide Reels**: Removes Reels carousels, feed cards, and sidebar items without affecting the main navigation.

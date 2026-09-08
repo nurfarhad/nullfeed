@@ -257,6 +257,51 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   display: none !important;
 }
 
+/* YouTube home feed recommendations */
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
+  ytd-browse[page-subtype="home"] ytd-rich-grid-renderer,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
+  ytd-browse[page-subtype="home"] #contents.ytd-rich-grid-renderer,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
+  ytd-browse[page-subtype="home"] #chips-wrapper,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
+  ytd-browse[page-subtype="home"] ytd-feed-filter-chip-bar-renderer {
+  display: none !important;
+}
+
+/* YouTube home feed centered mindful quote card */
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
+  ytd-browse[page-subtype="home"] #nullfeed-quote-card {
+  max-width: 620px !important;
+  margin: 72px auto 0 auto !important;
+}
+
+/* YouTube watch page comments */
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-comments]
+  ytd-comments#comments,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-comments]
+  #comments.ytd-watch-flexy,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-comments]
+  ytd-comments {
+  display: none !important;
+}
+
+/* YouTube player end screen tiles & autoplay overlays */
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-endscreen]
+  .ytp-ce-element,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-endscreen]
+  .ytp-endscreen-content,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-endscreen]
+  .ytp-autonav-endscreen-countdown-overlay,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-endscreen]
+  .ytp-autonav-endscreen-button-container,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-endscreen]
+  .ytp-pause-overlay,
+html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-endscreen]
+  .ytp-pause-overlay-container {
+  display: none !important;
+}
+
 /* Nullfeed Mindful Focus Quote Card */
 .nullfeed-quote-card {
   display: flex !important;

@@ -20,6 +20,9 @@ export type YouTubeSettings = {
   navigation: boolean;
   redirect: boolean;
   sidebar: boolean;
+  feed: boolean;
+  comments: boolean;
+  endscreen: boolean;
 };
 
 export type Settings = {
@@ -60,7 +63,10 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     shorts: true,
     navigation: true,
     redirect: true,
-    sidebar: true
+    sidebar: true,
+    feed: false,
+    comments: false,
+    endscreen: true
   })
 });
 
@@ -143,6 +149,18 @@ export function validateSettings(value: unknown): Settings {
       sidebar: booleanOrDefault(
         youtube.sidebar,
         DEFAULT_SETTINGS.youtube.sidebar
+      ),
+      feed: booleanOrDefault(
+        youtube.feed,
+        DEFAULT_SETTINGS.youtube.feed
+      ),
+      comments: booleanOrDefault(
+        youtube.comments,
+        DEFAULT_SETTINGS.youtube.comments
+      ),
+      endscreen: booleanOrDefault(
+        youtube.endscreen,
+        DEFAULT_SETTINGS.youtube.endscreen
       )
     }
   };
@@ -152,7 +170,14 @@ export function hasActiveFilters(settings: Settings): boolean {
   return (
     Boolean(settings.facebook.reels || settings.facebook.stories || settings.facebook.videos) ||
     Boolean(settings.instagram.reels || settings.instagram.stories || settings.instagram.explore) ||
-    Boolean(settings.youtube.shorts || settings.youtube.navigation || settings.youtube.sidebar)
+    Boolean(
+      settings.youtube.shorts ||
+      settings.youtube.navigation ||
+      settings.youtube.sidebar ||
+      settings.youtube.feed ||
+      settings.youtube.comments ||
+      settings.youtube.endscreen
+    )
   );
 }
 

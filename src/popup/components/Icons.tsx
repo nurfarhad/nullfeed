@@ -151,3 +151,63 @@ export function SparklesIcon() {
     </svg>
   );
 }
+
+export function LayoutGridIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      class="switch-icon"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+      <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+      <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+      <path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+    </svg>
+  );
+}
+
+export function MessageCircleIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      class="switch-icon"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1" />
+    </svg>
+  );
+}
+
+export function PlayerStopIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      class="switch-icon"
+      fill="none"
+      height="18"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="18"
+    >
+      <path d="M5 5m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
+    </svg>
+  );
+}

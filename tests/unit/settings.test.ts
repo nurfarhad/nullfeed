@@ -26,7 +26,7 @@ describe("settings validation", () => {
         schemaVersion: 0,
         enabled: false,
         lastPlatform: "instagram",
-        youtube: { shorts: false, unexpected: "ignored" },
+        youtube: { shorts: false, feed: true, comments: true, unexpected: "ignored" },
         facebook: { videos: true },
         instagram: "malformed",
         secret: "must not survive"
@@ -38,7 +38,15 @@ describe("settings validation", () => {
       lastPlatform: "instagram",
       facebook: { reels: true, stories: true, videos: true, ads: true },
       instagram: { reels: true, stories: true, explore: true },
-      youtube: { shorts: false, navigation: true, redirect: true, sidebar: true }
+      youtube: {
+        shorts: false,
+        navigation: true,
+        redirect: true,
+        sidebar: true,
+        feed: true,
+        comments: true,
+        endscreen: true
+      }
     });
   });
 
@@ -54,18 +62,34 @@ describe("settings validation", () => {
     expect(
       hasActiveFilters({
         ...DEFAULT_SETTINGS,
-        youtube: { shorts: false, navigation: false, redirect: false, sidebar: false },
+        youtube: {
+          shorts: false,
+          navigation: false,
+          redirect: false,
+          sidebar: false,
+          feed: false,
+          comments: false,
+          endscreen: false
+        },
         facebook: { reels: false, stories: false, videos: false, ads: false },
         instagram: { reels: false, stories: false, explore: false }
       })
     ).toBe(false);
   });
 
-  it("returns false if all visible toggles are off even if background ads are on", () => {
+  it("returns false if all visible toggles are off even if background ads or redirect are on", () => {
     expect(
       hasActiveFilters({
         ...DEFAULT_SETTINGS,
-        youtube: { shorts: false, navigation: false, redirect: true, sidebar: false },
+        youtube: {
+          shorts: false,
+          navigation: false,
+          redirect: true,
+          sidebar: false,
+          feed: false,
+          comments: false,
+          endscreen: false
+        },
         facebook: { reels: false, stories: false, videos: false, ads: true },
         instagram: { reels: false, stories: false, explore: false }
       })

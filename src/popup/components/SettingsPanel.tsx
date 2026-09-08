@@ -8,8 +8,11 @@ import {
   BoltIcon,
   CircleDashedIcon,
   CompassIcon,
+  LayoutGridIcon,
+  MessageCircleIcon,
   MovieIcon,
   NavbarIcon,
+  PlayerStopIcon,
   SparklesIcon,
   VideoIcon
 } from "./Icons";
@@ -31,7 +34,10 @@ const ROWS: Record<Platform, readonly RowDefinition[]> = {
   youtube: [
     ["shorts", "Hide Shorts", BoltIcon],
     ["navigation", "Hide Shorts Nav", NavbarIcon],
-    ["sidebar", "Hide Recommended", SparklesIcon]
+    ["sidebar", "Hide Recommended", SparklesIcon],
+    ["feed", "Hide Home Feed", LayoutGridIcon],
+    ["comments", "Hide Comments", MessageCircleIcon],
+    ["endscreen", "Hide End Screens", PlayerStopIcon]
   ]
 };
 

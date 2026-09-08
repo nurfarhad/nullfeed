@@ -8,7 +8,15 @@ const DEFAULT_SETTINGS = {
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true }
+  youtube: {
+    shorts: true,
+    navigation: true,
+    redirect: true,
+    sidebar: true,
+    feed: false,
+    comments: false,
+    endscreen: true
+  }
 };
 
 let context: BrowserContext;
@@ -160,6 +168,7 @@ test("popup exposes the approved controls and pause state", async () => {
   await page.getByRole("switch", { name: "Hide Shorts", exact: true }).click();
   await page.getByRole("switch", { name: "Hide Shorts Nav", exact: true }).click();
   await page.getByRole("switch", { name: "Hide Recommended", exact: true }).click();
+  await page.getByRole("switch", { name: "Hide End Screens", exact: true }).click();
 
   await expect(page.getByText("No filters selected", { exact: true })).toBeVisible();
 

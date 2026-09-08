@@ -15,7 +15,15 @@ const DEFAULT_SETTINGS = {
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },
-  youtube: { shorts: true, navigation: true, redirect: true, sidebar: true }
+  youtube: {
+    shorts: true,
+    navigation: true,
+    redirect: true,
+    sidebar: true,
+    feed: false,
+    comments: false,
+    endscreen: true
+  }
 };
 
 let context: BrowserContext;
@@ -768,5 +776,63 @@ test("Quote card does NOT mount on YouTube home (prevents layout thrashing)", as
   await expect(page.locator("#nullfeed-quote-card")).toHaveCount(0);
   // Feed content should remain visible and untouched
   await expect(page.locator("#contents")).toBeVisible();
+});
+
+test("YouTube hides home feed recommendations and mounts mindful quote card when feed is enabled", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    youtube: { ...DEFAULT_SETTINGS.youtube, feed: true }
+  });
+
+  const page = await fixturePage(
+    "https://www.youtube.com/",
+    `
+      <ytd-browse page-subtype="home" id="home-browse">
+        <div id="primary">
+          <ytd-rich-grid-renderer id="rich-grid">
+            <div id="contents">Home Feed Videos</div>
+          </ytd-rich-grid-renderer>
+        </div>
+      </ytd-browse>
+    `
+  );
+
+  await expect(page.locator("#rich-grid")).toBeHidden();
+  await expect(page.locator("#nullfeed-quote-card")).toBeVisible();
+});
+
+test("YouTube hides comments on watch page when comments filter is enabled", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    youtube: { ...DEFAULT_SETTINGS.youtube, comments: true }
+  });
+
+  const page = await fixturePage(
+    "https://www.youtube.com/watch?v=54321",
+    `
+      <div id="player">Video Player</div>
+      <ytd-comments id="comments">
+        <div id="comment-thread">User comments</div>
+      </ytd-comments>
+    `
+  );
+
+  await expect(page.locator("#player")).toBeVisible();
+  await expect(page.locator("#comments")).toBeHidden();
+});
+
+test("YouTube hides end screen tiles and autoplay overlays when endscreen filter is enabled", async () => {
+  const page = await fixturePage(
+    "https://www.youtube.com/watch?v=99999",
+    `
+      <div id="player">
+        <div class="ytp-ce-element" id="endscreen-card">Next Up Video</div>
+        <div class="ytp-autonav-endscreen-countdown-overlay" id="autonav-overlay">Autoplay Next</div>
+      </div>
+    `
+  );
+
+  await expect(page.locator("#endscreen-card")).toBeHidden();
+  await expect(page.locator("#autonav-overlay")).toBeHidden();
 });
 
