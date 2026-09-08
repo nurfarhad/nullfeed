@@ -27,6 +27,76 @@ function pickNextLine(reason: QuoteCardReason, excludeIndex: number): { text: st
   return { text: quote.text, author: quote.author, index };
 }
 
+const INTENT_STORAGE_KEY = "nullfeed-session-intent";
+
+function getSessionIntent(): string | null {
+  try {
+    return sessionStorage.getItem(INTENT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setSessionIntent(intent: string | null): void {
+  try {
+    if (intent) {
+      sessionStorage.setItem(INTENT_STORAGE_KEY, intent);
+    } else {
+      sessionStorage.removeItem(INTENT_STORAGE_KEY);
+    }
+  } catch {
+    // Non-fatal
+  }
+}
+
+function renderIntentHTML(intent: string | null): string {
+  if (intent) {
+    const escaped = intent.replace(/"/g, "&quot;");
+    return `
+      <div class="nullfeed-intent-badge">
+        <span class="nullfeed-intent-icon" aria-hidden="true">🎯</span>
+        <span class="nullfeed-intent-tag">Session Goal:</span>
+        <span class="nullfeed-intent-text">“${escaped}”</span>
+        <button type="button" class="nullfeed-intent-clear" title="Clear Goal" aria-label="Clear Goal">×</button>
+      </div>
+    `;
+  }
+  return `
+    <form class="nullfeed-intent-form">
+      <input type="text" class="nullfeed-intent-input" placeholder="What did you open this tab to do?" maxlength="70" autocomplete="off" />
+      <button type="submit" class="nullfeed-intent-submit">Set Goal</button>
+    </form>
+  `;
+}
+
+function bindIntentHandlers(container: HTMLElement): void {
+  const form = container.querySelector<HTMLFormElement>(".nullfeed-intent-form");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const input = form.querySelector<HTMLInputElement>(".nullfeed-intent-input");
+      const val = input?.value.trim();
+      if (val) {
+        setSessionIntent(val);
+        container.innerHTML = renderIntentHTML(val);
+        bindIntentHandlers(container);
+      }
+    });
+  }
+
+  const clearBtn = container.querySelector<HTMLButtonElement>(".nullfeed-intent-clear");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setSessionIntent(null);
+      container.innerHTML = renderIntentHTML(null);
+      bindIntentHandlers(container);
+    });
+  }
+}
+
 export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLElement {
   const existing = document.getElementById(CARD_ID);
   if (existing) {
@@ -35,6 +105,7 @@ export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLE
 
   const { text, author, index } = pickLine(reason);
   currentQuoteIndex = index;
+  const currentIntent = getSessionIntent();
 
   const card = document.createElement("div");
   card.id = CARD_ID;
@@ -46,18 +117,23 @@ export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLE
   const refreshTitle = reason === "smart" ? "New nudge" : "New Quote";
 
   card.innerHTML = `
-    <div class="nullfeed-quote-header">
-      <span class="nullfeed-quote-badge">${badgeLabel}</span>
+    <div class="nullfeed-quote-main">
+      <div class="nullfeed-quote-header">
+        <span class="nullfeed-quote-badge">${badgeLabel}</span>
+      </div>
+      <div class="nullfeed-quote-body">
+        <blockquote class="nullfeed-quote-text">“${text}”</blockquote>
+        <cite class="nullfeed-quote-author">— ${author}</cite>
+      </div>
+      <button type="button" class="nullfeed-quote-refresh" title="${refreshTitle}" aria-label="${refreshTitle}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+      </button>
     </div>
-    <div class="nullfeed-quote-body">
-      <blockquote class="nullfeed-quote-text">“${text}”</blockquote>
-      <cite class="nullfeed-quote-author">— ${author}</cite>
+    <div class="nullfeed-intent-container">
+      ${renderIntentHTML(currentIntent)}
     </div>
-    <button type="button" class="nullfeed-quote-refresh" title="${refreshTitle}" aria-label="${refreshTitle}">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-      </svg>
-    </button>
   `;
 
   const refreshBtn = card.querySelector<HTMLButtonElement>(".nullfeed-quote-refresh");
@@ -72,6 +148,11 @@ export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLE
       if (textEl) textEl.textContent = `“${next.text}”`;
       if (authorEl) authorEl.textContent = `— ${next.author}`;
     });
+  }
+
+  const intentContainer = card.querySelector<HTMLElement>(".nullfeed-intent-container");
+  if (intentContainer) {
+    bindIntentHandlers(intentContainer);
   }
 
   return card;

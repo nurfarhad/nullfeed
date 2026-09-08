@@ -36,8 +36,8 @@ describe("settings validation", () => {
       enabled: false,
       showQuotes: true,
       lastPlatform: "instagram",
-      facebook: { reels: true, stories: true, videos: true, ads: true },
-      instagram: { reels: true, stories: true, explore: true },
+      facebook: { reels: true, stories: true, videos: true, ads: true, messages: false },
+      instagram: { reels: true, stories: true, explore: true, messages: false },
       youtube: {
         shorts: false,
         navigation: true,
@@ -52,9 +52,14 @@ describe("settings validation", () => {
 
   it("backfills missing ads field to default", () => {
     const result = validateSettings({
-      facebook: { reels: false, stories: false, videos: false }
+      facebook: { reels: false, stories: false, videos: false, messages: false }
     });
     expect(result.facebook.ads).toBe(true);
+  });
+
+  it("defaults messages to false for Facebook and Instagram", () => {
+    expect(DEFAULT_SETTINGS.facebook.messages).toBe(false);
+    expect(DEFAULT_SETTINGS.instagram.messages).toBe(false);
   });
 
   it("detects whether any granular filter is active", () => {
@@ -71,10 +76,27 @@ describe("settings validation", () => {
           comments: false,
           endscreen: false
         },
-        facebook: { reels: false, stories: false, videos: false, ads: false },
-        instagram: { reels: false, stories: false, explore: false }
+        facebook: { reels: false, stories: false, videos: false, ads: false, messages: false },
+        instagram: { reels: false, stories: false, explore: false, messages: false }
       })
     ).toBe(false);
+
+    expect(
+      hasActiveFilters({
+        ...DEFAULT_SETTINGS,
+        youtube: {
+          shorts: false,
+          navigation: false,
+          redirect: false,
+          sidebar: false,
+          feed: false,
+          comments: false,
+          endscreen: false
+        },
+        facebook: { reels: false, stories: false, videos: false, ads: false, messages: true },
+        instagram: { reels: false, stories: false, explore: false, messages: false }
+      })
+    ).toBe(true);
   });
 
   it("returns false if all visible toggles are off even if background ads or redirect are on", () => {
@@ -90,8 +112,8 @@ describe("settings validation", () => {
           comments: false,
           endscreen: false
         },
-        facebook: { reels: false, stories: false, videos: false, ads: true },
-        instagram: { reels: false, stories: false, explore: false }
+        facebook: { reels: false, stories: false, videos: false, ads: true, messages: false },
+        instagram: { reels: false, stories: false, explore: false, messages: false }
       })
     ).toBe(false);
   });

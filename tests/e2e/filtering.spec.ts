@@ -13,8 +13,8 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   showQuotes: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false, ads: true },
-  instagram: { reels: true, stories: true, explore: true },
+  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false },
+  instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
     navigation: true,
@@ -29,7 +29,8 @@ const DEFAULT_SETTINGS = {
 let context: BrowserContext;
 let worker: Worker;
 
-async function setSettings(settings = DEFAULT_SETTINGS): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function setSettings(settings: Record<string, any> = DEFAULT_SETTINGS): Promise<void> {
   await worker.evaluate(
     async ({ value }) => {
       await chrome.storage.sync.set({ settings: value });

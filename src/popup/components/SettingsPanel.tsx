@@ -24,12 +24,14 @@ const ROWS: Record<Platform, readonly RowDefinition[]> = {
   facebook: [
     ["reels", "Hide Reels", MovieIcon],
     ["stories", "Hide Stories", CircleDashedIcon],
-    ["videos", "Hide Videos", VideoIcon]
+    ["videos", "Hide Videos", VideoIcon],
+    ["messages", "Direct to Messages", MessageCircleIcon]
   ],
   instagram: [
     ["reels", "Hide Reels", MovieIcon],
     ["stories", "Hide Stories", CircleDashedIcon],
-    ["explore", "Hide Explore", CompassIcon]
+    ["explore", "Hide Explore", CompassIcon],
+    ["messages", "Direct to Messages", MessageCircleIcon]
   ],
   youtube: [
     ["shorts", "Hide Shorts", BoltIcon],

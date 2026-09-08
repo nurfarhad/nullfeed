@@ -2,6 +2,7 @@ import type { Settings } from "../shared/settings";
 import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
 import { getOrCreateAnchor } from "../shared/focusCycleStorage";
 import { recordDistractions } from "../shared/statsStorage";
+import { getSnoozeUntil, SNOOZE_STORAGE_KEY } from "../shared/snoozeStorage";
 import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
 import { instagramAdapter } from "./adapters/instagram";
@@ -41,13 +42,48 @@ function logFailure(message: string, error: unknown): void {
   console.error(message, error);
 }
 
+let snoozeUntil: number | null = null;
+let snoozeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function isSnoozeActive(): boolean {
+  return Boolean(snoozeUntil && snoozeUntil > Date.now());
+}
+
+function getEffectiveSettings(source: Settings): Settings {
+  if (isSnoozeActive()) {
+    return { ...source, enabled: false };
+  }
+  return source;
+}
+
+function scheduleSnoozeExpiration(onExpire: () => void): void {
+  if (snoozeTimeout) {
+    clearTimeout(snoozeTimeout);
+    snoozeTimeout = null;
+  }
+  if (!snoozeUntil) {
+    return;
+  }
+  const remaining = snoozeUntil - Date.now();
+  if (remaining > 0) {
+    snoozeTimeout = setTimeout(() => {
+      snoozeUntil = null;
+      onExpire();
+    }, remaining + 50);
+  } else {
+    snoozeUntil = null;
+  }
+}
+
 function updateRootState(current: Settings): void {
   const root = document.documentElement;
+  const effective = getEffectiveSettings(current);
   const platformSettings = adapter
-    ? current[adapter.platform]
+    ? effective[adapter.platform]
     : undefined;
 
-  root.toggleAttribute("data-nullfeed-enabled", current.enabled);
+  root.toggleAttribute("data-nullfeed-enabled", effective.enabled);
+  root.toggleAttribute("data-nullfeed-snoozed", isSnoozeActive());
   root.setAttribute(
     "data-nullfeed-platform",
     adapter?.platform ?? "unsupported"
@@ -59,7 +95,7 @@ function updateRootState(current: Settings): void {
     }
   }
 
-  if (current.enabled && platformSettings) {
+  if (effective.enabled && platformSettings) {
     for (const [key, enabled] of Object.entries(platformSettings)) {
       root.toggleAttribute(`data-nullfeed-filter-${key}`, enabled);
     }
@@ -71,8 +107,12 @@ function handleRoute(current: Settings): boolean {
     return false;
   }
 
+  const destination = adapter.redirectDestination
+    ? adapter.redirectDestination(location.pathname, current) ?? adapter.homeUrl
+    : adapter.homeUrl;
+
   recordDistractions(1);
-  location.replace(adapter.homeUrl);
+  location.replace(destination);
   return true;
 }
 
@@ -81,8 +121,13 @@ function scan(root: ParentNode): void {
     return;
   }
 
+  const effective = getEffectiveSettings(settings);
+  if (!effective.enabled) {
+    return;
+  }
+
   try {
-    adapter.scan(root, settings);
+    adapter.scan(root, effective);
   } catch (error) {
     logFailure(`Nullfeed ${adapter.platform} scan failed.`, error);
   }
@@ -97,7 +142,8 @@ function apply(nextSettings: Settings): void {
     adapter.cleanup();
     settings = nextSettings;
     updateRootState(nextSettings);
-    if (!handleRoute(nextSettings)) {
+    const effective = getEffectiveSettings(nextSettings);
+    if (effective.enabled && !handleRoute(effective)) {
       scan(document);
     }
   } catch (error) {
@@ -118,19 +164,27 @@ if (adapter) {
     stopRouteWatcher = null;
   }
 
-  void getSettings()
-    .then((loaded) => {
+  void Promise.all([getSettings(), getSnoozeUntil()])
+    .then(([loaded, loadedSnooze]) => {
+      snoozeUntil = loadedSnooze;
+      scheduleSnoozeExpiration(() => {
+        void getSettings().then((s) => {
+          apply(s);
+        });
+      });
       apply(loaded);
       stopObserver = observeDynamicContent((root) => {
-        if (settings && !handleRoute(settings)) {
+        const effective = settings ? getEffectiveSettings(settings) : null;
+        if (effective?.enabled && !handleRoute(effective)) {
           scan(root);
         }
-        if (cyclePlatform && settings?.enabled && currentCyclePhase === "on") {
+        if (cyclePlatform && effective?.enabled && currentCyclePhase === "on") {
           applyCyclePhase(cyclePlatform, "on");
         }
       });
       stopRouteWatcher = watchRoutes(() => {
-        if (settings && !handleRoute(settings)) {
+        const effective = settings ? getEffectiveSettings(settings) : null;
+        if (effective?.enabled && !handleRoute(effective)) {
           scan(document);
         }
       });
@@ -150,6 +204,23 @@ if (adapter) {
           logFailure("Nullfeed could not apply changed settings.", error)
         );
     }
+
+    if (
+      areaName === "local" &&
+      changes[SNOOZE_STORAGE_KEY] !== undefined
+    ) {
+      snoozeUntil = typeof changes[SNOOZE_STORAGE_KEY].newValue === "number"
+        ? changes[SNOOZE_STORAGE_KEY].newValue
+        : null;
+      scheduleSnoozeExpiration(() => {
+        void getSettings().then((s) => {
+          apply(s);
+        });
+      });
+      void getSettings().then((s) => {
+        apply(s);
+      });
+    }
   });
 
   // Expose teardown for diagnostics (accessible from the page-world via
@@ -168,8 +239,9 @@ if (cyclePlatform) {
   let detectorState: DetectorState = createDetectorState();
 
   async function tickCycle(current: Settings): Promise<void> {
+    const effective = getEffectiveSettings(current);
 
-    if (!current.enabled) {
+    if (!effective.enabled) {
       if (currentCyclePhase !== null) {
         applyCyclePhase(cyclePlatform!, "off");
         currentCyclePhase = null;
@@ -200,6 +272,13 @@ if (cyclePlatform) {
     if (
       areaName === "sync" &&
       changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
+    ) {
+      void getSettings().then(tickCycle);
+    }
+
+    if (
+      areaName === "local" &&
+      changes[SNOOZE_STORAGE_KEY] !== undefined
     ) {
       void getSettings().then(tickCycle);
     }

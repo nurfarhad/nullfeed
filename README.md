@@ -18,8 +18,9 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **System-Aware Adaptation**: Automatically detects and matches your device or Chrome browser preference (dark or light mode).
 * **UI8 Bento Pro Minimalist Design**: Physical matte borders, tactile toggles, and seamless styling with zero configuration needed.
 
-### Mindful Focus Quotes
+### Mindful Focus Quotes & Intent Prompt
 * **Serene Feed Replacement**: When algorithmic feeds are hidden, Nullfeed replaces the distraction void with an elegant Focus Card featuring inspiring quotes from Marcus Aurelius, Seneca, Naval Ravikant, Steve Jobs, and more.
+* **Mindful Intent Prompt**: Set an intentional goal for your browsing session ("What did you come here to do?"). Pins your objective badge directly to the page without cluttering persistent settings.
 * **Interactive Refresh**: Click the subtle refresh button to cycle to a new quote anytime.
 
 ### YouTube
@@ -32,17 +33,20 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **Hide End Screens & Autoplay**: Removes intrusive end-screen recommendation tiles and autoplay countdown overlays inside the video player.
 
 ### Facebook
+* **Direct to Messages (Intentional Navigation)**: Direct root Facebook visits (`facebook.com/`) straight to Messenger (`/messages/`), keeping communication open while avoiding the infinite feed trap.
 * **Hide Reels**: Removes Reels carousels, feed cards, and sidebar items without affecting the main navigation.
 * **Hide Stories**: Collapses empty story shells and trays with zero layout gaps.
 * **Hide Videos & Auto-Pause**: Hides video posts from the feed and automatically pauses background video playback.
 * **Sponsored & Ad Blocker**: Seamlessly identifies and removes sponsored feed posts, ads, and sponsored side rails.
 
 ### Instagram
+* **Direct to Messages (Intentional Navigation)**: Direct root Instagram visits (`instagram.com/`) straight to Direct Messages (`/direct/inbox/`) to stay in touch without getting sucked into the feed.
 * **Hide Reels**: Removes the Reels icon from the sidebar, removes the Reels tab from profile pages, redirects `/[username]/reels/` and `/reels/` routes, and cleans up the Explore grid without distorting profile posts.
 * **Hide Stories & Highlights**: Hides story trays and profile story highlight carousels with clean zero-gap layout collapse.
 * **Hide Explore**: Hides the Explore navigation icon from the sidebar.
 
 ### Productivity Controls
+* **Snooze Protection**: Quick 5-minute or 15-minute temporary unpause with a live countdown timer and immediate one-click resume — zero new permissions, zero persistent setting pollution.
 * **Automatic Focus Cycle**: Automatically switches between a 15-minute blocked and 15-minute open phase for feeds on Facebook, LinkedIn, Twitter/X, and Reddit, replacing endless scrolling with a serene focus quote card.
 * **Smart Trigger**: Behavioral doomscroll detection that cuts a Focus Cycle break short early when fast, sustained scrolling is detected across covered platforms.
 * **Time Reclaimed & Distraction Counter**: Real-time stats card in the popup tracking daily distractions intercepted, estimated focused time saved, and active focus day streaks.

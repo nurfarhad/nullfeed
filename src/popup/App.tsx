@@ -27,15 +27,29 @@ import {
   STATS_STORAGE_KEY,
   type FocusStats
 } from "../shared/statsStorage";
+import {
+  cancelSnooze,
+  formatSnoozeRemaining,
+  getSnoozeUntil,
+  setSnooze,
+  SNOOZE_STORAGE_KEY
+} from "../shared/snoozeStorage";
 
 const SKELETON_MINIMUM_MS = 150;
 
 type Status = {
   label: string;
-  tone: "active" | "neutral";
+  tone: "active" | "neutral" | "warning";
 };
 
-function getStatus(settings: Settings): Status {
+function getStatus(settings: Settings, snoozeUntil: number | null, now: number): Status {
+  if (snoozeUntil && snoozeUntil > now) {
+    return {
+      label: "Snoozed",
+      tone: "warning"
+    };
+  }
+
   if (!settings.enabled) {
     return {
       label: "Paused",
@@ -59,11 +73,32 @@ function getStatus(settings: Settings): Status {
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [stats, setStats] = useState<FocusStats>(DEFAULT_STATS);
+  const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(Date.now());
   const [error, setError] = useState<string | null>(null);
+
+  const isSnoozed = Boolean(snoozeUntil && snoozeUntil > now);
+
   const status = useMemo(
-    () => getStatus(settings ?? DEFAULT_SETTINGS),
-    [settings]
+    () => getStatus(settings ?? DEFAULT_SETTINGS, snoozeUntil, now),
+    [settings, snoozeUntil, now]
   );
+
+  useEffect(() => {
+    if (!isSnoozed) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (snoozeUntil && current >= snoozeUntil) {
+        setSnoozeUntil(null);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isSnoozed, snoozeUntil]);
 
   useEffect(() => {
     const started = performance.now();
@@ -91,11 +126,15 @@ export function App() {
           });
       }
 
-      if (
-        areaName === "local" &&
-        changes[STATS_STORAGE_KEY]?.newValue !== undefined
-      ) {
-        setStats(changes[STATS_STORAGE_KEY].newValue as FocusStats);
+      if (areaName === "local") {
+        if (changes[STATS_STORAGE_KEY]?.newValue !== undefined) {
+          setStats(changes[STATS_STORAGE_KEY].newValue as FocusStats);
+        }
+        if (changes[SNOOZE_STORAGE_KEY] !== undefined) {
+          setSnoozeUntil(
+            (changes[SNOOZE_STORAGE_KEY].newValue as number | null) ?? null
+          );
+        }
       }
     };
 
@@ -103,6 +142,10 @@ export function App() {
 
     void getStats()
       .then(setStats)
+      .catch(() => {});
+
+    void getSnoozeUntil()
+      .then(setSnoozeUntil)
       .catch(() => {});
 
     void getSettings()
@@ -203,6 +246,29 @@ export function App() {
     );
   }
 
+  async function handleSnooze(minutes: number) {
+    try {
+      const until = await setSnooze(minutes);
+      setSnoozeUntil(until);
+      setNow(Date.now());
+    } catch (snoozeError) {
+      if (DEVELOPMENT) {
+        console.error("Nullfeed popup could not set snooze.", snoozeError);
+      }
+    }
+  }
+
+  async function handleResume() {
+    try {
+      await cancelSnooze();
+      setSnoozeUntil(null);
+    } catch (resumeError) {
+      if (DEVELOPMENT) {
+        console.error("Nullfeed popup could not cancel snooze.", resumeError);
+      }
+    }
+  }
+
   const platform = currentSettings.lastPlatform;
 
   return (
@@ -223,6 +289,42 @@ export function App() {
         >
           <strong id="protection-heading">Protection</strong>
         </Switch>
+        {settings.enabled ? (
+          isSnoozed ? (
+            <div class="snooze-banner">
+              <span class="snooze-banner-text">
+                Paused for <strong>{formatSnoozeRemaining(snoozeUntil, now)}</strong>
+              </span>
+              <button
+                type="button"
+                class="snooze-resume-btn"
+                onClick={() => void handleResume()}
+              >
+                Resume
+              </button>
+            </div>
+          ) : (
+            <div class="snooze-quick-actions">
+              <span class="snooze-label">Pause:</span>
+              <button
+                type="button"
+                class="snooze-pill"
+                onClick={() => void handleSnooze(5)}
+                aria-label="Pause protection for 5 minutes"
+              >
+                5m
+              </button>
+              <button
+                type="button"
+                class="snooze-pill"
+                onClick={() => void handleSnooze(15)}
+                aria-label="Pause protection for 15 minutes"
+              >
+                15m
+              </button>
+            </div>
+          )
+        ) : null}
       </section>
 
       <StatsCard stats={stats} />
@@ -231,13 +333,13 @@ export function App() {
 
       <div
         class={
-          !currentSettings.enabled
+          !currentSettings.enabled || isSnoozed
             ? "preferences preferences-paused"
             : "preferences"
         }
       >
         <SettingsPanel
-          disabled={!currentSettings.enabled}
+          disabled={!currentSettings.enabled || isSnoozed}
           onChange={(key, value) => changePreference(platform, key, value)}
           platform={platform}
           settings={currentSettings[platform]}

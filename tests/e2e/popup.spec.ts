@@ -6,8 +6,8 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   showQuotes: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false, ads: true },
-  instagram: { reels: true, stories: true, explore: true },
+  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false },
+  instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
     navigation: true,

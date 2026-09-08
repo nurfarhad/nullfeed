@@ -162,6 +162,10 @@ export const instagramAdapter: SiteAdapter = {
       return false;
     }
 
+    if (settings.instagram.messages && (pathname === "/" || pathname === "")) {
+      return true;
+    }
+
     if (
       settings.instagram.reels &&
       (/^\/(?:reel|reels)(?:\/|$)/i.test(pathname) ||
@@ -174,6 +178,13 @@ export const instagramAdapter: SiteAdapter = {
       settings.instagram.explore &&
       /^\/explore(?:\/|$)/i.test(pathname)
     );
+  },
+
+  redirectDestination(pathname, settings) {
+    if (settings.instagram.messages && (pathname === "/" || pathname === "")) {
+      return "https://www.instagram.com/direct/inbox/";
+    }
+    return this.homeUrl;
   },
 
   scan(root, settings) {

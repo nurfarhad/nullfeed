@@ -5,6 +5,7 @@ export interface SiteAdapter {
   platform: Platform;
   homeUrl: string;
   blockedRoute(pathname: string, settings: Settings): boolean;
+  redirectDestination?(pathname: string, settings: Settings): string | null;
   scan(root: ParentNode, settings: Settings): void;
   cleanup(): void;
 }

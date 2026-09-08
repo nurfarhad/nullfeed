@@ -37,6 +37,9 @@
   --status-active-bg: #15221c;
   --status-active-border: rgba(46, 216, 138, 0.35);
   --status-neutral-bg: #18191f;
+  --status-warning-bg: #291e10;
+  --status-warning-border: rgba(245, 158, 11, 0.35);
+  --warning: #fbbf24;
   --grain-opacity: 0.038;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-fast: cubic-bezier(0.2, 0, 0, 1);
@@ -73,6 +76,9 @@
     --status-active-bg: #ecfdf5;
     --status-active-border: rgba(16, 185, 129, 0.35);
     --status-neutral-bg: #f3f4f6;
+    --status-warning-bg: #fffbeb;
+    --status-warning-border: rgba(245, 158, 11, 0.35);
+    --warning: #d97706;
     --grain-opacity: 0.022;
   }
 }
@@ -240,6 +246,17 @@ footer {
   opacity: 0.6;
 }
 
+.status-warning {
+  border-color: var(--status-warning-border);
+  background: var(--status-warning-bg);
+  color: var(--warning);
+}
+
+.status-warning::before {
+  background: var(--warning);
+  animation: pulse-dot 2.4s infinite ease-in-out;
+}
+
 @keyframes pulse-dot {
 
   0%,
@@ -281,6 +298,107 @@ footer {
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--ink);
+}
+
+/* ── Snooze Protection Controls ── */
+.snooze-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 4px 0 8px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 2px;
+}
+
+.snooze-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  margin-right: 2px;
+}
+
+.snooze-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  box-shadow: var(--bevel-top);
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease),
+    transform 120ms var(--ease);
+}
+
+.snooze-pill:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: var(--surface-hover);
+  transform: translateY(-0.5px);
+}
+
+.snooze-pill:active {
+  transform: translateY(0.5px);
+}
+
+.snooze-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0 8px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 2px;
+}
+
+.snooze-banner-text {
+  font-size: 11.5px;
+  color: var(--warning);
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.snooze-banner-text strong {
+  font-weight: 700;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--warning);
+}
+
+.snooze-resume-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--status-warning-border);
+  background: var(--status-warning-bg);
+  color: var(--warning);
+  cursor: pointer;
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    opacity 160ms var(--ease);
+}
+
+.snooze-resume-btn:hover {
+  filter: brightness(1.1);
+}
+
+.snooze-resume-btn:active {
+  opacity: 0.85;
 }
 
 /* ── Stats Card (UI8 Bento Pro 3-Column Metrics Tile) ── */

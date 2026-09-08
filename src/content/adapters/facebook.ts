@@ -632,6 +632,10 @@ export const facebookAdapter: SiteAdapter = {
       return false;
     }
 
+    if (settings.facebook.messages && (pathname === "/" || pathname === "")) {
+      return true;
+    }
+
     if (
       settings.facebook.reels &&
       /^\/(?:reel|reels)(?:\/|$)/i.test(pathname)
@@ -643,6 +647,13 @@ export const facebookAdapter: SiteAdapter = {
       settings.facebook.videos &&
       /^\/(?:watch|video|videos)(?:\/|$)/i.test(pathname)
     );
+  },
+
+  redirectDestination(pathname, settings) {
+    if (settings.facebook.messages && (pathname === "/" || pathname === "")) {
+      return "https://www.facebook.com/messages/";
+    }
+    return this.homeUrl;
   },
 
   scan(root, settings) {

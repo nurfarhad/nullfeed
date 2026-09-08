@@ -7,12 +7,14 @@ export type FacebookSettings = {
   stories: boolean;
   videos: boolean;
   ads: boolean;
+  messages: boolean;
 };
 
 export type InstagramSettings = {
   reels: boolean;
   stories: boolean;
   explore: boolean;
+  messages: boolean;
 };
 
 export type YouTubeSettings = {
@@ -52,12 +54,14 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     reels: true,
     stories: true,
     videos: false,
-    ads: true
+    ads: true,
+    messages: false
   }),
   instagram: Object.freeze({
     reels: true,
     stories: true,
-    explore: true
+    explore: true,
+    messages: false
   }),
   youtube: Object.freeze({
     shorts: true,
@@ -117,6 +121,10 @@ export function validateSettings(value: unknown): Settings {
       ads: booleanOrDefault(
         facebook.ads,
         DEFAULT_SETTINGS.facebook.ads
+      ),
+      messages: booleanOrDefault(
+        facebook.messages,
+        DEFAULT_SETTINGS.facebook.messages
       )
     },
     instagram: {
@@ -131,6 +139,10 @@ export function validateSettings(value: unknown): Settings {
       explore: booleanOrDefault(
         instagram.explore,
         DEFAULT_SETTINGS.instagram.explore
+      ),
+      messages: booleanOrDefault(
+        instagram.messages,
+        DEFAULT_SETTINGS.instagram.messages
       )
     },
     youtube: {
@@ -168,8 +180,8 @@ export function validateSettings(value: unknown): Settings {
 
 export function hasActiveFilters(settings: Settings): boolean {
   return (
-    Boolean(settings.facebook.reels || settings.facebook.stories || settings.facebook.videos) ||
-    Boolean(settings.instagram.reels || settings.instagram.stories || settings.instagram.explore) ||
+    Boolean(settings.facebook.reels || settings.facebook.stories || settings.facebook.videos || settings.facebook.messages) ||
+    Boolean(settings.instagram.reels || settings.instagram.stories || settings.instagram.explore || settings.instagram.messages) ||
     Boolean(
       settings.youtube.shorts ||
       settings.youtube.navigation ||
