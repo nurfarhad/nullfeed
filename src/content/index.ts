@@ -158,17 +158,14 @@ if (adapter) {
 }
 
 if (cyclePlatform) {
-  // Last-known anchor + smartTrigger preference, refreshed on every tick.
-  // Deliberately NOT reusing the module-level `settings` variable above —
-  // that one is only populated inside apply(), which returns early when
-  // there's no adapter. LinkedIn, X, and Reddit have no adapter, so this
-  // block needs its own settings tracking or it silently never fires there.
+  // Last-known anchor, refreshed on every tick. Smart Trigger itself has no
+  // on/off setting — it runs whenever a feed is visible ("off" phase) and
+  // Protection is on. See tickCycle below for why this can't reuse the
+  // module-level `settings` variable above (that one is adapter-only).
   let currentAnchor: number | null = null;
-  let smartTriggerEnabled = false;
   let detectorState: DetectorState = createDetectorState();
 
   async function tickCycle(current: Settings): Promise<void> {
-    smartTriggerEnabled = current.smartTrigger;
 
     if (!current.enabled) {
       if (currentCyclePhase !== null) {
@@ -233,8 +230,7 @@ if (cyclePlatform) {
     if (
       currentCyclePhase !== "off" ||
       currentAnchor === null ||
-      triggering ||
-      !smartTriggerEnabled
+      triggering
     ) {
       return;
     }

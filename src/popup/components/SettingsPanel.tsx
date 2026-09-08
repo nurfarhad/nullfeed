@@ -5,16 +5,12 @@ import type {
   Settings
 } from "../../shared/settings";
 import {
-  ArticleIcon,
-  BellIcon,
   BoltIcon,
   CircleDashedIcon,
   CompassIcon,
   MovieIcon,
   NavbarIcon,
   SparklesIcon,
-  TimelineIcon,
-  TrendingIcon,
   VideoIcon
 } from "./Icons";
 import { Switch } from "./Switch";

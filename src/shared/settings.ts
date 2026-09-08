@@ -26,11 +26,6 @@ export type Settings = {
   schemaVersion: typeof CURRENT_SCHEMA_VERSION;
   enabled: boolean;
   showQuotes: boolean;
-  /** Let the Scroll Detector end a Focus Cycle break early when it spots a
-   * fast, sustained scroll pace, instead of waiting for the fixed 15-minute
-   * timer. Facebook, LinkedIn, X, and Reddit only — the platforms that
-   * already have a Focus Cycle. */
-  smartTrigger: boolean;
   lastPlatform: Platform;
   facebook: FacebookSettings;
   instagram: InstagramSettings;
@@ -49,7 +44,6 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   schemaVersion: CURRENT_SCHEMA_VERSION,
   enabled: true,
   showQuotes: true,
-  smartTrigger: true,
   lastPlatform: "facebook",
   facebook: Object.freeze({
     reels: true,
@@ -97,7 +91,6 @@ export function validateSettings(value: unknown): Settings {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     enabled: booleanOrDefault(source.enabled, DEFAULT_SETTINGS.enabled),
     showQuotes: booleanOrDefault(source.showQuotes, DEFAULT_SETTINGS.showQuotes),
-    smartTrigger: booleanOrDefault(source.smartTrigger, DEFAULT_SETTINGS.smartTrigger),
     lastPlatform:
       typeof platform === "string" && PLATFORMS.has(platform as Platform)
         ? (platform as Platform)

@@ -35,7 +35,6 @@ describe("settings validation", () => {
       schemaVersion: CURRENT_SCHEMA_VERSION,
       enabled: false,
       showQuotes: true,
-      smartTrigger: true,
       lastPlatform: "instagram",
       facebook: { reels: true, stories: true, videos: true, ads: true },
       instagram: { reels: true, stories: true, explore: true },

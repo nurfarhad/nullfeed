@@ -12,7 +12,6 @@ const DEFAULT_SETTINGS = {
   schemaVersion: 1,
   enabled: true,
   showQuotes: true,
-  smartTrigger: true,
   lastPlatform: "facebook",
   facebook: { reels: true, stories: true, videos: false, ads: true },
   instagram: { reels: true, stories: true, explore: true },

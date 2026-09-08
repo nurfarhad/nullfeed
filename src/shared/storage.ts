@@ -103,12 +103,6 @@ export async function setEnabled(
 }
 
 
-export async function setSmartTrigger(
-  settings: Settings,
-  smartTrigger: boolean
-): Promise<Settings> {
-  return saveSettings({ ...settings, smartTrigger });
-}
 
 export async function setLastPlatform(
   settings: Settings,
