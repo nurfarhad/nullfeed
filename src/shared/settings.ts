@@ -67,7 +67,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     redirect: true,
     sidebar: true,
     feed: false,
-    comments: true,
+    comments: false,
     endscreen: true
   })
 });
@@ -160,7 +160,10 @@ export function validateSettings(value: unknown): Settings {
         youtube.feed,
         DEFAULT_SETTINGS.youtube.feed
       ),
-      comments: true,
+      comments: booleanOrDefault(
+        youtube.comments,
+        DEFAULT_SETTINGS.youtube.comments
+      ),
       endscreen: true
     }
   };
@@ -173,7 +176,8 @@ export function hasActiveFilters(settings: Settings): boolean {
     Boolean(
       settings.youtube.shorts ||
       settings.youtube.sidebar ||
-      settings.youtube.feed
+      settings.youtube.feed ||
+      settings.youtube.comments
     )
   );
 }

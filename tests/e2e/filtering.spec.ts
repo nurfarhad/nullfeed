@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
     redirect: true,
     sidebar: true,
     feed: false,
-    comments: true,
+    comments: false,
     endscreen: true
   }
 };
@@ -829,7 +829,12 @@ test("YouTube filters home feed by hiding 'All' chip, auto-activating 'New for y
   await expect(page.locator("#watch-again-shelf")).toBeVisible();
 });
 
-test("YouTube hides comments on watch page in background whenever protection is active", async () => {
+test("YouTube hides comments on watch page when comments filter is enabled", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    youtube: { ...DEFAULT_SETTINGS.youtube, comments: true }
+  });
+
   const page = await fixturePage(
     "https://www.youtube.com/watch?v=54321",
     `
@@ -843,8 +848,11 @@ test("YouTube hides comments on watch page in background whenever protection is 
   await expect(page.locator("#player")).toBeVisible();
   await expect(page.locator("#comments")).toBeHidden();
 
-  // Restores when protection is paused
-  await setSettings({ ...DEFAULT_SETTINGS, enabled: false });
+  // Restores when comments filter is disabled
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    youtube: { ...DEFAULT_SETTINGS.youtube, comments: false }
+  });
   await expect(page.locator("#comments")).toBeVisible();
 });
 

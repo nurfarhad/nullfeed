@@ -96,15 +96,15 @@ describe("settings validation", () => {
     ).toBe(true);
   });
 
-  it("enforces comments and endscreen as always true in background", () => {
+  it("enforces endscreen as always true in background", () => {
     const result = validateSettings({
       youtube: { comments: false, endscreen: false }
     });
-    expect(result.youtube.comments).toBe(true);
+    expect(result.youtube.comments).toBe(false);
     expect(result.youtube.endscreen).toBe(true);
   });
 
-  it("returns false if all visible toggles are off even if background ads, redirect, comments, or endscreen are on", () => {
+  it("returns false if all visible toggles are off even if background ads, redirect, or endscreen are on", () => {
     expect(
       hasActiveFilters({
         ...DEFAULT_SETTINGS,
@@ -113,7 +113,7 @@ describe("settings validation", () => {
           redirect: true,
           sidebar: false,
           feed: false,
-          comments: true,
+          comments: false,
           endscreen: true
         },
         facebook: { reels: false, stories: false, videos: false, ads: true, messages: false },

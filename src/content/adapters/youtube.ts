@@ -235,6 +235,12 @@ export const youtubeAdapter: SiteAdapter = {
           hideElement(element, "youtube-comments")
         );
       });
+    } else {
+      const doc =
+        root instanceof Document
+          ? root
+          : (root as Element).ownerDocument ?? document;
+      cleanupOwnedFeature("youtube-comments", doc);
     }
 
     if (settings.youtube.endscreen) {
