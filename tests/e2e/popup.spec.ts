@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   showQuotes: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false, interactions: false },
+  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false },
   instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
@@ -161,7 +161,6 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect(page.getByRole("region", { name: "Snooze controls" })).toHaveCount(0);
 
   // Verify P1 fix: turning off all granular toggles displays "No filters selected"
-  await expect(page.getByRole("switch", { name: "Hide Interaction Bar" })).toHaveCount(1);
   await page.getByRole("switch", { name: "Hide Reels", exact: true }).click();
   await page.getByRole("switch", { name: "Hide Stories", exact: true }).click();
   await page.getByRole("tab", { name: "Instagram" }).click();

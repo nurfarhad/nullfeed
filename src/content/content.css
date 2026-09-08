@@ -117,56 +117,6 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
 }
 
 /*
- * Facebook Post Interactions — Like, Comment, and Share action bar, reaction counters, and comment composers.
- */
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [role="toolbar"],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] div:has(> [aria-label="Like" i]),
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] div:has(> [aria-label*="Like this" i]),
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] div:has(> [aria-label="Comment" i]),
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] div:has(> [aria-label*="Leave a comment" i]),
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label="Like" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="Like this" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="React" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label="Comment" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="Leave a comment" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label="Share" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="Send this to friends" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="Share with friends" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="reaction" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="See who reacted" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="comments" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="shares" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] form[aria-label*="Comment" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label="Write a comment" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="Write a public comment" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] [aria-label*="Write an answer" i],
-html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-interactions]
-  [role="article"] ul[aria-label*="Comment" i] {
-  display: none !important;
-}
-
-/*
  * Facebook Sponsored & Ads — two tiers driven by JS-applied data-nullfeed-fb-ad.
  *
  * Feed ads ("feed"): fixed-height placeholder instead of display:none.

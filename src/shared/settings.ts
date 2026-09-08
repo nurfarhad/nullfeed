@@ -8,7 +8,6 @@ export type FacebookSettings = {
   videos: boolean;
   ads: boolean;
   messages: boolean;
-  interactions: boolean;
 };
 
 export type InstagramSettings = {
@@ -55,8 +54,7 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     stories: true,
     videos: false,
     ads: true,
-    messages: false,
-    interactions: false
+    messages: false
   }),
   instagram: Object.freeze({
     reels: true,
@@ -125,10 +123,6 @@ export function validateSettings(value: unknown): Settings {
       messages: booleanOrDefault(
         facebook.messages,
         DEFAULT_SETTINGS.facebook.messages
-      ),
-      interactions: booleanOrDefault(
-        facebook.interactions,
-        DEFAULT_SETTINGS.facebook.interactions
       )
     },
     instagram: {
@@ -177,19 +171,8 @@ export function validateSettings(value: unknown): Settings {
 
 export function hasActiveFilters(settings: Settings): boolean {
   return (
-    Boolean(
-      settings.facebook.reels ||
-      settings.facebook.stories ||
-      settings.facebook.videos ||
-      settings.facebook.messages ||
-      settings.facebook.interactions
-    ) ||
-    Boolean(
-      settings.instagram.reels ||
-      settings.instagram.stories ||
-      settings.instagram.explore ||
-      settings.instagram.messages
-    ) ||
+    Boolean(settings.facebook.reels || settings.facebook.stories || settings.facebook.videos || settings.facebook.messages) ||
+    Boolean(settings.instagram.reels || settings.instagram.stories || settings.instagram.explore || settings.instagram.messages) ||
     Boolean(
       settings.youtube.shorts ||
       settings.youtube.sidebar ||

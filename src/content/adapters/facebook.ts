@@ -4,7 +4,6 @@ import type { SiteAdapter } from "../adapter";
 import { queryAll } from "../adapter";
 import {
   cleanupOwnedElements,
-  cleanupOwnedFeature,
   collapseEmptyAncestors,
   hideElement
 } from "../domOwnership";
@@ -242,68 +241,6 @@ function hideNavigationEntries(
     }
   });
 }
-
-const INTERACTION_SELECTORS = [
-  '[role="article"] [role="toolbar"]',
-  '[role="article"] div:has(> [aria-label="Like" i])',
-  '[role="article"] div:has(> [aria-label*="Like this" i])',
-  '[role="article"] div:has(> [aria-label="Comment" i])',
-  '[role="article"] div:has(> [aria-label*="Leave a comment" i])',
-  '[role="article"] [aria-label="Like" i]',
-  '[role="article"] [aria-label*="Like this" i]',
-  '[role="article"] [aria-label*="React" i]',
-  '[role="article"] [aria-label="Comment" i]',
-  '[role="article"] [aria-label*="Leave a comment" i]',
-  '[role="article"] [aria-label="Share" i]',
-  '[role="article"] [aria-label*="Send this to friends" i]',
-  '[role="article"] [aria-label*="Share with friends" i]',
-  '[role="article"] [aria-label*="reaction" i]',
-  '[role="article"] [aria-label*="See who reacted" i]',
-  '[role="article"] [aria-label*="comments" i]',
-  '[role="article"] [aria-label*="shares" i]',
-  '[role="article"] form[aria-label*="Comment" i]',
-  '[role="article"] [aria-label="Write a comment" i]',
-  '[role="article"] [aria-label*="Write a public comment" i]',
-  '[role="article"] [aria-label*="Write an answer" i]',
-  '[role="article"] ul[aria-label*="Comment" i]'
-] as const;
-
-function hideInteractionEntries(root: ParentNode): void {
-  for (const selector of INTERACTION_SELECTORS) {
-    try {
-      queryAll(root, selector).forEach((el) => {
-        if (
-          el.closest(
-            'header, [role="banner"], [role="navigation"], [data-pagelet*="Header"]'
-          )
-        ) {
-          return;
-        }
-        hideElement(el, "facebook-interactions");
-
-        const label = el.getAttribute("aria-label")?.toLowerCase() ?? "";
-        if (
-          label.includes("reaction") ||
-          label.includes("reacted") ||
-          label.includes("comments") ||
-          label.includes("shares")
-        ) {
-          const parent = el.parentElement;
-          if (
-            parent &&
-            parent !== el.closest('[role="article"]') &&
-            !parent.matches('[role="article"], [role="feed"], main, [role="main"]')
-          ) {
-            hideElement(parent, "facebook-interactions");
-          }
-        }
-      });
-    } catch {
-      // Gracefully continue if environment does not support complex pseudo-classes
-    }
-  }
-}
-
 
 // ---------------------------------------------------------------------------
 // Facebook Sponsored & Ads — two-path detection
@@ -760,16 +697,6 @@ export const facebookAdapter: SiteAdapter = {
     } else {
       restoreAds();
     }
-
-    if (settings.facebook.interactions) {
-      hideInteractionEntries(root);
-    } else {
-      const doc =
-        root instanceof Document
-          ? root
-          : (root as Element).ownerDocument ?? document;
-      cleanupOwnedFeature("facebook-interactions", doc);
-    }
   },
 
   cleanup() {
@@ -777,7 +704,6 @@ export const facebookAdapter: SiteAdapter = {
       .querySelectorAll("[data-nullfeed-paused]")
       .forEach((video) => video.removeAttribute("data-nullfeed-paused"));
     restoreAds();
-    cleanupOwnedFeature("facebook-interactions", document);
     cleanupOwnedElements();
   }
 };

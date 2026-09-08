@@ -8,7 +8,6 @@ import {
   BoltIcon,
   CircleDashedIcon,
   CompassIcon,
-  HeartOffIcon,
   LayoutGridIcon,
   MessageCircleIcon,
   MovieIcon,
@@ -24,7 +23,6 @@ const ROWS: Record<Platform, readonly RowDefinition[]> = {
     ["reels", "Hide Reels", MovieIcon],
     ["stories", "Hide Stories", CircleDashedIcon],
     ["videos", "Hide Videos", VideoIcon],
-    ["interactions", "Hide Interaction Bar", HeartOffIcon],
     ["messages", "Direct to Messages", MessageCircleIcon]
   ],
   instagram: [
