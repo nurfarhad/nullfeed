@@ -19,7 +19,14 @@ import {
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
 import { SettingsPanel } from "./components/SettingsPanel";
+import { StatsCard } from "./components/StatsCard";
 import { Switch } from "./components/Switch";
+import {
+  DEFAULT_STATS,
+  getStats,
+  STATS_STORAGE_KEY,
+  type FocusStats
+} from "../shared/statsStorage";
 
 const SKELETON_MINIMUM_MS = 150;
 
@@ -51,6 +58,7 @@ function getStatus(settings: Settings): Status {
 
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [stats, setStats] = useState<FocusStats>(DEFAULT_STATS);
   const [error, setError] = useState<string | null>(null);
   const status = useMemo(
     () => getStatus(settings ?? DEFAULT_SETTINGS),
@@ -65,28 +73,37 @@ export function App() {
       areaName: string
     ) => {
       if (
-        areaName !== "sync" ||
-        changes[SETTINGS_STORAGE_KEY]?.newValue === undefined
+        areaName === "sync" &&
+        changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
       ) {
-        return;
+        void getSettings()
+          .then((loaded) => {
+            setSettings(loaded);
+            setError(null);
+          })
+          .catch((storageError) => {
+            if (DEVELOPMENT) {
+              console.error(
+                "Nullfeed popup could not apply external settings.",
+                storageError
+              );
+            }
+          });
       }
 
-      void getSettings()
-        .then((loaded) => {
-          setSettings(loaded);
-          setError(null);
-        })
-        .catch((storageError) => {
-          if (DEVELOPMENT) {
-            console.error(
-              "Nullfeed popup could not apply external settings.",
-              storageError
-            );
-          }
-        });
+      if (
+        areaName === "local" &&
+        changes[STATS_STORAGE_KEY]?.newValue !== undefined
+      ) {
+        setStats(changes[STATS_STORAGE_KEY].newValue as FocusStats);
+      }
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
+
+    void getStats()
+      .then(setStats)
+      .catch(() => {});
 
     void getSettings()
       .then((loaded) => {
@@ -121,6 +138,7 @@ export function App() {
         </header>
 
         <section class="protection skeleton-card" />
+        <div class="skeleton-stats skeleton-card" />
         <div class="skeleton-tabs" />
         <div class="preferences skeleton-card" />
       </main>
@@ -206,6 +224,8 @@ export function App() {
           <strong id="protection-heading">Protection</strong>
         </Switch>
       </section>
+
+      <StatsCard stats={stats} />
 
       <PlatformTabs active={platform} onChange={changePlatform} />
 

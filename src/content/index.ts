@@ -1,6 +1,7 @@
 import type { Settings } from "../shared/settings";
 import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
 import { getOrCreateAnchor } from "../shared/focusCycleStorage";
+import { recordDistractions } from "../shared/statsStorage";
 import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
 import { instagramAdapter } from "./adapters/instagram";
@@ -70,6 +71,7 @@ function handleRoute(current: Settings): boolean {
     return false;
   }
 
+  recordDistractions(1);
   location.replace(adapter.homeUrl);
   return true;
 }

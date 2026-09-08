@@ -88,6 +88,10 @@ test("popup exposes the approved controls and pause state", async () => {
   await expect(page.getByRole("heading", { name: "Nullfeed" })).toBeVisible();
   await expect(page.getByText("Protected", { exact: true })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Protection" })).toBeChecked();
+  await expect(page.locator(".stats-card")).toBeVisible();
+  await expect(page.getByText("Blocked", { exact: true })).toBeVisible();
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+  await expect(page.getByText("Streak", { exact: true })).toBeVisible();
   const tabs = page.getByRole("tab");
   await expect(tabs).toHaveCount(3);
   expect(await tabs.allTextContents()).toEqual([
