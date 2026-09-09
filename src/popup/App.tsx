@@ -20,7 +20,6 @@ import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { StatsCard } from "./components/StatsCard";
-import { Switch } from "./components/Switch";
 import {
   DEFAULT_STATS,
   getStats,
@@ -282,49 +281,64 @@ export function App() {
       </header>
 
       <section class="protection" aria-labelledby="protection-heading">
-        <Switch
-          checked={settings.enabled}
-          id="master-protection"
-          onChange={changeEnabled}
-        >
-          <strong id="protection-heading">Protection</strong>
-        </Switch>
-        {settings.enabled ? (
-          isSnoozed ? (
-            <div class="snooze-banner">
-              <span class="snooze-banner-text">
-                Paused for <strong>{formatSnoozeRemaining(snoozeUntil, now)}</strong>
-              </span>
-              <button
-                type="button"
-                class="snooze-resume-btn"
-                onClick={() => void handleResume()}
-              >
-                Resume
-              </button>
-            </div>
-          ) : (
-            <div class="snooze-quick-actions">
-              <span class="snooze-label">Pause:</span>
-              <button
-                type="button"
-                class="snooze-pill"
-                onClick={() => void handleSnooze(5)}
-                aria-label="Pause protection for 5 minutes"
-              >
-                5m
-              </button>
-              <button
-                type="button"
-                class="snooze-pill"
-                onClick={() => void handleSnooze(15)}
-                aria-label="Pause protection for 15 minutes"
-              >
-                15m
-              </button>
-            </div>
-          )
-        ) : null}
+        <div class="protection-row">
+          <div class="protection-leading">
+            <label class="protection-label" htmlFor="master-protection">
+              <strong id="protection-heading">Protection</strong>
+            </label>
+            {settings.enabled ? (
+              isSnoozed ? (
+                <div class="snooze-inline">
+                  <span class="snooze-banner-text">
+                    Paused for <strong>{formatSnoozeRemaining(snoozeUntil, now)}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    class="snooze-resume-btn"
+                    onClick={() => void handleResume()}
+                  >
+                    Resume
+                  </button>
+                </div>
+              ) : (
+                <div class="snooze-quick-actions">
+                  <span class="snooze-label">Pause:</span>
+                  <button
+                    type="button"
+                    class="snooze-pill"
+                    onClick={() => void handleSnooze(5)}
+                    aria-label="Pause protection for 5 minutes"
+                  >
+                    5m
+                  </button>
+                  <button
+                    type="button"
+                    class="snooze-pill"
+                    onClick={() => void handleSnooze(15)}
+                    aria-label="Pause protection for 15 minutes"
+                  >
+                    15m
+                  </button>
+                </div>
+              )
+            ) : null}
+          </div>
+
+          <label class="protection-toggle" htmlFor="master-protection">
+            <input
+              checked={settings.enabled}
+              class="switch-input"
+              id="master-protection"
+              onChange={(event) => changeEnabled(event.currentTarget.checked)}
+              role="switch"
+              type="checkbox"
+              aria-label="Protection"
+            />
+            <span aria-hidden="true" class="switch-control">
+              <span class="switch-thumb" />
+            </span>
+          </label>
+        </div>
       </section>
 
       <StatsCard stats={stats} />

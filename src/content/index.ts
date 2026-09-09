@@ -2,6 +2,7 @@ import type { Settings } from "../shared/settings";
 import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
 import { getOrCreateAnchor } from "../shared/focusCycleStorage";
 import { recordDistractions } from "../shared/statsStorage";
+import { hideElement } from "./domOwnership";
 import { getSnoozeUntil, SNOOZE_STORAGE_KEY } from "../shared/snoozeStorage";
 import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
@@ -10,6 +11,7 @@ import { youtubeAdapter } from "./adapters/youtube";
 import {
   applyCyclePhase,
   CYCLE_BREAK_MS,
+  CYCLE_PLATFORMS,
   CYCLE_TOTAL_MS,
   detectCyclePlatform,
   getPhase,
@@ -179,7 +181,7 @@ if (adapter) {
           scan(root);
         }
         if (cyclePlatform && effective?.enabled && currentCyclePhase === "on") {
-          applyCyclePhase(cyclePlatform, "on");
+          applyCyclePhase(cyclePlatform, "on", "cycle", effective.showQuotes);
         }
       });
       stopRouteWatcher = watchRoutes(() => {
@@ -238,6 +240,69 @@ if (cyclePlatform) {
   let currentAnchor: number | null = null;
   let detectorState: DetectorState = createDetectorState();
 
+  // ── LAYER 1: Synchronous pre-block ──────────────────────────────────────
+  // Before any async storage read completes, instantly re-apply the last
+  // known blocking phase from localStorage. This closes the ~10-50ms window
+  // between page load and the first async tickCycle() resolution during which
+  // the feed would flash visible — the refresh/new-tab bypass exploit.
+  // We store the anchor timestamp so we can compute the phase mathematically
+  // without needing chrome.storage (which is always async).
+  const LS_ANCHOR_KEY = `nullfeed-sync-anchor-${cyclePlatform}`;
+  const LS_ENABLED_KEY = `nullfeed-sync-enabled-${cyclePlatform}`;
+  try {
+    const cachedAnchorStr = localStorage.getItem(LS_ANCHOR_KEY);
+    const cachedEnabled = localStorage.getItem(LS_ENABLED_KEY);
+    if (cachedEnabled === "true" && cachedAnchorStr) {
+      const cachedAnchor = Number(cachedAnchorStr);
+      if (Number.isFinite(cachedAnchor)) {
+        const cachedPhase = getPhase(cachedAnchor);
+        if (cachedPhase === "on") {
+          // Pre-paint both attributes so the CSS rule fires immediately,
+          // before the feed even renders. tickCycle() will confirm/correct.
+          document.documentElement.setAttribute("data-nullfeed-enabled", "");
+          document.documentElement.setAttribute("data-nullfeed-cycle-phase", "on");
+        }
+      }
+    }
+  } catch {
+    // localStorage unavailable (private mode with strict settings) — ignore.
+  }
+
+  // ── LAYER 2: MutationObserver feed-watcher ──────────────────────────────
+  // Facebook's SPA renders feed posts lazily. Even after the initial
+  // applyCyclePhase() call hides what's there, new posts can be injected into
+  // the DOM by React. This observer catches them the instant they appear and
+  // hides them immediately, making the feed unkillable by refresh or navigation.
+  const { feedSelectors } = CYCLE_PLATFORMS[cyclePlatform];
+  let feedWatcherObserver: MutationObserver | null = null;
+
+  function startFeedWatcher(): void {
+    if (feedWatcherObserver) return;
+    feedWatcherObserver = new MutationObserver(() => {
+      if (currentCyclePhase !== "on") return;
+      // Use querySelectorAll for each selector and hide any visible feed elements.
+      for (const sel of feedSelectors) {
+        document.querySelectorAll(sel).forEach((el) => {
+          if (
+            !el.hasAttribute("data-nullfeed-hidden") &&
+            !el.closest("#nullfeed-quote-card")
+          ) {
+            hideElement(el, "focus-cycle");
+          }
+        });
+      }
+    });
+    feedWatcherObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  function stopFeedWatcher(): void {
+    feedWatcherObserver?.disconnect();
+    feedWatcherObserver = null;
+  }
+
   async function tickCycle(current: Settings): Promise<void> {
     const effective = getEffectiveSettings(current);
 
@@ -247,19 +312,34 @@ if (cyclePlatform) {
         currentCyclePhase = null;
         currentAnchor = null;
         document.documentElement.removeAttribute("data-nullfeed-cycle-phase");
+        stopFeedWatcher();
       }
+      // ── Persist: enabled=false so next load won't pre-block incorrectly
+      try {
+        localStorage.setItem(LS_ENABLED_KEY, "false");
+        localStorage.removeItem(LS_ANCHOR_KEY);
+      } catch { /* ignore */ }
       return;
     }
     const anchor = await getOrCreateAnchor(cyclePlatform!);
     const phase = getPhase(anchor);
     currentAnchor = anchor;
     document.documentElement.setAttribute("data-nullfeed-cycle-phase", phase);
-    applyCyclePhase(cyclePlatform!, phase);
+    applyCyclePhase(cyclePlatform!, phase, "cycle", effective.showQuotes);
     if (phase !== "off") {
       // Nothing to scroll while blocked — start the next "off" window clean.
       detectorState = createDetectorState();
+      startFeedWatcher(); // Activate the DOM watcher during blocking phase
+    } else {
+      stopFeedWatcher(); // Not needed during free-browsing phase
     }
     currentCyclePhase = phase;
+    // ── LAYER 3: Persist anchor to localStorage ─────────────────────
+    // On next page load, Layer 1 reads this to compute phase synchronously.
+    try {
+      localStorage.setItem(LS_ANCHOR_KEY, String(anchor));
+      localStorage.setItem(LS_ENABLED_KEY, "true");
+    } catch { /* ignore */ }
   }
 
   void getSettings().then(tickCycle);
@@ -290,7 +370,7 @@ if (cyclePlatform) {
     observeDynamicContent(() => {
       void getSettings().then((s) => {
         if (s.enabled && currentCyclePhase === "on") {
-          applyCyclePhase(cyclePlatform!, "on");
+          applyCyclePhase(cyclePlatform!, "on", "cycle", s.showQuotes);
         }
       });
     });
@@ -334,7 +414,8 @@ if (cyclePlatform) {
           currentCyclePhase = "on";
           detectorState = createDetectorState();
           document.documentElement.setAttribute("data-nullfeed-cycle-phase", "on");
-          applyCyclePhase(cyclePlatform!, "on", "smart");
+          const showQuotes = settings ? getEffectiveSettings(settings).showQuotes : true;
+          applyCyclePhase(cyclePlatform!, "on", "smart", showQuotes);
         })
         .catch((error) => logFailure("Nullfeed smart trigger failed.", error))
         .finally(() => {

@@ -273,7 +273,7 @@ footer {
 
 /* ── Protection Card (UI8 Bento Squircle Tile) ── */
 .protection {
-  padding: 4px 18px;
+  padding: 0 16px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background-color: var(--surface);
@@ -285,45 +285,74 @@ footer {
     box-shadow 220ms var(--ease);
 }
 
-.protection .switch-row,
-.protection .switch-row:hover {
+.protection-row {
+  display: flex;
   min-height: 48px;
-  padding: 0;
-  border: 0;
-  background: transparent !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
+.protection-leading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.protection-label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.protection-label strong,
 .protection strong {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
   letter-spacing: -0.015em;
   color: var(--ink);
 }
 
-/* ── Snooze Protection Controls ── */
-.snooze-quick-actions {
-  display: flex;
+.protection-toggle {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  padding: 4px 0 8px;
-  border-top: 1px solid var(--border-subtle);
-  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.protection-toggle:active .switch-thumb {
+  width: 20px;
+}
+
+.protection-toggle:active .switch-input:checked + .switch-control .switch-thumb {
+  transform: translateX(18px);
+}
+
+/* ── Inline Snooze Protection Controls ── */
+.snooze-quick-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
 }
 
 .snooze-label {
   font-size: 11px;
   color: var(--muted);
   font-weight: 500;
-  margin-right: 2px;
+  margin-right: 1px;
 }
 
 .snooze-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 9px;
-  font-size: 11px;
+  padding: 2px 7.5px;
+  font-size: 10.5px;
   font-weight: 600;
   border-radius: 999px;
   border: 1px solid var(--border);
@@ -349,28 +378,26 @@ footer {
   transform: translateY(0.5px);
 }
 
-.snooze-banner {
-  display: flex;
+.snooze-inline {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 0 8px;
-  border-top: 1px solid var(--border-subtle);
-  margin-top: 2px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .snooze-banner-text {
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--warning);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 .snooze-banner-text strong {
   font-weight: 700;
-  font-size: 11.5px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--warning);
 }
@@ -379,14 +406,15 @@ footer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 10px;
-  font-size: 11px;
+  padding: 2px 8px;
+  font-size: 10.5px;
   font-weight: 600;
   border-radius: 6px;
   border: 1px solid var(--status-warning-border);
   background: var(--status-warning-bg);
   color: var(--warning);
   cursor: pointer;
+  white-space: nowrap;
   transition:
     background-color 160ms var(--ease),
     border-color 160ms var(--ease),

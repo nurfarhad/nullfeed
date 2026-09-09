@@ -295,236 +295,366 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   display: none !important;
 }
 
-/* Nullfeed Mindful Focus Quote Card */
+/* ==========================================================================
+   Nullfeed Mindful Focus Hero Card (State-of-the-Art Design)
+   ========================================================================== */
+
+@keyframes nullfeed-card-appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes nullfeed-pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
 .nullfeed-quote-card {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
   box-sizing: border-box !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 0 20px 0 !important;
-  padding: 16px 22px !important;
-  background: rgba(18, 18, 22, 0.82) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border: 1px solid rgba(167, 139, 250, 0.18) !important;
-  border-radius: 14px !important;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35) !important;
+  width: min(100%, 640px) !important;
+  margin: 32px auto 44px auto !important;
+  padding: 32px 36px 26px 36px !important;
+  
+  /* Modern Glassmorphic Surface */
+  background: linear-gradient(165deg, rgba(24, 25, 33, 0.92) 0%, rgba(13, 14, 19, 0.96) 100%) !important;
+  backdrop-filter: blur(24px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+  
+  /* Borders & Shadows */
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 22px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 24px 56px -12px rgba(0, 0, 0, 0.75),
+    0 0 40px -10px rgba(167, 139, 250, 0.14) !important;
+    
   color: #f1f3f5 !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif !important;
   z-index: 100 !important;
-  gap: 12px !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  position: relative !important;
+  animation: nullfeed-card-appear 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease !important;
 }
 
-.nullfeed-quote-main {
+.nullfeed-quote-card:hover {
+  border-color: rgba(167, 139, 250, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 32px 64px -12px rgba(0, 0, 0, 0.85),
+    0 0 44px -8px rgba(167, 139, 250, 0.22) !important;
+}
+
+/* Smart Trigger (Doomscroll Detection) Theme Variant */
+.nullfeed-quote-card--smart {
+  border-color: rgba(45, 212, 191, 0.18) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 24px 56px -12px rgba(0, 0, 0, 0.75),
+    0 0 40px -10px rgba(45, 212, 191, 0.16) !important;
+}
+
+.nullfeed-quote-card--smart:hover {
+  border-color: rgba(45, 212, 191, 0.32) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 32px 64px -12px rgba(0, 0, 0, 0.85),
+    0 0 44px -8px rgba(45, 212, 191, 0.24) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Top Bar: Badge on left, Refresh button on right
+   -------------------------------------------------------------------------- */
+.nullfeed-quote-topbar {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 18px !important;
   width: 100% !important;
+  margin-bottom: 22px !important;
 }
 
+.nullfeed-quote-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 5px 12px !important;
+  border-radius: 9999px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: #c4b5fd !important;
+  background: rgba(167, 139, 250, 0.12) !important;
+  border: 1px solid rgba(167, 139, 250, 0.25) !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.nullfeed-quote-card--smart .nullfeed-quote-badge {
+  color: #5eead4 !important;
+  background: rgba(45, 212, 191, 0.12) !important;
+  border-color: rgba(45, 212, 191, 0.25) !important;
+}
+
+.nullfeed-quote-badge-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: currentColor !important;
+  box-shadow: 0 0 6px currentColor !important;
+  display: inline-block !important;
+  animation: nullfeed-pulse-dot 2s infinite ease-in-out !important;
+}
+
+.nullfeed-quote-refresh {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.nullfeed-quote-refresh:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  transform: rotate(90deg) scale(1.06) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Quote Centerpiece (Hero Content)
+   -------------------------------------------------------------------------- */
+.nullfeed-quote-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 0 6px 0 !important;
+}
+
+.nullfeed-quote-mark {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 38px !important;
+  line-height: 22px !important;
+  height: 18px !important;
+  color: rgba(167, 139, 250, 0.35) !important;
+  margin-bottom: 12px !important;
+  user-select: none !important;
+}
+
+.nullfeed-quote-card--smart .nullfeed-quote-mark {
+  color: rgba(45, 212, 191, 0.35) !important;
+}
+
+.nullfeed-quote-text {
+  font-size: 19px !important;
+  line-height: 1.55 !important;
+  font-weight: 450 !important;
+  color: #f8fafc !important;
+  margin: 0 0 16px 0 !important;
+  font-style: normal !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  max-width: 540px !important;
+  letter-spacing: -0.01em !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.nullfeed-quote-author {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-style: normal !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+/* --------------------------------------------------------------------------
+   Intent / Session Goal Section
+   -------------------------------------------------------------------------- */
 .nullfeed-intent-container {
   display: flex !important;
   align-items: center !important;
   width: 100% !important;
-  padding-top: 10px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  margin-top: 26px !important;
+  padding-top: 20px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 .nullfeed-intent-form {
   display: flex !important;
+  flex-direction: row !important;
   align-items: center !important;
-  gap: 8px !important;
+  gap: 10px !important;
   width: 100% !important;
 }
 
 .nullfeed-intent-input {
   flex: 1 !important;
-  height: 30px !important;
-  padding: 0 12px !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 8px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
   color: #ffffff !important;
-  font-size: 12.5px !important;
+  font-size: 13px !important;
   font-family: inherit !important;
   outline: none !important;
-  transition: border-color 0.15s ease !important;
+  transition: all 0.2s ease !important;
 }
 
 .nullfeed-intent-input::placeholder {
-  color: rgba(255, 255, 255, 0.4) !important;
+  color: rgba(255, 255, 255, 0.35) !important;
 }
 
 .nullfeed-intent-input:focus {
   border-color: rgba(167, 139, 250, 0.5) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12) !important;
+}
+
+.nullfeed-quote-card--smart .nullfeed-intent-input:focus {
+  border-color: rgba(45, 212, 191, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12) !important;
 }
 
 .nullfeed-intent-submit {
-  height: 30px !important;
-  padding: 0 12px !important;
-  background: rgba(167, 139, 250, 0.2) !important;
+  height: 38px !important;
+  padding: 0 18px !important;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.22) 0%, rgba(139, 92, 246, 0.32) 100%) !important;
   border: 1px solid rgba(167, 139, 250, 0.35) !important;
-  border-radius: 8px !important;
-  color: #e0e7ff !important;
-  font-size: 11.5px !important;
+  border-radius: 10px !important;
+  color: #ede9fe !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
   cursor: pointer !important;
-  transition: background 0.15s ease !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
 }
 
 .nullfeed-intent-submit:hover {
-  background: rgba(167, 139, 250, 0.35) !important;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.35) 0%, rgba(139, 92, 246, 0.48) 100%) !important;
+  border-color: rgba(167, 139, 250, 0.5) !important;
+  transform: translateY(-1px) !important;
+}
+
+.nullfeed-quote-card--smart .nullfeed-intent-submit {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(20, 184, 166, 0.3) 100%) !important;
+  border-color: rgba(45, 212, 191, 0.35) !important;
+  color: #ccfbf1 !important;
+}
+
+.nullfeed-quote-card--smart .nullfeed-intent-submit:hover {
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.32) 0%, rgba(20, 184, 166, 0.45) 100%) !important;
+  border-color: rgba(45, 212, 191, 0.5) !important;
 }
 
 .nullfeed-intent-badge {
   display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding: 10px 16px !important;
+  background: rgba(45, 212, 191, 0.08) !important;
+  border: 1px solid rgba(45, 212, 191, 0.22) !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+}
+
+.nullfeed-intent-badge-content {
+  display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  width: 100% !important;
-  padding: 5px 12px !important;
-  background: rgba(45, 212, 191, 0.1) !important;
-  border: 1px solid rgba(45, 212, 191, 0.22) !important;
-  border-radius: 8px !important;
-  font-size: 12px !important;
+  min-width: 0 !important;
+  flex: 1 !important;
 }
 
 .nullfeed-intent-icon {
-  font-size: 13px !important;
+  font-size: 14px !important;
+  flex-shrink: 0 !important;
 }
 
 .nullfeed-intent-tag {
   font-size: 10px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  letter-spacing: 0.06em !important;
   color: #2dd4bf !important;
+  flex-shrink: 0 !important;
 }
 
 .nullfeed-intent-text {
-  flex: 1 !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
-  color: #f1f3f5 !important;
-}
-
-.nullfeed-intent-clear {
-  background: transparent !important;
-  border: none !important;
-  color: rgba(255, 255, 255, 0.45) !important;
-  font-size: 16px !important;
-  cursor: pointer !important;
-  padding: 0 4px !important;
-  line-height: 1 !important;
-}
-
-.nullfeed-intent-clear:hover {
-  color: #ffffff !important;
-}
-
-.nullfeed-quote-card:hover {
-  border-color: rgba(167, 139, 250, 0.35) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-.nullfeed-quote-header {
-  display: flex !important;
-  align-items: center !important;
-  flex-shrink: 0 !important;
-  gap: 0 !important;
-  margin-bottom: 0 !important;
-  width: auto !important;
-}
-
-.nullfeed-quote-badge {
-  font-size: 9.5px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-  color: #a78bfa !important;
-  background: rgba(167, 139, 250, 0.12) !important;
-  padding: 4px 10px !important;
-  border-radius: 20px !important;
-  border: 1px solid rgba(167, 139, 250, 0.2) !important;
-  white-space: nowrap !important;
-}
-
-/* Scroll Detector variant — same card, a distinct accent so it reads as
-   "this one fired for a reason" rather than the regular timed break. */
-.nullfeed-quote-card--smart {
-  border-color: rgba(45, 212, 191, 0.18) !important;
-}
-
-.nullfeed-quote-card--smart:hover {
-  border-color: rgba(45, 212, 191, 0.35) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-quote-badge {
-  color: #2dd4bf !important;
-  background: rgba(45, 212, 191, 0.12) !important;
-  border-color: rgba(45, 212, 191, 0.2) !important;
-}
-
-.nullfeed-quote-body {
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  min-width: 0 !important;
-}
-
-.nullfeed-quote-refresh {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  cursor: pointer !important;
-  width: 30px !important;
-  height: 30px !important;
-  border-radius: 8px !important;
-  transition: all 0.2s ease !important;
-  padding: 0 !important;
-  flex-shrink: 0 !important;
-}
-
-.nullfeed-quote-refresh:hover {
-  color: #fff !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.25) !important;
-  transform: rotate(45deg) !important;
-}
-
-.nullfeed-quote-text {
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-  font-weight: 400 !important;
-  color: rgba(255, 255, 255, 0.88) !important;
-  margin: 0 0 4px 0 !important;
-  font-style: italic !important;
+  color: #f1f5f9 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 100% !important;
+  flex: 1 !important;
 }
 
-.nullfeed-quote-author {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.4) !important;
-  font-style: normal !important;
-  letter-spacing: 0.02em !important;
-  white-space: nowrap !important;
+.nullfeed-intent-clear {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.nullfeed-intent-clear:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
 }
 
 /*
  * Focus Cycle — instantaneous CSS hiding during focus phase
  */
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="facebook"] :is([role="feed"], [data-pagelet="Feed"], [data-pagelet*="Feed"]) {
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="facebook"] :is(
+  [role="feed"],
+  [data-pagelet="Feed"],
+  [data-pagelet*="Feed"],
+  div[role="main"] div[data-virtualized="false"],
+  div[role="main"] [role="article"]:not([data-pagelet*="Stories"]),
+  div[role="main"] [data-pagelet^="FeedUnit"]
+) {
   display: none !important;
 }
 

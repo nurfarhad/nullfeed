@@ -49,14 +49,25 @@ function setSessionIntent(intent: string | null): void {
   }
 }
 
+function escapeHTML(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderIntentHTML(intent: string | null): string {
   if (intent) {
-    const escaped = intent.replace(/"/g, "&quot;");
+    const escaped = escapeHTML(intent);
     return `
       <div class="nullfeed-intent-badge">
-        <span class="nullfeed-intent-icon" aria-hidden="true">🎯</span>
-        <span class="nullfeed-intent-tag">Session Goal:</span>
-        <span class="nullfeed-intent-text">“${escaped}”</span>
+        <div class="nullfeed-intent-badge-content">
+          <span class="nullfeed-intent-icon" aria-hidden="true">🎯</span>
+          <span class="nullfeed-intent-tag">Session Goal:</span>
+          <span class="nullfeed-intent-text">“${escaped}”</span>
+        </div>
         <button type="button" class="nullfeed-intent-clear" title="Clear Goal" aria-label="Clear Goal">×</button>
       </div>
     `;
@@ -99,8 +110,14 @@ function bindIntentHandlers(container: HTMLElement): void {
 
 export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLElement {
   const existing = document.getElementById(CARD_ID);
-  if (existing) {
+  // If the card exists but has been detached from the live document (Facebook
+  // virtual-scroll swapped its parent container), treat it as gone so we can
+  // create and insert a fresh one.
+  if (existing && existing.isConnected) {
     return existing;
+  }
+  if (existing) {
+    existing.remove(); // clean up the orphaned node
   }
 
   const { text, author, index } = pickLine(reason);
@@ -117,19 +134,21 @@ export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLE
   const refreshTitle = reason === "smart" ? "New nudge" : "New Quote";
 
   card.innerHTML = `
-    <div class="nullfeed-quote-main">
-      <div class="nullfeed-quote-header">
-        <span class="nullfeed-quote-badge">${badgeLabel}</span>
-      </div>
-      <div class="nullfeed-quote-body">
-        <blockquote class="nullfeed-quote-text">“${text}”</blockquote>
-        <cite class="nullfeed-quote-author">— ${author}</cite>
+    <div class="nullfeed-quote-topbar">
+      <div class="nullfeed-quote-badge">
+        <span class="nullfeed-quote-badge-dot"></span>
+        <span>${badgeLabel}</span>
       </div>
       <button type="button" class="nullfeed-quote-refresh" title="${refreshTitle}" aria-label="${refreshTitle}">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
         </svg>
       </button>
+    </div>
+    <div class="nullfeed-quote-content">
+      <div class="nullfeed-quote-mark" aria-hidden="true">“</div>
+      <blockquote class="nullfeed-quote-text">${text}</blockquote>
+      <cite class="nullfeed-quote-author">— ${author}</cite>
     </div>
     <div class="nullfeed-intent-container">
       ${renderIntentHTML(currentIntent)}
@@ -141,11 +160,12 @@ export function createQuoteCardElement(reason: QuoteCardReason = "cycle"): HTMLE
     refreshBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const next = pickNextLine(reason, currentQuoteIndex);
+      const currentReason = (card.dataset.nullfeedReason as QuoteCardReason) || reason;
+      const next = pickNextLine(currentReason, currentQuoteIndex);
       currentQuoteIndex = next.index;
       const textEl = card.querySelector(".nullfeed-quote-text");
       const authorEl = card.querySelector(".nullfeed-quote-author");
-      if (textEl) textEl.textContent = `“${next.text}”`;
+      if (textEl) textEl.textContent = next.text;
       if (authorEl) authorEl.textContent = `— ${next.author}`;
     });
   }
@@ -163,8 +183,12 @@ export function mountQuoteCard(
   position: "before" | "append" = "before",
   reason: QuoteCardReason = "cycle"
 ): void {
-  if (document.getElementById(CARD_ID)) {
+  const existing = document.getElementById(CARD_ID);
+  if (existing?.isConnected) {
     return;
+  }
+  if (existing) {
+    existing.remove();
   }
 
   const card = createQuoteCardElement(reason);

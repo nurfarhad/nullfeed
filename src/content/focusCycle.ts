@@ -15,9 +15,9 @@ export const CYCLE_PLATFORMS: Record<CyclePlatform, CycleConfig> = {
     feedSelectors: [
       '[role="feed"]',
       '[data-pagelet="Feed"]',
-      '[data-pagelet*="Feed"]',
       'div[role="main"] [role="feed"]',
-      'div[role="main"] [data-pagelet*="Feed"]',
+      'div[role="main"] [data-pagelet="Feed"]',
+      'div[role="main"] div[data-virtualized="false"]',
       'div[role="main"] [data-pagelet^="FeedUnit"]',
       'div[role="main"] [role="article"]'
     ]
@@ -55,13 +55,14 @@ export function findFeedContainer(
   for (const selector of selectors) {
     const match = root.querySelector(selector);
     if (match) {
-      // If the matched selector is a single article / unit, climb up to its containing feed container
+      // If the matched selector is a single article / unit, climb up to find the enclosing feed container
       if (
         typeof match.matches === "function" &&
-        match.matches('[data-pagelet^="FeedUnit"], [role="article"]')
+        match.matches('[data-pagelet^="FeedUnit"], [role="article"], div[data-virtualized="false"]')
       ) {
-        const feedAncestor = match.closest(
-          '[role="feed"], [data-pagelet*="Feed"], div[data-virtualized="false"]'
+        // Look for an explicit feed ancestor above this unit (never match the unit itself)
+        const feedAncestor = match.parentElement?.closest(
+          '[role="feed"], [data-pagelet="Feed"], [data-pagelet*="Feed"]:not([data-pagelet^="FeedUnit"])'
         );
         if (
           feedAncestor &&
@@ -71,14 +72,20 @@ export function findFeedContainer(
         ) {
           return feedAncestor;
         }
-        if (
-          match.parentElement &&
-          !match.parentElement.matches(
-            'main, [role="main"], body, html, [role="navigation"], [role="banner"]'
-          )
+
+        // If no explicit role="feed" wrapper exists, find the post container inside role="main"
+        let candidate: Element | null = match.parentElement;
+        let bestChild: Element = match;
+        while (
+          candidate &&
+          candidate !== document.body &&
+          candidate !== document.documentElement &&
+          !candidate.matches('main, [role="main"], [role="navigation"], [role="banner"]')
         ) {
-          return match.parentElement;
+          bestChild = candidate;
+          candidate = candidate.parentElement;
         }
+        return bestChild;
       }
       return match;
     }
@@ -121,14 +128,31 @@ export async function triggerEarlyBlock(
 export function applyCyclePhase(
   platform: CyclePlatform,
   phase: "on" | "off",
-  reason: QuoteCardReason = "cycle"
+  reason: QuoteCardReason = "cycle",
+  showQuotes = true
 ): void {
   const config = CYCLE_PLATFORMS[platform];
   if (phase === "on") {
     const feed = findFeedContainer(config.feedSelectors);
     if (feed) {
       hideElement(feed, "focus-cycle");
-      mountQuoteCard(feed, "before", reason);
+      if (showQuotes) {
+        mountQuoteCard(feed, "before", reason);
+      } else {
+        unmountQuoteCard();
+      }
+    }
+    // Also guarantee all virtualized post cards in the main feed on Facebook are hidden
+    if (platform === "facebook") {
+      document
+        .querySelectorAll(
+          'div[role="main"] div[data-virtualized="false"], div[role="main"] [data-pagelet^="FeedUnit"], div[role="main"] [role="article"]:not([data-pagelet*="Stories"])'
+        )
+        .forEach((post) => {
+          if (!post.closest("#nullfeed-quote-card")) {
+            hideElement(post, "focus-cycle");
+          }
+        });
     }
   } else {
     unmountQuoteCard();
