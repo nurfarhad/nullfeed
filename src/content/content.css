@@ -157,7 +157,7 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   border: 1px dashed rgba(142, 142, 142, 0.35) !important;
   border-radius: 12px !important;
   color: rgba(142, 142, 142, 0.7) !important;
-  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font: 400 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   letter-spacing: 0.01em !important;
 }
 
@@ -182,7 +182,7 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   justify-content: center !important;
   border: 1px dashed rgba(142, 142, 142, 0.35) !important;
   border-radius: 12px !important;
-  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font: 400 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
   letter-spacing: 0.01em !important;
   gap: 4px !important;
   color: rgba(142, 142, 142, 0.7) !important;
@@ -193,15 +193,20 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
   [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a {
   color: rgba(142, 142, 142, 0.9) !important;
-  text-decoration: underline !important;
-  text-underline-offset: 2px !important;
+  text-decoration: none !important;
+  font-weight: normal !important;
   cursor: pointer !important;
   pointer-events: all !important;
 }
 
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
-  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:hover {
+  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:hover,
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:focus,
+html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
+  [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:visited {
   color: #fff !important;
+  text-decoration: none !important;
 }
 
 

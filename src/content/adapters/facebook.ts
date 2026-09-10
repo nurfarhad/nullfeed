@@ -421,7 +421,7 @@ function injectAdLabel(container: Element): void {
   label.className = "nullfeed-ad-label";
   label.innerHTML =
     'Sponsored &amp; ads hidden by '
-    + `<a href="${FACEBOOK_URL}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;font-weight:normal;">Nur Farhad</a>`;
+    + `<a href="${FACEBOOK_URL}" style="text-decoration:none !important;font-weight:normal !important;">Nur Farhad</a>`;
   container.appendChild(label);
 }
 
