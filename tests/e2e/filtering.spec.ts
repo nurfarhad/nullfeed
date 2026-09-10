@@ -876,3 +876,36 @@ test("YouTube hides end screen tiles and autoplay overlays in background wheneve
   await expect(page.locator("#autonav-overlay")).toBeVisible();
 });
 
+test("Facebook mounts always-pinned quote card at top of feed before any post", async () => {
+  const page = await fixturePage(
+    "https://www.facebook.com/",
+    `
+      <div role="main">
+        <div role="feed">
+          <div id="composer">What's on your mind, Nur?</div>
+          <div id="first-post-wrapper">
+            <div role="article" aria-label="First Post">Switzerland Probashi</div>
+          </div>
+          <div id="second-post-wrapper">
+            <div role="article" aria-label="Second Post">Space Verse</div>
+          </div>
+        </div>
+      </div>
+    `
+  );
+
+  const pinnedCard = page.locator("#nullfeed-pinned-quote-card");
+  await expect(pinnedCard).toBeVisible();
+  await expect(pinnedCard.locator(".nullfeed-quote-badge")).toContainText("MINDFUL INTENT");
+  await expect(pinnedCard.locator(".nullfeed-quote-text")).toBeVisible();
+
+  // Verify it is placed before the first post
+  const isBefore = await page.evaluate(() => {
+    const card = document.getElementById("nullfeed-pinned-quote-card");
+    const firstPostWrapper = document.getElementById("first-post-wrapper");
+    return card && firstPostWrapper && card.nextElementSibling === firstPostWrapper;
+  });
+  expect(isBefore).toBe(true);
+});
+
+

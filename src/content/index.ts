@@ -17,6 +17,12 @@ import {
   getPhase,
   triggerEarlyBlock
 } from "./focusCycle";
+import {
+  detectPinnedPlatform,
+  mountPinnedQuoteCard,
+  startPinnedQuoteWatcher,
+  unmountPinnedQuoteCard
+} from "./pinnedQuote";
 import { observeDynamicContent } from "./observer";
 import { watchRoutes } from "./routeWatcher";
 import {
@@ -29,8 +35,35 @@ import {
 
 const adapter = selectAdapter(location.hostname);
 const cyclePlatform = detectCyclePlatform(location.hostname);
+const pinnedPlatform = detectPinnedPlatform(location.hostname);
 let settings: Settings | null = null;
 let currentCyclePhase: "on" | "off" | null = null;
+let stopPinnedWatcher: (() => void) | null = null;
+let tickCyclePlatform: ((current: Settings) => Promise<void>) | null = null;
+
+function syncPinnedQuote(): void {
+  if (!pinnedPlatform) return;
+  const effective = settings ? getEffectiveSettings(settings) : null;
+  const shouldShow =
+    Boolean(effective?.enabled) &&
+    Boolean(effective?.showQuotes) &&
+    currentCyclePhase !== "on";
+
+  if (shouldShow) {
+    if (!stopPinnedWatcher) {
+      stopPinnedWatcher = startPinnedQuoteWatcher(pinnedPlatform);
+    } else {
+      mountPinnedQuoteCard(pinnedPlatform);
+    }
+  } else {
+    if (stopPinnedWatcher) {
+      stopPinnedWatcher();
+      stopPinnedWatcher = null;
+    } else {
+      unmountPinnedQuoteCard();
+    }
+  }
+}
 
 function selectAdapter(hostname: string): SiteAdapter | null {
   if (/(?:^|\.)youtube\.com$/i.test(hostname)) return youtubeAdapter;
@@ -164,65 +197,27 @@ if (adapter) {
     stopObserver = null;
     stopRouteWatcher?.();
     stopRouteWatcher = null;
+    stopPinnedWatcher?.();
+    stopPinnedWatcher = null;
   }
 
-  void Promise.all([getSettings(), getSnoozeUntil()])
-    .then(([loaded, loadedSnooze]) => {
-      snoozeUntil = loadedSnooze;
-      scheduleSnoozeExpiration(() => {
-        void getSettings().then((s) => {
-          apply(s);
-        });
-      });
-      apply(loaded);
-      stopObserver = observeDynamicContent((root) => {
-        const effective = settings ? getEffectiveSettings(settings) : null;
-        if (effective?.enabled && !handleRoute(effective)) {
-          scan(root);
-        }
-        if (cyclePlatform && effective?.enabled && currentCyclePhase === "on") {
-          applyCyclePhase(cyclePlatform, "on", "cycle", effective.showQuotes);
-        }
-      });
-      stopRouteWatcher = watchRoutes(() => {
-        const effective = settings ? getEffectiveSettings(settings) : null;
-        if (effective?.enabled && !handleRoute(effective)) {
-          scan(document);
-        }
-      });
-    })
-    .catch((error) => {
-      logFailure("Nullfeed could not read settings.", error);
-    });
-
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (
-      areaName === "sync" &&
-      changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
-    ) {
-      void getSettings()
-        .then(apply)
-        .catch((error) =>
-          logFailure("Nullfeed could not apply changed settings.", error)
-        );
+  stopObserver = observeDynamicContent((root) => {
+    const effective = settings ? getEffectiveSettings(settings) : null;
+    if (effective?.enabled && !handleRoute(effective)) {
+      scan(root);
     }
-
-    if (
-      areaName === "local" &&
-      changes[SNOOZE_STORAGE_KEY] !== undefined
-    ) {
-      snoozeUntil = typeof changes[SNOOZE_STORAGE_KEY].newValue === "number"
-        ? changes[SNOOZE_STORAGE_KEY].newValue
-        : null;
-      scheduleSnoozeExpiration(() => {
-        void getSettings().then((s) => {
-          apply(s);
-        });
-      });
-      void getSettings().then((s) => {
-        apply(s);
-      });
+    if (cyclePlatform && effective?.enabled && currentCyclePhase === "on") {
+      applyCyclePhase(cyclePlatform, "on", "cycle", effective.showQuotes);
     }
+    syncPinnedQuote();
+  });
+
+  stopRouteWatcher = watchRoutes(() => {
+    const effective = settings ? getEffectiveSettings(settings) : null;
+    if (effective?.enabled && !handleRoute(effective)) {
+      scan(document);
+    }
+    syncPinnedQuote();
   });
 
   // Expose teardown for diagnostics (accessible from the page-world via
@@ -231,6 +226,80 @@ if (adapter) {
     Reflect.set(window, "__nullfeedTeardown", teardown);
   }
 }
+
+void Promise.all([getSettings(), getSnoozeUntil()])
+  .then(([loaded, loadedSnooze]) => {
+    settings = loaded;
+    snoozeUntil = loadedSnooze;
+    scheduleSnoozeExpiration(() => {
+      void getSettings().then((s) => {
+        settings = s;
+        if (adapter) apply(s);
+        if (cyclePlatform && tickCyclePlatform) void tickCyclePlatform(s);
+        syncPinnedQuote();
+      });
+    });
+    if (adapter) apply(loaded);
+    if (cyclePlatform && tickCyclePlatform) void tickCyclePlatform(loaded);
+    syncPinnedQuote();
+  })
+  .catch((error) => {
+    logFailure("Nullfeed could not read settings.", error);
+  });
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (
+    areaName === "sync" &&
+    changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
+  ) {
+    void getSettings()
+      .then((s) => {
+        settings = s;
+        if (adapter) apply(s);
+        if (cyclePlatform && tickCyclePlatform) void tickCyclePlatform(s);
+        syncPinnedQuote();
+      })
+      .catch((error) =>
+        logFailure("Nullfeed could not apply changed settings.", error)
+      );
+  }
+
+  if (
+    areaName === "local" &&
+    changes[SNOOZE_STORAGE_KEY] !== undefined
+  ) {
+    snoozeUntil =
+      typeof changes[SNOOZE_STORAGE_KEY].newValue === "number"
+        ? changes[SNOOZE_STORAGE_KEY].newValue
+        : null;
+
+    if (cyclePlatform) {
+      try {
+        if (isSnoozeActive()) {
+          localStorage.setItem(`nullfeed-sync-enabled-${cyclePlatform}`, "false");
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    scheduleSnoozeExpiration(() => {
+      void getSettings().then((s) => {
+        settings = s;
+        if (adapter) apply(s);
+        if (cyclePlatform && tickCyclePlatform) void tickCyclePlatform(s);
+        syncPinnedQuote();
+      });
+    });
+
+    void getSettings().then((s) => {
+      settings = s;
+      if (adapter) apply(s);
+      if (cyclePlatform && tickCyclePlatform) void tickCyclePlatform(s);
+      syncPinnedQuote();
+    });
+  }
+});
 
 if (cyclePlatform) {
   // Last-known anchor, refreshed on every tick. Smart Trigger itself has no
@@ -303,7 +372,7 @@ if (cyclePlatform) {
     feedWatcherObserver = null;
   }
 
-  async function tickCycle(current: Settings): Promise<void> {
+  tickCyclePlatform = async function tickCycle(current: Settings): Promise<void> {
     const effective = getEffectiveSettings(current);
 
     if (!effective.enabled) {
@@ -314,6 +383,7 @@ if (cyclePlatform) {
         document.documentElement.removeAttribute("data-nullfeed-cycle-phase");
         stopFeedWatcher();
       }
+      syncPinnedQuote();
       // ── Persist: enabled=false so next load won't pre-block incorrectly
       try {
         localStorage.setItem(LS_ENABLED_KEY, "false");
@@ -334,44 +404,31 @@ if (cyclePlatform) {
       stopFeedWatcher(); // Not needed during free-browsing phase
     }
     currentCyclePhase = phase;
+    syncPinnedQuote();
     // ── LAYER 3: Persist anchor to localStorage ─────────────────────
     // On next page load, Layer 1 reads this to compute phase synchronously.
     try {
       localStorage.setItem(LS_ANCHOR_KEY, String(anchor));
       localStorage.setItem(LS_ENABLED_KEY, "true");
     } catch { /* ignore */ }
-  }
+  };
 
-  void getSettings().then(tickCycle);
+  if (settings) void tickCyclePlatform(settings);
 
   setInterval(() => {
-    void getSettings().then(tickCycle);
+    if (settings && tickCyclePlatform) void tickCyclePlatform(settings);
   }, 3000);
-
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (
-      areaName === "sync" &&
-      changes[SETTINGS_STORAGE_KEY]?.newValue !== undefined
-    ) {
-      void getSettings().then(tickCycle);
-    }
-
-    if (
-      areaName === "local" &&
-      changes[SNOOZE_STORAGE_KEY] !== undefined
-    ) {
-      void getSettings().then(tickCycle);
-    }
-  });
 
   // For platforms without an adapter (e.g. LinkedIn, Twitter, Reddit),
   // observe dynamic DOM mutations to ensure the feed remains hidden in "on" phase.
   if (!adapter) {
     observeDynamicContent(() => {
       void getSettings().then((s) => {
+        settings = s;
         if (s.enabled && currentCyclePhase === "on") {
           applyCyclePhase(cyclePlatform!, "on", "cycle", s.showQuotes);
         }
+        syncPinnedQuote();
       });
     });
   }
@@ -416,6 +473,7 @@ if (cyclePlatform) {
           document.documentElement.setAttribute("data-nullfeed-cycle-phase", "on");
           const showQuotes = settings ? getEffectiveSettings(settings).showQuotes : true;
           applyCyclePhase(cyclePlatform!, "on", "smart", showQuotes);
+          syncPinnedQuote();
         })
         .catch((error) => logFailure("Nullfeed smart trigger failed.", error))
         .finally(() => {

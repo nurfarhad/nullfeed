@@ -438,6 +438,13 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
     0 0 70px -6px rgba(45, 212, 191, 0.3) !important;
 }
 
+/* Pinned top-of-feed variant */
+.nullfeed-quote-card--pinned {
+  margin: 18px auto 28px auto !important;
+  width: min(100%, 680px) !important;
+}
+
+
 /* --------------------------------------------------------------------------
    Top Bar: Badge on left, Refresh button on right
    -------------------------------------------------------------------------- */

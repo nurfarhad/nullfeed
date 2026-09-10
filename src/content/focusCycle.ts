@@ -19,7 +19,7 @@ export const CYCLE_PLATFORMS: Record<CyclePlatform, CycleConfig> = {
       'div[role="main"] [data-pagelet="Feed"]',
       'div[role="main"] div[data-virtualized="false"]',
       'div[role="main"] [data-pagelet^="FeedUnit"]',
-      'div[role="main"] [role="article"]'
+      'div[role="main"] [role="article"]:not([data-pagelet*="Stories"])'
     ]
   },
   linkedin: {
