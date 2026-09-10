@@ -24,7 +24,8 @@ const SHORTS_CONTAINERS = [
   "yt-lockup-view-model"
 ] as const;
 
-const NAVIGATION_CONTAINERS = [
+// Unused but kept for structural completeness (avoids any future re-additions)
+const _NAVIGATION_CONTAINERS = [
   "ytd-guide-entry-renderer",
   "ytd-mini-guide-entry-renderer",
   "tp-yt-paper-item",
@@ -73,35 +74,47 @@ const HOME_RECOMMENDED_SHELVES = [
   'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer:has([title*="Mixes" i]))'
 ] as const;
 
-// ── New to you chip watcher ──────────────────────────────────────────────────
-// Tracks whether we have already activated the chip on the current page load.
-// Reset to false whenever the YouTube SPA navigates (handled by resetYouTubeHomeFeedChipState).
-let chipClickedThisNavigation = false;
+// ── "New to you" chip activator ───────────────────────────────────────────────
+// We click the chip exactly ONCE per page navigation using a boolean guard.
+// If the chip bar hasn't rendered yet when settings load, we schedule up to
+// MAX_RETRIES timed retries with increasing delays — stopping immediately once
+// the chip is found and clicked (or already selected).
+// NO intervals, NO CSS hiding, NO Polymer APIs.
 
-function resolveDocument(root: ParentNode): Document | null {
-  if (typeof Document !== "undefined" && root instanceof Document) {
-    return root;
-  }
-  return (root as Element).ownerDocument ?? (typeof document !== "undefined" ? document : null);
-}
+let chipActivated = false;        // true once clicked (or confirmed already selected) this navigation
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+let retryCount = 0;
+const MAX_RETRIES = 6;
+// Delays in ms: 250, 500, 1000, 2000, 3500, 5000
+const RETRY_DELAYS = [250, 500, 1000, 2000, 3500, 5000] as const;
 
 function isYouTubeHomePage(): boolean {
-  if (typeof location === "undefined") {
-    return false;
-  }
+  if (typeof location === "undefined") return false;
   return location.pathname === "/" || location.pathname === "";
 }
 
+function resolveDocument(root: ParentNode): Document | null {
+  if (typeof Document !== "undefined" && root instanceof Document) return root;
+  return (root as Element).ownerDocument ?? (typeof document !== "undefined" ? document : null);
+}
+
 /**
- * Find the "New to you" chip renderer in the home feed chip bar.
- * Returns null if not found or not on the home page.
+ * Locate the "New to you" chip. Uses attribute-based selectors first
+ * (most reliable), falls back to textContent scan.
  */
-function findNewToYouChip(): Element | null {
-  const chips = document.querySelectorAll("yt-chip-cloud-chip-renderer");
-  for (const chip of chips) {
+function findNewToYouChip(): HTMLElement | null {
+  // Primary: yt-formatted-string title attribute (doesn't depend on whitespace in textContent)
+  const byTitle = document.querySelector<HTMLElement>(
+    'yt-chip-cloud-chip-renderer:has(yt-formatted-string[title*="New to you" i])'
+  );
+  if (byTitle) return byTitle;
+
+  // Fallback: textContent scan across all chips
+  for (const chip of document.querySelectorAll<HTMLElement>("yt-chip-cloud-chip-renderer")) {
+    // Check the inner yt-formatted-string title attribute too
+    const fmtTitle = chip.querySelector("yt-formatted-string")?.getAttribute("title") ?? "";
     const text = chip.textContent?.trim() ?? "";
-    // Match English "New to you" and reasonable locale variants
-    if (/new\s+to\s+you/i.test(text)) {
+    if (/new\s+to\s+you/i.test(fmtTitle) || /new\s+to\s+you/i.test(text)) {
       return chip;
     }
   }
@@ -109,8 +122,8 @@ function findNewToYouChip(): Element | null {
 }
 
 /**
- * Check if the "New to you" chip is currently selected/active.
- * YouTube marks the selected chip with aria-selected="true" or a "selected" attribute.
+ * Check if the "New to you" chip is currently active/selected.
+ * YouTube uses several different attribute conventions across versions.
  */
 function isNewToYouChipSelected(): boolean {
   const chip = findNewToYouChip();
@@ -119,57 +132,99 @@ function isNewToYouChipSelected(): boolean {
     chip.getAttribute("aria-selected") === "true" ||
     chip.hasAttribute("selected") ||
     chip.classList.contains("iron-selected") ||
-    chip.matches("[selected]")
+    chip.matches("[selected]") ||
+    // Some YouTube versions mark the active chip differently
+    chip.querySelector('[aria-selected="true"]') !== null
   );
 }
 
 /**
- * Try to activate the "New to you" chip. Returns true if successfully clicked,
- * false if the chip wasn't available yet.
- *
- * Safe guarantees:
- *  - Only called on the home page (pathname === "/")
- *  - Only called once per navigation (chipClickedThisNavigation guard)
- *  - Does NOT use Polymer APIs — only fires a standard DOM click
- *  - Does NOT hide the "All" chip or any other chip
+ * Clear any pending retry timer.
  */
-function tryActivateNewToYouChip(): boolean {
-  if (!isYouTubeHomePage()) return false;
-  if (chipClickedThisNavigation) return true; // Already done this navigation
+function clearRetry(): void {
+  if (retryTimer !== null) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+}
 
-  // If it's already selected, just mark as done
+/**
+ * Perform a single click attempt. Returns true if chip was found and action taken,
+ * false if chip not in DOM yet.
+ */
+function attemptChipClick(): boolean {
+  if (!isYouTubeHomePage() || chipActivated) return true;
+
+  // Already on New to you — just mark done
   if (isNewToYouChipSelected()) {
-    chipClickedThisNavigation = true;
+    chipActivated = true;
+    clearRetry();
     return true;
   }
 
   const chip = findNewToYouChip();
-  if (!chip) return false; // Chip bar not rendered yet — caller should retry
+  if (!chip) return false; // Not rendered yet
 
-  // Fire a real click so YouTube's own navigation / Polymer data flow handles it
-  chipClickedThisNavigation = true;
-  (chip as HTMLElement).click();
+  chipActivated = true;
+  clearRetry();
+
+  // Click the most specific interactive child first (yt-formatted-string or button/anchor),
+  // falling back to the chip element itself.
+  const clickTarget =
+    chip.querySelector<HTMLElement>("a, button, yt-formatted-string, .chip-text") ??
+    chip;
+  clickTarget.click();
   return true;
 }
 
 /**
- * Called by routeWatcher on every SPA navigation so the chip can be
- * re-activated on the next home page visit.
+ * Schedule the next retry attempt if chip wasn't found yet.
  */
-export function resetYouTubeHomeFeedChipState(): void {
-  chipClickedThisNavigation = false;
+function scheduleRetry(): void {
+  clearRetry();
+  if (retryCount >= MAX_RETRIES) return; // Give up after max attempts
+  const delay = RETRY_DELAYS[retryCount] ?? 5000;
+  retryCount++;
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
+    if (!isYouTubeHomePage() || chipActivated) return;
+    const found = attemptChipClick();
+    if (!found) {
+      scheduleRetry(); // Still not rendered — try again
+    }
+  }, delay);
 }
 
 /**
- * Called from the scan() path (which runs on every MutationObserver batch)
- * when settings.youtube.feed is enabled. It attempts to click the chip and
- * returns immediately — no loops, no intervals, no blocking.
+ * Public entry point — called from index.ts on settings load/change and
+ * from scan() on every MutationObserver batch.
+ * Safe: no-ops if already activated this navigation, or if not on home page.
  */
 export function syncYouTubeNewToYouChip(enabled: boolean): void {
-  if (!enabled || !isYouTubeHomePage()) {
+  if (!enabled) {
+    clearRetry();
     return;
   }
-  tryActivateNewToYouChip();
+  if (!isYouTubeHomePage() || chipActivated) return;
+
+  const found = attemptChipClick();
+  if (!found) {
+    // Chip bar not in DOM yet — start the retry sequence
+    if (retryTimer === null) {
+      retryCount = 0;
+      scheduleRetry();
+    }
+  }
+}
+
+/**
+ * Called by routeWatcher on every SPA navigation so the next home-page
+ * visit re-activates the chip.
+ */
+export function resetYouTubeHomeFeedChipState(): void {
+  chipActivated = false;
+  retryCount = 0;
+  clearRetry();
 }
 
 export const youtubeAdapter: SiteAdapter = {
@@ -202,8 +257,6 @@ export const youtubeAdapter: SiteAdapter = {
       ]) {
         queryAll(root, selector).forEach((element) => {
           hideElement(element, "youtube-shorts");
-          // Also hide parent section container if on home grid so virtualizer
-          // sees zero height and does not thrash layout with empty margins.
           const section = element.closest("ytd-rich-section-renderer");
           if (section) {
             hideElement(section, "youtube-shorts");
@@ -211,7 +264,6 @@ export const youtubeAdapter: SiteAdapter = {
         });
       }
 
-      // Hide the "Shorts" filter chip in search results / browse
       queryAll(root, "yt-chip-cloud-chip-renderer").forEach((chip) => {
         if (chip.textContent?.trim() === "Shorts") {
           hideElement(chip, "youtube-shorts");
@@ -220,11 +272,7 @@ export const youtubeAdapter: SiteAdapter = {
 
       queryAll(root, 'a[href^="/shorts/"], a[href="/shorts"]').forEach(
         (anchor) => {
-          // If already inside an element hidden by Nullfeed, skip immediately (huge perf win)
-          if (anchor.closest("[data-nullfeed-hidden]")) {
-            return;
-          }
-
+          if (anchor.closest("[data-nullfeed-hidden]")) return;
           const nav = anchor.closest(
             "ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item, yt-list-item-view-model"
           );
@@ -253,10 +301,10 @@ export const youtubeAdapter: SiteAdapter = {
     }
 
     if (settings.youtube.feed && isYouTubeHomePage()) {
-      // 1. Activate "New to you" chip (safe, one-shot per navigation)
+      // Activate "New to you" chip (one-shot per navigation, with retry fallback)
       syncYouTubeNewToYouChip(true);
 
-      // 2. Hide algorithmic history-based recommendation shelves
+      // Also hide algorithmic history-based recommendation shelves
       HOME_RECOMMENDED_SHELVES.forEach((selector) => {
         queryAll(root, selector).forEach((element) =>
           hideElement(element, "youtube-recommended-shelf")
