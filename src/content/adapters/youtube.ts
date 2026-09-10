@@ -73,6 +73,11 @@ const HOME_RECOMMENDED_SHELVES = [
   'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer:has([title*="Mixes" i]))'
 ] as const;
 
+// ── New to you chip watcher ──────────────────────────────────────────────────
+// Tracks whether we have already activated the chip on the current page load.
+// Reset to false whenever the YouTube SPA navigates (handled by resetYouTubeHomeFeedChipState).
+let chipClickedThisNavigation = false;
+
 function resolveDocument(root: ParentNode): Document | null {
   if (typeof Document !== "undefined" && root instanceof Document) {
     return root;
@@ -87,8 +92,84 @@ function isYouTubeHomePage(): boolean {
   return location.pathname === "/" || location.pathname === "";
 }
 
+/**
+ * Find the "New to you" chip renderer in the home feed chip bar.
+ * Returns null if not found or not on the home page.
+ */
+function findNewToYouChip(): Element | null {
+  const chips = document.querySelectorAll("yt-chip-cloud-chip-renderer");
+  for (const chip of chips) {
+    const text = chip.textContent?.trim() ?? "";
+    // Match English "New to you" and reasonable locale variants
+    if (/new\s+to\s+you/i.test(text)) {
+      return chip;
+    }
+  }
+  return null;
+}
+
+/**
+ * Check if the "New to you" chip is currently selected/active.
+ * YouTube marks the selected chip with aria-selected="true" or a "selected" attribute.
+ */
+function isNewToYouChipSelected(): boolean {
+  const chip = findNewToYouChip();
+  if (!chip) return false;
+  return (
+    chip.getAttribute("aria-selected") === "true" ||
+    chip.hasAttribute("selected") ||
+    chip.classList.contains("iron-selected") ||
+    chip.matches("[selected]")
+  );
+}
+
+/**
+ * Try to activate the "New to you" chip. Returns true if successfully clicked,
+ * false if the chip wasn't available yet.
+ *
+ * Safe guarantees:
+ *  - Only called on the home page (pathname === "/")
+ *  - Only called once per navigation (chipClickedThisNavigation guard)
+ *  - Does NOT use Polymer APIs — only fires a standard DOM click
+ *  - Does NOT hide the "All" chip or any other chip
+ */
+function tryActivateNewToYouChip(): boolean {
+  if (!isYouTubeHomePage()) return false;
+  if (chipClickedThisNavigation) return true; // Already done this navigation
+
+  // If it's already selected, just mark as done
+  if (isNewToYouChipSelected()) {
+    chipClickedThisNavigation = true;
+    return true;
+  }
+
+  const chip = findNewToYouChip();
+  if (!chip) return false; // Chip bar not rendered yet — caller should retry
+
+  // Fire a real click so YouTube's own navigation / Polymer data flow handles it
+  chipClickedThisNavigation = true;
+  (chip as HTMLElement).click();
+  return true;
+}
+
+/**
+ * Called by routeWatcher on every SPA navigation so the chip can be
+ * re-activated on the next home page visit.
+ */
 export function resetYouTubeHomeFeedChipState(): void {
-  // Retained as clean no-op for routeWatcher compatibility
+  chipClickedThisNavigation = false;
+}
+
+/**
+ * Called from the scan() path (which runs on every MutationObserver batch)
+ * when settings.youtube.feed is enabled. It attempts to click the chip and
+ * returns immediately — no loops, no intervals, no blocking.
+ */
+export function syncYouTubeNewToYouChip(enabled: boolean): void {
+  if (!enabled || !isYouTubeHomePage()) {
+    return;
+  }
+  tryActivateNewToYouChip();
 }
 
 export const youtubeAdapter: SiteAdapter = {
@@ -172,7 +253,10 @@ export const youtubeAdapter: SiteAdapter = {
     }
 
     if (settings.youtube.feed && isYouTubeHomePage()) {
-      // 1. Hide algorithmic history-based recommendation shelves
+      // 1. Activate "New to you" chip (safe, one-shot per navigation)
+      syncYouTubeNewToYouChip(true);
+
+      // 2. Hide algorithmic history-based recommendation shelves
       HOME_RECOMMENDED_SHELVES.forEach((selector) => {
         queryAll(root, selector).forEach((element) =>
           hideElement(element, "youtube-recommended-shelf")
