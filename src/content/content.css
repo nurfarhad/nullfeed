@@ -192,7 +192,7 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
 
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
   [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a {
-  color: rgba(142, 142, 142, 0.9) !important;
+  color: inherit !important;
   text-decoration: none !important;
   font-weight: normal !important;
   cursor: pointer !important;
@@ -205,7 +205,7 @@ html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-fil
   [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:focus,
 html[data-nullfeed-enabled][data-nullfeed-platform="facebook"][data-nullfeed-filter-ads]
   [data-nullfeed-fb-ad="feed"] > .nullfeed-ad-label a:visited {
-  color: #fff !important;
+  color: inherit !important;
   text-decoration: none !important;
 }
 
