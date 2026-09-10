@@ -65,18 +65,32 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
   if (typeof location !== "undefined" && location.pathname !== "/" && location.pathname !== "") {
     return false;
   }
-  const grid = root.querySelector("ytd-rich-grid-renderer");
-  if (!grid) return false;
-  const contents = grid.querySelector("#contents");
-  if (contents && contents.previousElementSibling === card) {
-    return true;
-  }
-  if (contents) {
-    grid.insertBefore(card, contents);
-    return true;
-  }
-  if (grid.firstElementChild === card) return true;
-  grid.insertBefore(card, grid.firstElementChild);
+
+  // Apply YouTube thumbnail card styling
+  card.classList.add("nullfeed-quote-card--yt-thumb");
+
+  // Target the rich grid contents list
+  const contents = root.querySelector("ytd-rich-grid-renderer #contents");
+  if (!contents) return false;
+
+  // Check if already slotted
+  const existingWrapper = root.querySelector("#nullfeed-yt-grid-wrapper");
+  if (existingWrapper?.isConnected) return true;
+
+  // Wrap the card in a ytd-rich-item-renderer mimic so it blends into the grid
+  const wrapper = document.createElement("ytd-rich-item-renderer");
+  wrapper.id = "nullfeed-yt-grid-wrapper";
+  wrapper.className = "style-scope ytd-rich-grid-row";
+  wrapper.setAttribute("data-nullfeed-yt-card", "");
+  wrapper.appendChild(card);
+
+  // Insert at position 3 (index 2): before the 3rd child of #contents
+  const children = Array.from(contents.children).filter(
+    (el) => !el.hasAttribute("data-nullfeed-yt-card")
+  );
+  const targetIndex = Math.min(2, children.length);
+  const refChild = children[targetIndex] ?? null;
+  contents.insertBefore(wrapper, refChild);
   return true;
 }
 
@@ -238,7 +252,7 @@ function bindIntentHandlers(container: HTMLElement): void {
 
 let currentQuoteIdx = 0;
 
-export function createFeedQuoteCardElement(doc?: Document): HTMLElement {
+export function createFeedQuoteCardElement(doc?: Document, platform?: string): HTMLElement {
   const documentRef = doc ?? (typeof document !== "undefined" ? document : null);
   if (!documentRef) {
     return { id: FEED_QUOTE_CARD_ID } as unknown as HTMLElement;
@@ -254,33 +268,63 @@ export function createFeedQuoteCardElement(doc?: Document): HTMLElement {
   const { quote, index } = getRandomQuote();
   currentQuoteIdx = index;
   const currentIntent = getSessionIntent();
+  const isYouTube = platform === "youtube" ||
+    (typeof location !== "undefined" && /youtube\.com/i.test(location.hostname));
 
   const card = documentRef.createElement("div");
   card.id = FEED_QUOTE_CARD_ID;
-  card.className = "nullfeed-quote-card nullfeed-quote-card--feed";
   card.dataset.nullfeedTopQuote = "true";
 
-  card.innerHTML = `
-    <div class="nullfeed-quote-topbar">
-      <div class="nullfeed-quote-badge">
-        <span class="nullfeed-quote-badge-dot"></span>
-        <span>MINDFUL MOMENT</span>
+  if (isYouTube) {
+    // YouTube: thumbnail-style layout (16:9 + metadata row)
+    card.className = "nullfeed-quote-card nullfeed-quote-card--feed";
+    card.innerHTML = `
+      <div class="nullfeed-yt-thumb-area">
+        <div class="nullfeed-quote-mark" aria-hidden="true">“</div>
+        <blockquote class="nullfeed-quote-text">${quote.text}</blockquote>
+        <cite class="nullfeed-quote-author">— ${quote.author}</cite>
+        <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </button>
       </div>
-      <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-        </svg>
-      </button>
-    </div>
-    <div class="nullfeed-quote-content">
-      <div class="nullfeed-quote-mark" aria-hidden="true">“</div>
-      <blockquote class="nullfeed-quote-text">${quote.text}</blockquote>
-      <cite class="nullfeed-quote-author">— ${quote.author}</cite>
-    </div>
-    <div class="nullfeed-intent-container">
-      ${renderIntentHTML(currentIntent)}
-    </div>
-  `;
+      <div class="nullfeed-yt-meta">
+        <div class="nullfeed-yt-meta-avatar" aria-hidden="true">✎</div>
+        <div class="nullfeed-yt-meta-info">
+          <span class="nullfeed-yt-meta-title">Mindful Moment</span>
+          <span class="nullfeed-yt-meta-sub">Nullfeed · Pause &amp; Reflect</span>
+        </div>
+      </div>
+      <div class="nullfeed-intent-container">
+        ${renderIntentHTML(currentIntent)}
+      </div>
+    `;
+  } else {
+    // Standard post-style layout for Facebook, Instagram, LinkedIn etc.
+    card.className = "nullfeed-quote-card nullfeed-quote-card--feed";
+    card.innerHTML = `
+      <div class="nullfeed-quote-topbar">
+        <div class="nullfeed-quote-badge">
+          <span class="nullfeed-quote-badge-dot"></span>
+          <span>MINDFUL MOMENT</span>
+        </div>
+        <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+        </button>
+      </div>
+      <div class="nullfeed-quote-content">
+        <div class="nullfeed-quote-mark" aria-hidden="true">“</div>
+        <blockquote class="nullfeed-quote-text">${quote.text}</blockquote>
+        <cite class="nullfeed-quote-author">— ${quote.author}</cite>
+      </div>
+      <div class="nullfeed-intent-container">
+        ${renderIntentHTML(currentIntent)}
+      </div>
+    `;
+  }
 
   const refreshBtn = card.querySelector<HTMLButtonElement>("button.nullfeed-quote-refresh");
   if (refreshBtn) {
@@ -317,7 +361,7 @@ export function mountPinnedQuoteCard(
     return true;
   }
 
-  const card = createFeedQuoteCardElement(documentRef ?? undefined);
+  const card = createFeedQuoteCardElement(documentRef ?? undefined, platform);
 
   switch (platform) {
     case "facebook":
@@ -338,9 +382,15 @@ export function mountPinnedQuoteCard(
 }
 
 export function unmountPinnedQuoteCard(): void {
+  // Remove the card itself
   const card = document.getElementById(FEED_QUOTE_CARD_ID);
   if (card) {
     card.remove();
+  }
+  // Also remove the YouTube grid wrapper if present
+  const ytWrapper = document.getElementById("nullfeed-yt-grid-wrapper");
+  if (ytWrapper) {
+    ytWrapper.remove();
   }
 }
 

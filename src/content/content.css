@@ -296,162 +296,93 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
 }
 
 /* ==========================================================================
-   Nullfeed Mindful Focus Hero Card — Premium Cinema-Dark Edition
+   Nullfeed Quote Card — Clean Premium Design (no glow)
    ========================================================================== */
 
 @keyframes nullfeed-card-appear {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.97);
-    filter: blur(4px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
+    transform: translateY(0);
   }
-}
-
-@keyframes nullfeed-pulse-dot {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-    box-shadow: 0 0 6px currentColor, 0 0 12px currentColor;
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(0.65);
-    box-shadow: 0 0 3px currentColor;
-  }
-}
-
-@keyframes nullfeed-aura-breathe {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 0.75; transform: scale(1.04); }
-}
-
-@keyframes nullfeed-shimmer {
-  0% { background-position: -200% center; }
-  100% { background-position: 200% center; }
 }
 
 @keyframes nullfeed-quote-fade {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Card wrapper adds a cinematic ambient-glow aura behind the card */
+/* ── Base card shell — clean, no glow, popup-style ── */
 .nullfeed-quote-card {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
   box-sizing: border-box !important;
   width: min(100%, 660px) !important;
-  margin: 36px auto 52px auto !important;
-  padding: 30px 38px 28px 38px !important;
-  
-  /* Deep Glassmorphic Surface */
-  background:
-    linear-gradient(160deg,
-      rgba(28, 24, 48, 0.97) 0%,
-      rgba(14, 12, 24, 0.99) 100%) !important;
-  backdrop-filter: blur(32px) saturate(180%) brightness(0.9) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(180%) brightness(0.9) !important;
-  
-  /* Borders & Multi-layer Shadows */
-  border: 1px solid rgba(167, 139, 250, 0.15) !important;
-  border-top-color: rgba(255, 255, 255, 0.14) !important;
-  border-radius: 24px !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 32px 72px -16px rgba(0, 0, 0, 0.9),
-    0 0 60px -8px rgba(139, 92, 246, 0.2) !important;
+  margin: 24px auto 36px auto !important;
+  padding: 26px 30px 24px 30px !important;
 
-  color: #f1f3f5 !important;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  /* Surface — matches popup's --surface token */
+  background: #1a1b1e !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 16px !important;
+
+  /* Depth shadow — no color glow, just realistic depth */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.35),
+    0 20px 48px rgba(0, 0, 0, 0.25) !important;
+
+  color: #e8eaed !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif !important;
   z-index: 100 !important;
   position: relative !important;
-  overflow: visible !important;
-  animation: nullfeed-card-appear 0.5s cubic-bezier(0.16, 1, 0.3, 1) both !important;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+  overflow: hidden !important;
+  animation: nullfeed-card-appear 0.4s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
-/* Ambient glow aura rendered behind the card */
+/* No glow pseudo-element — clean card, no aura */
 .nullfeed-quote-card::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: -28px !important;
-  border-radius: 40px !important;
-  background: radial-gradient(
-    ellipse 70% 55% at 50% 60%,
-    rgba(139, 92, 246, 0.28) 0%,
-    rgba(109, 40, 217, 0.14) 45%,
-    transparent 75%
-  ) !important;
-  filter: blur(18px) !important;
-  z-index: -1 !important;
-  pointer-events: none !important;
-  animation: nullfeed-aura-breathe 4s ease-in-out infinite !important;
+  display: none !important;
 }
 
 .nullfeed-quote-card:hover {
-  border-color: rgba(167, 139, 250, 0.35) !important;
-  border-top-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.13) !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 40px 80px -16px rgba(0, 0, 0, 0.95),
-    0 0 70px -6px rgba(139, 92, 246, 0.32) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.45),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 24px 56px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Smart Trigger (Doomscroll Detection) — Teal Theme */
+/* Smart Trigger (Doomscroll Detection) — Teal accent only on badge/text, no glow */
 .nullfeed-quote-card--smart {
-  border-color: rgba(45, 212, 191, 0.2) !important;
-  border-top-color: rgba(255, 255, 255, 0.14) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 32px 72px -16px rgba(0, 0, 0, 0.9),
-    0 0 60px -8px rgba(45, 212, 191, 0.22) !important;
+  border-color: rgba(46, 216, 138, 0.2) !important;
+  border-top-color: rgba(46, 216, 138, 0.25) !important;
 }
 
 .nullfeed-quote-card--smart::before {
-  background: radial-gradient(
-    ellipse 70% 55% at 50% 60%,
-    rgba(45, 212, 191, 0.24) 0%,
-    rgba(20, 184, 166, 0.12) 45%,
-    transparent 75%
-  ) !important;
+  display: none !important;
 }
-
-.nullfeed-quote-card--smart:hover {
-  border-color: rgba(45, 212, 191, 0.38) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 40px 80px -16px rgba(0, 0, 0, 0.95),
-    0 0 70px -6px rgba(45, 212, 191, 0.3) !important;
-}
-
 /* Feed Top Quote Card — sits in-stream like a post card */
 .nullfeed-quote-card--feed,
 .nullfeed-quote-card--pinned {
   width: 100% !important;
   max-width: 680px !important;
-  margin: 16px auto !important;
+  margin: 12px auto 20px auto !important;
   box-sizing: border-box !important;
   align-self: center !important;
   flex-shrink: 0 !important;
 }
 
-
 /* --------------------------------------------------------------------------
-   Top Bar: Badge on left, Refresh button on right
+   Top Bar: Label on left, Refresh button on right
    -------------------------------------------------------------------------- */
 .nullfeed-quote-topbar {
   display: flex !important;
@@ -459,353 +390,31 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   align-items: center !important;
   justify-content: space-between !important;
   width: 100% !important;
-  margin-bottom: 28px !important;
+  margin-bottom: 20px !important;
 }
 
+/* Clean pill badge — matches popup status pill style */
 .nullfeed-quote-badge {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 7px !important;
-  padding: 6px 14px !important;
+  gap: 6px !important;
+  padding: 5px 11px !important;
   border-radius: 9999px !important;
-  font-size: 9.5px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
+  letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
-  color: #d8b4fe !important;
-  background: rgba(139, 92, 246, 0.14) !important;
-  border: 1px solid rgba(167, 139, 250, 0.3) !important;
+  color: #2ed88a !important;
+  background: rgba(46, 216, 138, 0.08) !important;
+  border: 1px solid rgba(46, 216, 138, 0.25) !important;
   white-space: nowrap !important;
   line-height: 1 !important;
-  /* Subtle shimmer on hover */
-  background-size: 200% auto !important;
-  transition: border-color 0.25s ease, background 0.25s ease !important;
-}
-
-.nullfeed-quote-badge:hover {
-  background: rgba(139, 92, 246, 0.22) !important;
-  border-color: rgba(167, 139, 250, 0.48) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-quote-badge {
-  color: #5eead4 !important;
-  background: rgba(45, 212, 191, 0.14) !important;
-  border-color: rgba(45, 212, 191, 0.3) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-quote-badge:hover {
-  background: rgba(45, 212, 191, 0.22) !important;
-  border-color: rgba(45, 212, 191, 0.5) !important;
-}
-
-.nullfeed-quote-badge-dot {
-  width: 6px !important;
-  height: 6px !important;
-  border-radius: 50% !important;
-  background: currentColor !important;
-  box-shadow: 0 0 6px currentColor, 0 0 12px currentColor !important;
-  display: inline-block !important;
-  flex-shrink: 0 !important;
-  animation: nullfeed-pulse-dot 2.2s infinite ease-in-out !important;
-}
-
-.nullfeed-quote-refresh {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 34px !important;
-  height: 34px !important;
-  border-radius: 50% !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.45) !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  flex-shrink: 0 !important;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.nullfeed-quote-refresh:hover {
-  color: #ffffff !important;
-  background: rgba(167, 139, 250, 0.15) !important;
-  border-color: rgba(167, 139, 250, 0.4) !important;
-  transform: rotate(135deg) scale(1.1) !important;
-  box-shadow: 0 0 14px rgba(139, 92, 246, 0.4) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-quote-refresh:hover {
-  background: rgba(45, 212, 191, 0.15) !important;
-  border-color: rgba(45, 212, 191, 0.4) !important;
-  box-shadow: 0 0 14px rgba(45, 212, 191, 0.35) !important;
-}
-
-/* --------------------------------------------------------------------------
-   Quote Centerpiece — Dramatic Hero Layout
-   -------------------------------------------------------------------------- */
-.nullfeed-quote-content {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  text-align: center !important;
-  width: 100% !important;
-  padding: 0 4px !important;
-  margin: 0 0 4px 0 !important;
-  animation: nullfeed-quote-fade 0.55s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both !important;
-}
-
-/* Giant decorative opening quote — the design hero element */
-.nullfeed-quote-mark {
-  font-family: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, serif !important;
-  font-size: 96px !important;
-  line-height: 0.55 !important;
-  height: 52px !important;
-  color: rgba(139, 92, 246, 0.22) !important;
-  margin-bottom: 16px !important;
-  user-select: none !important;
-  letter-spacing: -8px !important;
-  display: block !important;
-  text-shadow: 0 0 40px rgba(139, 92, 246, 0.3) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-quote-mark {
-  color: rgba(45, 212, 191, 0.22) !important;
-  text-shadow: 0 0 40px rgba(45, 212, 191, 0.28) !important;
-}
-
-.nullfeed-quote-text {
-  font-size: 22px !important;
-  line-height: 1.6 !important;
-  font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.95) !important;
-  margin: 0 0 20px 0 !important;
-  font-style: normal !important;
-  white-space: normal !important;
-  word-break: break-word !important;
-  max-width: 560px !important;
-  letter-spacing: -0.02em !important;
-  padding: 0 !important;
-  border: none !important;
-  text-shadow: 0 1px 24px rgba(0, 0, 0, 0.5) !important;
-}
-
-.nullfeed-quote-author {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  color: rgba(255, 255, 255, 0.35) !important;
-  font-style: normal !important;
-  letter-spacing: 0.14em !important;
-  text-transform: uppercase !important;
-}
-
-/* Decorative line before author */
-.nullfeed-quote-author::before {
-  content: "" !important;
-  display: inline-block !important;
-  width: 28px !important;
-  height: 1px !important;
-  background: rgba(167, 139, 250, 0.45) !important;
-  flex-shrink: 0 !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-quote-author::before {
-  background: rgba(45, 212, 191, 0.45) !important;
-}
-
-/* --------------------------------------------------------------------------
-   Intent / Session Goal Section — Redesigned
-   -------------------------------------------------------------------------- */
-.nullfeed-intent-container {
-  display: flex !important;
-  align-items: center !important;
-  width: 100% !important;
-  margin-top: 28px !important;
-  padding-top: 22px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
-}
-
-.nullfeed-intent-form {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 10px !important;
-  width: 100% !important;
-}
-
-.nullfeed-intent-input {
-  flex: 1 !important;
-  height: 42px !important;
-  padding: 0 18px !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  border-radius: 99px !important;
-  color: #ffffff !important;
-  font-size: 13px !important;
-  font-family: inherit !important;
-  outline: none !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  letter-spacing: 0.01em !important;
-}
-
-.nullfeed-intent-input::placeholder {
-  color: rgba(255, 255, 255, 0.28) !important;
-}
-
-.nullfeed-intent-input:focus {
-  border-color: rgba(167, 139, 250, 0.55) !important;
-  background: rgba(139, 92, 246, 0.07) !important;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1), 0 0 18px rgba(139, 92, 246, 0.15) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-intent-input:focus {
-  border-color: rgba(45, 212, 191, 0.55) !important;
-  background: rgba(45, 212, 191, 0.06) !important;
-  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.1), 0 0 18px rgba(45, 212, 191, 0.12) !important;
-}
-
-.nullfeed-intent-submit {
-  height: 42px !important;
-  padding: 0 22px !important;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.35) 0%, rgba(109, 40, 217, 0.55) 100%) !important;
-  border: 1px solid rgba(167, 139, 250, 0.45) !important;
-  border-radius: 99px !important;
-  color: #ede9fe !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  white-space: nowrap !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.2) !important;
-}
-
-.nullfeed-intent-submit:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.55) 0%, rgba(109, 40, 217, 0.75) 100%) !important;
-  border-color: rgba(167, 139, 250, 0.65) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-intent-submit {
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.28) 0%, rgba(20, 184, 166, 0.45) 100%) !important;
-  border-color: rgba(45, 212, 191, 0.45) !important;
-  color: #ccfbf1 !important;
-  box-shadow: 0 4px 16px rgba(45, 212, 191, 0.18) !important;
-}
-
-.nullfeed-quote-card--smart .nullfeed-intent-submit:hover {
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.45) 0%, rgba(20, 184, 166, 0.65) 100%) !important;
-  border-color: rgba(45, 212, 191, 0.65) !important;
-  box-shadow: 0 8px 24px rgba(45, 212, 191, 0.3) !important;
-}
-
-/* Intent Goal Badge — shown once a goal is set */
-.nullfeed-intent-badge {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 12px !important;
-  width: 100% !important;
-  padding: 12px 16px !important;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(109, 40, 217, 0.06) 100%) !important;
-  border: 1px solid rgba(167, 139, 250, 0.25) !important;
-  border-radius: 14px !important;
-  box-sizing: border-box !important;
   transition: border-color 0.2s ease, background 0.2s ease !important;
 }
 
-.nullfeed-intent-badge:hover {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(109, 40, 217, 0.09) 100%) !important;
-  border-color: rgba(167, 139, 250, 0.38) !important;
-}
-
-.nullfeed-intent-badge-content {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  min-width: 0 !important;
-  flex: 1 !important;
-}
-
-.nullfeed-intent-icon {
-  font-size: 15px !important;
-  flex-shrink: 0 !important;
-  filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.6)) !important;
-}
-
-.nullfeed-intent-tag {
-  font-size: 9.5px !important;
-  font-weight: 800 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.1em !important;
-  color: #c4b5fd !important;
-  flex-shrink: 0 !important;
-}
-
-.nullfeed-intent-text {
-  font-size: 13.5px !important;
-  font-weight: 500 !important;
-  color: rgba(255, 255, 255, 0.88) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  flex: 1 !important;
-  letter-spacing: -0.01em !important;
-}
-
-.nullfeed-intent-clear {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 24px !important;
-  height: 24px !important;
-  border-radius: 50% !important;
-  background: rgba(255, 255, 255, 0.07) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  font-size: 13px !important;
-  cursor: pointer !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  flex-shrink: 0 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.nullfeed-intent-clear:hover {
-  background: rgba(239, 68, 68, 0.2) !important;
-  border-color: rgba(239, 68, 68, 0.4) !important;
-  color: #fca5a5 !important;
-  transform: scale(1.1) !important;
-}
-
-/*
- * Focus Cycle — instantaneous CSS hiding during focus phase
- */
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="facebook"] :is(
-  [role="feed"],
-  [data-pagelet="Feed"],
-  [data-pagelet*="Feed"],
-  div[role="main"] div[data-virtualized="false"],
-  div[role="main"] [role="article"]:not([data-pagelet*="Stories"]),
-  div[role="main"] [data-pagelet^="FeedUnit"]
-) {
-  display: none !important;
-}
-
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] .scaffold-finite-scroll {
-  display: none !important;
-}
-
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] shreddit-feed {
-  display: none !important;
-}
-
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] div[data-testid="primaryColumn"] section[role="region"] {
-  display: none !important;
+.nullfeed-quote-badge:hover {
+  background: rgba(46, 216, 138, 0.14) !important;
+  border-color: rgba(46, 216, 138, 0.4) !important;
 }
 
 
