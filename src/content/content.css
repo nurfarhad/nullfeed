@@ -63,21 +63,6 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
   display: none !important;
 }
 
-/* YouTube: hide the "All" chip on the home feed when Hide Home Feed is active */
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-feed-filter-chip-bar-renderer #chips > yt-chip-cloud-chip-renderer:first-child,
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  ytd-feed-filter-chip-bar-renderer #chips > chip-shape:first-child,
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  yt-chip-cloud-chip-renderer:has(yt-formatted-string[title="All"]),
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  yt-chip-cloud-chip-renderer:has(#text[title="All"]),
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  yt-chip-cloud-chip-renderer[chip-title="All"],
-html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filter-feed]
-  [data-nullfeed-feature="youtube-all-chip"] {
-  display: none !important;
-}
 
 /*
  * Facebook feed-level hiding rules.

@@ -205,18 +205,18 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
     (typeof document !== "undefined" ? document.querySelector("ytd-rich-grid-renderer #contents") : null);
   if (!contents) return false;
 
-  // Wrap the card in a ytd-rich-item-renderer mimic so it blends into the grid
+  // Wrap the card in a div with YouTube grid item classes so it blends into the grid without crashing Polymer
   const docRef =
     typeof document !== "undefined"
       ? document
       : ((root as Element).ownerDocument ?? null);
   const wrapper =
     docRef && typeof docRef.createElement === "function"
-      ? docRef.createElement("ytd-rich-item-renderer")
+      ? docRef.createElement("div")
       : card;
   if (wrapper !== card) {
     wrapper.id = "nullfeed-yt-grid-wrapper";
-    wrapper.className = "style-scope ytd-rich-grid-renderer";
+    wrapper.className = "style-scope ytd-rich-grid-row ytd-rich-item-renderer";
     wrapper.setAttribute("data-nullfeed-yt-card", "");
     wrapper.appendChild(card);
   }
