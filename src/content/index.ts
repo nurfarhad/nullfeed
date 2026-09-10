@@ -73,7 +73,12 @@ function selectAdapter(hostname: string): SiteAdapter | null {
 }
 
 function logFailure(message: string, error: unknown): void {
-  // Always log — errors surface in chrome://extensions > Errors panel.
+  if (
+    error instanceof Error &&
+    /extension context invalidated/i.test(error.message)
+  ) {
+    return;
+  }
   console.error(message, error);
 }
 
@@ -415,8 +420,14 @@ if (cyclePlatform) {
 
   if (settings) void tickCyclePlatform(settings);
 
-  setInterval(() => {
-    if (settings && tickCyclePlatform) void tickCyclePlatform(settings);
+  const cycleInterval = setInterval(() => {
+    if (typeof chrome === "undefined" || !chrome.runtime?.id) {
+      clearInterval(cycleInterval);
+      return;
+    }
+    if (settings && tickCyclePlatform) {
+      void tickCyclePlatform(settings).catch(() => {});
+    }
   }, 3000);
 
   // For platforms without an adapter (e.g. LinkedIn, Twitter, Reddit),

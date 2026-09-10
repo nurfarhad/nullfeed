@@ -51,10 +51,14 @@ export function isStorageQuotaError(error: unknown): boolean {
 }
 
 export async function getSettings(): Promise<Settings> {
-  const stored = (await chrome.storage.sync.get(
-    SETTINGS_STORAGE_KEY
-  )) as StorageRecord;
-  return migrateSettings(stored[SETTINGS_STORAGE_KEY]);
+  try {
+    const stored = (await chrome.storage.sync.get(
+      SETTINGS_STORAGE_KEY
+    )) as StorageRecord;
+    return migrateSettings(stored[SETTINGS_STORAGE_KEY]);
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
 }
 
 export async function saveSettings(settings: Settings): Promise<Settings> {
