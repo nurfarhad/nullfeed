@@ -65,4 +65,42 @@ describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
     expect(mounted).toBe(true);
     expect(mockFirstVideo.parentElement.insertBefore).toHaveBeenCalled();
   });
+
+  it("inserts quote card before first update on LinkedIn home feed", () => {
+    const originalLocation = global.location;
+    // @ts-expect-error Mocking location for test
+    global.location = { pathname: "/feed/" };
+
+    const mockPost = {
+      parentElement: {
+        insertBefore: vi.fn()
+      }
+    };
+    const mockRoot = {
+      querySelectorAll: vi.fn(() => [mockPost]),
+      querySelector: vi.fn(() => mockPost)
+    };
+
+    const mounted = mountPinnedQuoteCard("linkedin", mockRoot as unknown as ParentNode);
+    expect(mounted).toBe(true);
+    expect(mockPost.parentElement.insertBefore).toHaveBeenCalled();
+
+    global.location = originalLocation;
+  });
+
+  it("does not insert quote card on LinkedIn notifications page", () => {
+    const originalLocation = global.location;
+    // @ts-expect-error Mocking location for test
+    global.location = { pathname: "/notifications/" };
+
+    const mockRoot = {
+      querySelectorAll: vi.fn(() => []),
+      querySelector: vi.fn(() => null)
+    };
+
+    const mounted = mountPinnedQuoteCard("linkedin", mockRoot as unknown as ParentNode);
+    expect(mounted).toBe(false);
+
+    global.location = originalLocation;
+  });
 });

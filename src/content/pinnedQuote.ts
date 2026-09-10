@@ -22,25 +22,117 @@ export function detectPinnedPlatform(hostname: string): PinnedQuotePlatform | nu
   return null;
 }
 
-function insertFacebookTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
-  // Find the first post in the feed stream
-  const firstPost = root.querySelector(
-    'div[role="feed"] div[role="article"]:not([data-pagelet*="Stories"]), [data-pagelet^="FeedUnit"], div[role="feed"] div[data-virtualized="false"]'
-  );
+function isRouteAllowed(platform: PinnedQuotePlatform): boolean {
+  if (typeof location === "undefined") return true;
+  const path = (location.pathname || "").toLowerCase();
+  if (path === "blank" || path === "") return true;
 
+  switch (platform) {
+    case "facebook":
+      return path === "/" || path === "";
+    case "youtube":
+      return path === "/" || path === "";
+    case "instagram":
+      return path === "/" || path === "";
+    case "linkedin":
+      return path === "/" || path === "" || path.startsWith("/feed");
+    case "twitter":
+      return path === "/" || path === "" || path.startsWith("/home");
+    case "reddit":
+      return path === "/" || path === "" || path.startsWith("/r/popular") || path.startsWith("/r/all");
+    default:
+      return true;
+  }
+}
+
+function getFacebookFirstPost(root: ParentNode = document): HTMLElement | null {
+  if (typeof root.querySelectorAll === "function") {
+    const articles = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        '[role="feed"] [role="article"], [role="main"] [role="article"], main [role="article"], [role="article"]'
+      )
+    );
+
+    for (const article of articles) {
+      if (
+        article.closest?.('[data-pagelet*="Stories"], [aria-label*="Stories" i], [aria-label*="stories" i]') ||
+        article.querySelector?.('a[href*="/stories/create"]')
+      ) {
+        continue;
+      }
+      if (
+        article.closest?.('[data-pagelet*="Reels"], [aria-label*="Reels" i]') ||
+        article.querySelector?.('a[href^="/reel/"]')
+      ) {
+        continue;
+      }
+      if (article.closest?.('[data-pagelet*="Composer"], [role="region"][aria-label*="Create" i]')) {
+        continue;
+      }
+      if (
+        article.hasAttribute?.("data-nullfeed-hidden") ||
+        article.hidden ||
+        article.style?.display === "none"
+      ) {
+        continue;
+      }
+      return article;
+    }
+
+    const virtualized = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        '[role="feed"] > div[data-virtualized="false"], [role="main"] div[data-virtualized="false"]'
+      )
+    );
+    for (const v of virtualized) {
+      if (
+        v.closest?.('[data-pagelet*="Stories"], [aria-label*="Stories" i]') ||
+        v.querySelector?.('a[href*="/stories/create"], a[href^="/reel/"]') ||
+        v.hasAttribute?.("data-nullfeed-hidden") ||
+        v.hidden
+      ) {
+        continue;
+      }
+      return v;
+    }
+  }
+
+  const single = root.querySelector?.(
+    '[role="feed"] [role="article"], [role="main"] [role="article"], [role="article"]'
+  );
+  if (
+    (typeof HTMLElement !== "undefined" && single instanceof HTMLElement) ||
+    (single && typeof single === "object")
+  ) {
+    return single as HTMLElement;
+  }
+
+  return null;
+}
+
+function insertFacebookTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  if (!isRouteAllowed("facebook")) {
+    unmountPinnedQuoteCard();
+    return false;
+  }
+
+  const firstPost = getFacebookFirstPost(root);
   if (firstPost) {
-    const feedContainer = firstPost.closest('[role="feed"], [data-pagelet="Feed"]');
-    if (feedContainer) {
-      let target: Element = firstPost;
-      while (target.parentElement && target.parentElement !== feedContainer) {
-        target = target.parentElement;
+    const feed = firstPost.closest<HTMLElement>(
+      '[role="feed"], [data-pagelet="Feed"], div[role="main"], main[role="main"], main'
+    );
+    if (feed) {
+      let target: HTMLElement = firstPost;
+      while (target.parentElement && target.parentElement !== feed) {
+        target = target.parentElement as HTMLElement;
       }
       if (target.previousElementSibling === card) {
         return true;
       }
-      feedContainer.insertBefore(card, target);
+      feed.insertBefore(card, target);
       return true;
     }
+
     if (firstPost.previousElementSibling === card) {
       return true;
     }
@@ -48,8 +140,8 @@ function insertFacebookTopQuote(card: HTMLElement, root: ParentNode = document):
     return true;
   }
 
-  // Fallback: if role="feed" is present but has no posts yet
-  const feed = root.querySelector('[role="feed"], [data-pagelet="Feed"]');
+  // Fallback: if role="feed" is present but has no posts loaded yet
+  const feed = root.querySelector<HTMLElement>('[role="feed"], [data-pagelet="Feed"]');
   if (feed) {
     if (feed.firstElementChild === card) {
       return true;
@@ -62,7 +154,8 @@ function insertFacebookTopQuote(card: HTMLElement, root: ParentNode = document):
 }
 
 function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
-  if (typeof location !== "undefined" && location.pathname !== "/" && location.pathname !== "") {
+  if (!isRouteAllowed("youtube")) {
+    unmountPinnedQuoteCard();
     return false;
   }
 
@@ -118,7 +211,8 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
 }
 
 function insertInstagramTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
-  if (typeof location !== "undefined" && location.pathname !== "/" && location.pathname !== "") {
+  if (!isRouteAllowed("instagram")) {
+    unmountPinnedQuoteCard();
     return false;
   }
   const firstArticle = root.querySelector('main[role="main"] article, main article');
@@ -136,21 +230,76 @@ function insertInstagramTopQuote(card: HTMLElement, root: ParentNode = document)
   return false;
 }
 
-function insertLinkedInTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
-  const update = root.querySelector(
-    '.scaffold-finite-scroll__content .feed-shared-update-v2, .scaffold-finite-scroll__content > div'
+function getLinkedInFirstPost(root: ParentNode = document): HTMLElement | null {
+  if (typeof root.querySelectorAll === "function") {
+    const candidates = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'main div.feed-shared-update-v2, main div[data-view-name*="feed"], main div[data-urn*="activity"], div.feed-shared-update-v2, div[data-view-name="feed-full-update"]'
+      )
+    );
+    for (const post of candidates) {
+      if (post.hasAttribute?.("data-nullfeed-hidden") || post.hidden) continue;
+      return post;
+    }
+  }
+
+  const single = root.querySelector?.(
+    'main div.feed-shared-update-v2, div.feed-shared-update-v2, .scaffold-finite-scroll__content .feed-shared-update-v2'
   );
-  if (update && update.parentElement) {
-    if (update.previousElementSibling === card) return true;
-    update.parentElement.insertBefore(card, update);
+  if (
+    (typeof HTMLElement !== "undefined" && single instanceof HTMLElement) ||
+    (single && typeof single === "object")
+  ) {
+    return single as HTMLElement;
+  }
+  return null;
+}
+
+function insertLinkedInTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  if (!isRouteAllowed("linkedin")) {
+    unmountPinnedQuoteCard();
+    return false;
+  }
+
+  // 1. Primary: insert right before the first visible post in the feed
+  const firstPost = getLinkedInFirstPost(root);
+  if (firstPost && firstPost.parentElement) {
+    if (firstPost.previousElementSibling === card) return true;
+    firstPost.parentElement.insertBefore(card, firstPost);
     return true;
   }
-  const container = root.querySelector('.scaffold-finite-scroll__content, .scaffold-finite-scroll');
-  if (container) {
-    if (container.firstElementChild === card) return true;
-    container.insertBefore(card, container.firstElementChild);
+
+  // 2. Secondary: scaffold finite scroll content container (after the sort dropdown)
+  const scrollContent = root.querySelector<HTMLElement>(
+    'main .scaffold-finite-scroll__content, .scaffold-finite-scroll__content'
+  );
+  if (scrollContent) {
+    const sortBar = scrollContent.querySelector<HTMLElement>(
+      '.display-flex:has(button[aria-label*="sort" i]), .feed-sort'
+    );
+    if (sortBar && sortBar.nextElementSibling) {
+      if (sortBar.nextElementSibling === card) return true;
+      scrollContent.insertBefore(card, sortBar.nextElementSibling);
+      return true;
+    }
+    if (scrollContent.firstElementChild === card) return true;
+    scrollContent.insertBefore(card, scrollContent.firstElementChild);
     return true;
   }
+
+  // 3. Fallback: Main container right after the "Start a post" box
+  const main = root.querySelector<HTMLElement>('main.scaffold-layout__main, main[role="main"]');
+  if (main) {
+    const shareBox = main.querySelector<HTMLElement>(
+      '.share-box-feed-entry, div:has(button[aria-label*="Start a post" i])'
+    );
+    if (shareBox && shareBox.nextElementSibling) {
+      if (shareBox.nextElementSibling === card) return true;
+      main.insertBefore(card, shareBox.nextElementSibling);
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -380,6 +529,11 @@ export function mountPinnedQuoteCard(
   root: ParentNode = typeof document !== "undefined" ? document : (null as unknown as ParentNode)
 ): boolean {
   if (!root) return false;
+  if (!isRouteAllowed(platform)) {
+    unmountPinnedQuoteCard();
+    return false;
+  }
+
   const documentRef = typeof document !== "undefined" ? document : null;
   const existing = documentRef?.getElementById(FEED_QUOTE_CARD_ID);
   if (existing && existing.isConnected) {
@@ -407,6 +561,7 @@ export function mountPinnedQuoteCard(
 }
 
 export function unmountPinnedQuoteCard(): void {
+  if (typeof document === "undefined") return;
   // Remove the card itself
   const card = document.getElementById(FEED_QUOTE_CARD_ID);
   if (card) {
@@ -420,11 +575,19 @@ export function unmountPinnedQuoteCard(): void {
 }
 
 export function startPinnedQuoteWatcher(platform: PinnedQuotePlatform): () => void {
-  // Mount immediately if feed is already present
-  mountPinnedQuoteCard(platform);
+  // Mount immediately if allowed
+  if (isRouteAllowed(platform)) {
+    mountPinnedQuoteCard(platform);
+  } else {
+    unmountPinnedQuoteCard();
+  }
 
-  // Keep observing so if SPA feed re-rendering (or chip switching) clears the card, it is immediately remounted
+  // Keep observing so if SPA feed re-rendering (or client-side route change) clears or moves the card, it is properly handled
   const observer = new MutationObserver(() => {
+    if (!isRouteAllowed(platform)) {
+      unmountPinnedQuoteCard();
+      return;
+    }
     const card = document.getElementById(FEED_QUOTE_CARD_ID);
     if (!card || !card.isConnected) {
       mountPinnedQuoteCard(platform);
