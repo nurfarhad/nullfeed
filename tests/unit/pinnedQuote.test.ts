@@ -43,13 +43,15 @@ describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
   });
 
   it("inserts quote card into YouTube rich grid", () => {
+    const mockFirstVideo = {
+      parentElement: {
+        insertBefore: vi.fn()
+      }
+    };
     const mockContents = {
-      children: [
-        { hasAttribute: () => false },
-        { hasAttribute: () => false },
-        { hasAttribute: () => false }
-      ],
-      querySelector: vi.fn().mockReturnValue(null),
+      querySelector: vi.fn((sel: string) =>
+        sel.includes("ytd-rich-item-renderer") ? mockFirstVideo : null
+      ),
       insertBefore: vi.fn()
     };
     const mockRoot = {
@@ -61,6 +63,6 @@ describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
 
     const mounted = mountPinnedQuoteCard("youtube", mockRoot as unknown as ParentNode);
     expect(mounted).toBe(true);
-    expect(mockContents.insertBefore).toHaveBeenCalled();
+    expect(mockFirstVideo.parentElement.insertBefore).toHaveBeenCalled();
   });
 });

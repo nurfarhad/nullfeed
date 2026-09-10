@@ -69,17 +69,26 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
   // Apply YouTube thumbnail card styling
   card.classList?.add("nullfeed-quote-card--yt-thumb");
 
-  // Target the rich grid contents list
-  const contents = root.querySelector("ytd-rich-grid-renderer #contents");
-  if (!contents) return false;
-
-  // Check if already slotted
-  const existingWrapper = root.querySelector("#nullfeed-yt-grid-wrapper");
+  const existingWrapper =
+    root.querySelector?.("#nullfeed-yt-grid-wrapper") ??
+    (typeof document !== "undefined" ? document.querySelector("#nullfeed-yt-grid-wrapper") : null);
   if (existingWrapper?.isConnected) return true;
 
+  // Target the rich grid contents list
+  const contents =
+    root.querySelector?.("ytd-rich-grid-renderer #contents") ??
+    (typeof document !== "undefined" ? document.querySelector("ytd-rich-grid-renderer #contents") : null);
+  if (!contents) return false;
+
   // Wrap the card in a ytd-rich-item-renderer mimic so it blends into the grid
-  const docRef = typeof document !== "undefined" ? document : null;
-  const wrapper = docRef ? docRef.createElement("ytd-rich-item-renderer") : card;
+  const docRef =
+    typeof document !== "undefined"
+      ? document
+      : ((root as Element).ownerDocument ?? null);
+  const wrapper =
+    docRef && typeof docRef.createElement === "function"
+      ? docRef.createElement("ytd-rich-item-renderer")
+      : card;
   if (wrapper !== card) {
     wrapper.id = "nullfeed-yt-grid-wrapper";
     wrapper.className = "style-scope ytd-rich-grid-renderer";
@@ -87,26 +96,24 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
     wrapper.appendChild(card);
   }
 
-  // Check if grid uses rows (ytd-rich-grid-row)
-  const firstRow = contents.querySelector("ytd-rich-grid-row");
-  if (firstRow) {
-    const rowContents = firstRow.querySelector("#contents") ?? firstRow;
-    const items = Array.from(rowContents.children).filter(
-      (el) => !el.hasAttribute("data-nullfeed-yt-card")
-    );
-    const targetIndex = Math.min(2, items.length);
-    const refChild = items[targetIndex] ?? null;
-    rowContents.insertBefore(wrapper, refChild);
+  // Find the first native video item in the grid
+  const firstVideo = contents.querySelector("ytd-rich-item-renderer:not([data-nullfeed-yt-card])");
+  if (firstVideo && firstVideo.parentElement) {
+    firstVideo.parentElement.insertBefore(wrapper, firstVideo);
     return true;
   }
 
-  // Otherwise direct items in contents
-  const children = Array.from(contents.children).filter(
-    (el) => !el.hasAttribute("data-nullfeed-yt-card")
-  );
-  const targetIndex = Math.min(2, children.length);
-  const refChild = children[targetIndex] ?? null;
-  contents.insertBefore(wrapper, refChild);
+  // If no items yet, insert at start of contents or append
+  if (typeof contents.appendChild === "function") {
+    contents.appendChild(wrapper);
+    return true;
+  }
+
+  if (typeof contents.insertBefore === "function") {
+    contents.insertBefore(wrapper, null);
+    return true;
+  }
+
   return true;
 }
 
@@ -293,7 +300,7 @@ export function createFeedQuoteCardElement(doc?: Document, platform?: string): H
 
   if (isYouTube) {
     // YouTube: thumbnail-style layout (16:9 + metadata row)
-    card.className = "nullfeed-quote-card nullfeed-quote-card--feed nullfeed-quote-card--yt-thumb";
+    card.className = "nullfeed-quote-card nullfeed-quote-card--yt-thumb";
     card.innerHTML = `
       <div class="nullfeed-yt-thumb-area">
         <div class="nullfeed-quote-mark" aria-hidden="true">“</div>
@@ -306,7 +313,12 @@ export function createFeedQuoteCardElement(doc?: Document, platform?: string): H
         </button>
       </div>
       <div class="nullfeed-yt-meta">
-        <div class="nullfeed-yt-meta-avatar" aria-hidden="true">✎</div>
+        <div class="nullfeed-yt-meta-avatar" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2ed88a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 3"/>
+          </svg>
+        </div>
         <div class="nullfeed-yt-meta-info">
           <span class="nullfeed-yt-meta-title">Mindful Moment</span>
           <span class="nullfeed-yt-meta-sub">Nullfeed · Pause &amp; Reflect</span>

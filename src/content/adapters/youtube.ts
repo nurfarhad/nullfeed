@@ -74,12 +74,98 @@ const HOME_RECOMMENDED_SHELVES = [
 ] as const;
 
 let lastNewChipClickTime = 0;
+let newChipRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let newChipRetryCount = 0;
+
+function resolveDocument(root: ParentNode): Document | null {
+  if (typeof Document !== "undefined" && root instanceof Document) {
+    return root;
+  }
+  return (root as Element).ownerDocument ?? (typeof document !== "undefined" ? document : null);
+}
 
 function isYouTubeHomePage(): boolean {
   if (typeof location === "undefined") {
     return false;
   }
   return location.pathname === "/" || location.pathname === "";
+}
+
+function syncYouTubeHomeFeedChips(doc: Document = document): void {
+  if (typeof location === "undefined" || !isYouTubeHomePage()) {
+    return;
+  }
+
+  const chips = Array.from(
+    doc.querySelectorAll<HTMLElement>(
+      "ytd-feed-filter-chip-bar-renderer yt-chip-cloud-chip-renderer, yt-chip-cloud-chip-renderer"
+    )
+  );
+
+  let newToYouChip: HTMLElement | null = null;
+  let isNewSelected = false;
+  let userSelectedTopic = false;
+
+  for (const chip of chips) {
+    const text = chip.textContent?.trim().toLowerCase() ?? "";
+    const title = chip.getAttribute("chip-title")?.toLowerCase() ?? "";
+    const combined = `${text} ${title}`;
+
+    const isSelected =
+      chip.classList.contains("iron-selected") ||
+      chip.getAttribute("aria-selected") === "true" ||
+      chip.hasAttribute("selected") ||
+      Boolean(chip.querySelector('[aria-selected="true"], [aria-pressed="true"], .iron-selected'));
+
+    if (text === "all" || title === "all" || combined === "all") {
+      hideElement(chip, "youtube-all-chip");
+    } else if (
+      combined.includes("new to you") ||
+      combined.includes("new for you")
+    ) {
+      newToYouChip = chip;
+      if (isSelected) {
+        isNewSelected = true;
+      }
+    } else if (isSelected && !combined.includes("shorts")) {
+      userSelectedTopic = true;
+    }
+  }
+
+  if (newToYouChip && !isNewSelected && !userSelectedTopic) {
+    const now = Date.now();
+    if (now - lastNewChipClickTime > 1200) {
+      lastNewChipClickTime = now;
+      const clickTarget =
+        newToYouChip.querySelector<HTMLElement>(
+          "button, a, [role='button'], yt-formatted-string"
+        ) ?? newToYouChip;
+      clickTarget.click();
+      clickTarget.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        })
+      );
+    }
+    newChipRetryCount = 0;
+    return;
+  }
+
+  if (isNewSelected || userSelectedTopic) {
+    newChipRetryCount = 0;
+    return;
+  }
+
+  // If chips haven't rendered into DOM yet, retry with backoff up to 8 times
+  if (newChipRetryCount < 8 && !newChipRetryTimer) {
+    newChipRetryCount++;
+    newChipRetryTimer = setTimeout(() => {
+      newChipRetryTimer = null;
+      syncYouTubeHomeFeedChips(doc);
+    }, 350);
+  }
 }
 
 export const youtubeAdapter: SiteAdapter = {
@@ -170,63 +256,15 @@ export const youtubeAdapter: SiteAdapter = {
         );
       });
 
-      // 2. Process chips bar: hide the "All" chip and auto-activate "New for you" / "New to you"
-      const chips = queryAll(
-        root,
-        "ytd-feed-filter-chip-bar-renderer yt-chip-cloud-chip-renderer, yt-chip-cloud-chip-renderer"
-      );
-
-      let isAllSelected = false;
-      let newForYouChip: Element | null = null;
-
-      for (const chip of chips) {
-        const text = chip.textContent?.trim().toLowerCase() ?? "";
-        const title = chip.getAttribute("chip-title")?.toLowerCase() ?? "";
-        const combined = `${text} ${title}`;
-
-        if (text === "all") {
-          hideElement(chip, "youtube-all-chip");
-          if (
-            chip.classList.contains("iron-selected") ||
-            chip.getAttribute("aria-selected") === "true" ||
-            chip.hasAttribute("selected")
-          ) {
-            isAllSelected = true;
-          }
-        } else if (
-          combined.includes("new for you") ||
-          combined.includes("new to you")
-        ) {
-          newForYouChip = chip;
-        }
-      }
-
-      // If "All" was active (or user just landed on home), auto-activate the "New for you" filter
-      if (newForYouChip && (isAllSelected || Date.now() - lastNewChipClickTime > 10_000)) {
-        const isNewSelected =
-          newForYouChip.classList.contains("iron-selected") ||
-          newForYouChip.getAttribute("aria-selected") === "true" ||
-          newForYouChip.hasAttribute("selected");
-
-        if (!isNewSelected) {
-          const now = Date.now();
-          if (now - lastNewChipClickTime > 2500) {
-            lastNewChipClickTime = now;
-            const clickTarget =
-              newForYouChip.querySelector<HTMLElement>(
-                "button, a, yt-formatted-string"
-              ) ?? (newForYouChip as HTMLElement);
-            clickTarget.click();
-          }
-        }
-      }
+      // 2. Process chips bar: hide the "All" chip and auto-activate "New to you"
+      const doc = resolveDocument(root);
+      if (doc) syncYouTubeHomeFeedChips(doc);
     } else if (!settings.youtube.feed || !isYouTubeHomePage()) {
-      const doc =
-        root instanceof Document
-          ? root
-          : (root as Element).ownerDocument ?? document;
-      cleanupOwnedFeature("youtube-all-chip", doc);
-      cleanupOwnedFeature("youtube-recommended-shelf", doc);
+      const doc = resolveDocument(root);
+      if (doc) {
+        cleanupOwnedFeature("youtube-all-chip", doc);
+        cleanupOwnedFeature("youtube-recommended-shelf", doc);
+      }
     }
 
     if (settings.youtube.comments) {
@@ -236,11 +274,10 @@ export const youtubeAdapter: SiteAdapter = {
         );
       });
     } else {
-      const doc =
-        root instanceof Document
-          ? root
-          : (root as Element).ownerDocument ?? document;
-      cleanupOwnedFeature("youtube-comments", doc);
+      const doc = resolveDocument(root);
+      if (doc) {
+        cleanupOwnedFeature("youtube-comments", doc);
+      }
     }
 
     if (settings.youtube.endscreen) {
@@ -253,6 +290,11 @@ export const youtubeAdapter: SiteAdapter = {
   },
 
   cleanup() {
+    if (newChipRetryTimer) {
+      clearTimeout(newChipRetryTimer);
+      newChipRetryTimer = null;
+    }
+    newChipRetryCount = 0;
     lastNewChipClickTime = 0;
     cleanupOwnedElements();
     unmountQuoteCard();
