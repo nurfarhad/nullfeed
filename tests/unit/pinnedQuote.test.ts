@@ -41,4 +41,26 @@ describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
     expect(mounted).toBe(true);
     expect(mockFeed.insertBefore).toHaveBeenCalled();
   });
+
+  it("inserts quote card into YouTube rich grid", () => {
+    const mockContents = {
+      children: [
+        { hasAttribute: () => false },
+        { hasAttribute: () => false },
+        { hasAttribute: () => false }
+      ],
+      querySelector: vi.fn().mockReturnValue(null),
+      insertBefore: vi.fn()
+    };
+    const mockRoot = {
+      querySelector: vi.fn((sel: string) => {
+        if (sel.includes("ytd-rich-grid-renderer")) return mockContents;
+        return null;
+      })
+    };
+
+    const mounted = mountPinnedQuoteCard("youtube", mockRoot as unknown as ParentNode);
+    expect(mounted).toBe(true);
+    expect(mockContents.insertBefore).toHaveBeenCalled();
+  });
 });

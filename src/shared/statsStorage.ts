@@ -164,5 +164,9 @@ export async function resetStats(): Promise<void> {
     clearTimeout(flushTimer);
     flushTimer = null;
   }
-  await chrome.storage.local.remove(STATS_STORAGE_KEY);
+  try {
+    await chrome.storage.local.remove(STATS_STORAGE_KEY);
+  } catch {
+    // Non-fatal
+  }
 }

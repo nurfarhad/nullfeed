@@ -73,10 +73,8 @@ function selectAdapter(hostname: string): SiteAdapter | null {
 }
 
 function logFailure(message: string, error: unknown): void {
-  if (
-    error instanceof Error &&
-    /extension context invalidated/i.test(error.message)
-  ) {
+  const errStr = error instanceof Error ? error.message : String(error ?? "");
+  if (/extension context invalidated/i.test(errStr)) {
     return;
   }
   console.error(message, error);

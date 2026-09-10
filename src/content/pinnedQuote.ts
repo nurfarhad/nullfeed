@@ -67,7 +67,7 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
   }
 
   // Apply YouTube thumbnail card styling
-  card.classList.add("nullfeed-quote-card--yt-thumb");
+  card.classList?.add("nullfeed-quote-card--yt-thumb");
 
   // Target the rich grid contents list
   const contents = root.querySelector("ytd-rich-grid-renderer #contents");
@@ -78,13 +78,29 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
   if (existingWrapper?.isConnected) return true;
 
   // Wrap the card in a ytd-rich-item-renderer mimic so it blends into the grid
-  const wrapper = document.createElement("ytd-rich-item-renderer");
-  wrapper.id = "nullfeed-yt-grid-wrapper";
-  wrapper.className = "style-scope ytd-rich-grid-row";
-  wrapper.setAttribute("data-nullfeed-yt-card", "");
-  wrapper.appendChild(card);
+  const docRef = typeof document !== "undefined" ? document : null;
+  const wrapper = docRef ? docRef.createElement("ytd-rich-item-renderer") : card;
+  if (wrapper !== card) {
+    wrapper.id = "nullfeed-yt-grid-wrapper";
+    wrapper.className = "style-scope ytd-rich-grid-renderer";
+    wrapper.setAttribute("data-nullfeed-yt-card", "");
+    wrapper.appendChild(card);
+  }
 
-  // Insert at position 3 (index 2): before the 3rd child of #contents
+  // Check if grid uses rows (ytd-rich-grid-row)
+  const firstRow = contents.querySelector("ytd-rich-grid-row");
+  if (firstRow) {
+    const rowContents = firstRow.querySelector("#contents") ?? firstRow;
+    const items = Array.from(rowContents.children).filter(
+      (el) => !el.hasAttribute("data-nullfeed-yt-card")
+    );
+    const targetIndex = Math.min(2, items.length);
+    const refChild = items[targetIndex] ?? null;
+    rowContents.insertBefore(wrapper, refChild);
+    return true;
+  }
+
+  // Otherwise direct items in contents
   const children = Array.from(contents.children).filter(
     (el) => !el.hasAttribute("data-nullfeed-yt-card")
   );
@@ -277,7 +293,7 @@ export function createFeedQuoteCardElement(doc?: Document, platform?: string): H
 
   if (isYouTube) {
     // YouTube: thumbnail-style layout (16:9 + metadata row)
-    card.className = "nullfeed-quote-card nullfeed-quote-card--feed";
+    card.className = "nullfeed-quote-card nullfeed-quote-card--feed nullfeed-quote-card--yt-thumb";
     card.innerHTML = `
       <div class="nullfeed-yt-thumb-area">
         <div class="nullfeed-quote-mark" aria-hidden="true">“</div>
