@@ -183,11 +183,11 @@ function apply(nextSettings: Settings): void {
     const effective = getEffectiveSettings(nextSettings);
     if (effective.enabled && !handleRoute(effective)) {
       scan(document);
-      // Eagerly activate "New to you" chip on settings load/change so it
-      // fires immediately on page load without waiting for a DOM mutation.
-      if (adapter.platform === "youtube") {
-        syncYouTubeNewToYouChip(effective.youtube.feed);
-      }
+    }
+    // Always sync the chip state regardless of enabled — this ensures
+    // that disabling "Hide Home Feed" clicks "All" to restore the default view.
+    if (adapter.platform === "youtube") {
+      syncYouTubeNewToYouChip(effective.enabled && effective.youtube.feed);
     }
   } catch (error) {
     logFailure(`Nullfeed ${adapter.platform} update failed.`, error);

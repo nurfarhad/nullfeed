@@ -99,6 +99,28 @@ function resolveDocument(root: ParentNode): Document | null {
 }
 
 /**
+ * Locate the "All" chip (the default/first chip that resets the feed).
+ * Uses attribute-based selectors first, falls back to textContent scan.
+ */
+function findAllChip(): HTMLElement | null {
+  // Primary: yt-formatted-string title="All"
+  const byTitle = document.querySelector<HTMLElement>(
+    'yt-chip-cloud-chip-renderer:has(yt-formatted-string[title="All" i])'
+  );
+  if (byTitle) return byTitle;
+
+  // Fallback: textContent scan — "All" is usually the very first chip
+  for (const chip of document.querySelectorAll<HTMLElement>("yt-chip-cloud-chip-renderer")) {
+    const fmtTitle = chip.querySelector("yt-formatted-string")?.getAttribute("title") ?? "";
+    const text = chip.textContent?.trim() ?? "";
+    if (/^all$/i.test(fmtTitle) || /^all$/i.test(text)) {
+      return chip;
+    }
+  }
+  return null;
+}
+
+/**
  * Locate the "New to you" chip. Uses attribute-based selectors first
  * (most reliable), falls back to textContent scan.
  */
@@ -203,6 +225,20 @@ function scheduleRetry(): void {
 export function syncYouTubeNewToYouChip(enabled: boolean): void {
   if (!enabled) {
     clearRetry();
+    // Reset activation guard so re-enabling the toggle works immediately
+    chipActivated = false;
+    retryCount = 0;
+    // If we're on the home page and "New to you" is still selected,
+    // click "All" to restore the default feed view.
+    if (isYouTubeHomePage() && isNewToYouChipSelected()) {
+      const allChip = findAllChip();
+      if (allChip) {
+        const clickTarget =
+          allChip.querySelector<HTMLElement>("a, button, yt-formatted-string, .chip-text") ??
+          allChip;
+        clickTarget.click();
+      }
+    }
     return;
   }
   if (!isYouTubeHomePage() || chipActivated) return;
