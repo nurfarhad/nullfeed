@@ -136,10 +136,9 @@ async function flushBuffer(): Promise<void> {
 
     await chrome.storage.local.set({ [STATS_STORAGE_KEY]: updated });
   } catch (err) {
-    // Non-fatal
-    if (typeof console !== "undefined") {
-      console.error("Nullfeed could not persist stats increment:", err);
-    }
+    // Silently ignore "Extension context invalidated" (extension reloaded mid-session)
+    // and any other storage error — stats are non-fatal and must never surface to users.
+    void err;
   }
 }
 
