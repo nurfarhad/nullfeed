@@ -196,18 +196,8 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
     return true;
   }
 
-  // If no items yet, insert at start of contents or append
-  if (typeof contents.appendChild === "function") {
-    contents.appendChild(wrapper);
-    return true;
-  }
-
-  if (typeof contents.insertBefore === "function") {
-    contents.insertBefore(wrapper, null);
-    return true;
-  }
-
-  return true;
+  // If no items yet, wait for YouTube to load initial videos instead of appending to empty grid
+  return false;
 }
 
 function insertInstagramTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
