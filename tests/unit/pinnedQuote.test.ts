@@ -103,4 +103,13 @@ describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
 
     global.location = originalLocation;
   });
+
+  it("does not insert quote card into Facebook sidebar when feed container is absent", () => {
+    const mockRoot = {
+      querySelector: vi.fn(() => null)
+    };
+
+    const mounted = mountPinnedQuoteCard("facebook", mockRoot as unknown as ParentNode);
+    expect(mounted).toBe(false);
+  });
 });

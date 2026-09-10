@@ -45,66 +45,87 @@ function isRouteAllowed(platform: PinnedQuotePlatform): boolean {
   }
 }
 
-function getFacebookFirstPost(root: ParentNode = document): HTMLElement | null {
-  if (typeof root.querySelectorAll === "function") {
+function getFacebookFeedContainer(root: ParentNode = document): HTMLElement | null {
+  const docRef = typeof document !== "undefined" ? document : null;
+  const feed =
+    root.querySelector<HTMLElement>('div[role="feed"], [data-pagelet="Feed"]') ??
+    docRef?.querySelector<HTMLElement>('div[role="feed"], [data-pagelet="Feed"]');
+
+  if (feed) return feed;
+
+  // Fallback for mocks/scoping where root contains an article with feed ancestor
+  const candidate = root.querySelector<HTMLElement>('[role="article"]');
+  if (candidate?.closest) {
+    const fromPost = candidate.closest<HTMLElement>('div[role="feed"], [data-pagelet="Feed"]');
+    if (fromPost) return fromPost;
+  }
+
+  return null;
+}
+
+function getFacebookFirstFeedPost(feed: HTMLElement): HTMLElement | null {
+  if (typeof feed.querySelectorAll === "function") {
     const articles = Array.from(
-      root.querySelectorAll<HTMLElement>(
-        '[role="feed"] [role="article"], [role="main"] [role="article"], main [role="article"], [role="article"]'
-      )
+      feed.querySelectorAll<HTMLElement>('[role="article"]')
     );
 
     for (const article of articles) {
       if (
         article.closest?.('[data-pagelet*="Stories"], [aria-label*="Stories" i], [aria-label*="stories" i]') ||
-        article.querySelector?.('a[href*="/stories/create"]')
-      ) {
-        continue;
-      }
-      if (
+        article.querySelector?.('a[href*="/stories/create"]') ||
         article.closest?.('[data-pagelet*="Reels"], [aria-label*="Reels" i]') ||
-        article.querySelector?.('a[href^="/reel/"]')
-      ) {
-        continue;
-      }
-      if (article.closest?.('[data-pagelet*="Composer"], [role="region"][aria-label*="Create" i]')) {
-        continue;
-      }
-      if (
+        article.querySelector?.('a[href^="/reel/"]') ||
+        article.closest?.('[data-pagelet*="Composer"], [role="region"][aria-label*="Create" i]') ||
         article.hasAttribute?.("data-nullfeed-hidden") ||
         article.hidden ||
         article.style?.display === "none"
       ) {
         continue;
       }
+
+      // Resolve the ancestor that is a DIRECT child of the feed container
+      let directChild: HTMLElement = article;
+      while (directChild.parentElement && directChild.parentElement !== feed) {
+        directChild = directChild.parentElement as HTMLElement;
+      }
+
+      if (directChild.parentElement === feed) {
+        return directChild;
+      }
       return article;
     }
 
     const virtualized = Array.from(
-      root.querySelectorAll<HTMLElement>(
-        '[role="feed"] > div[data-virtualized="false"], [role="main"] div[data-virtualized="false"]'
-      )
+      feed.querySelectorAll<HTMLElement>('div[data-virtualized="false"], div[data-pagelet^="FeedUnit_"]')
     );
     for (const v of virtualized) {
       if (
         v.closest?.('[data-pagelet*="Stories"], [aria-label*="Stories" i]') ||
+        v.closest?.('[data-pagelet*="Composer"]') ||
         v.querySelector?.('a[href*="/stories/create"], a[href^="/reel/"]') ||
         v.hasAttribute?.("data-nullfeed-hidden") ||
         v.hidden
       ) {
         continue;
       }
-      return v;
+
+      let directChild: HTMLElement = v;
+      while (directChild.parentElement && directChild.parentElement !== feed) {
+        directChild = directChild.parentElement as HTMLElement;
+      }
+      if (directChild.parentElement === feed) {
+        return directChild;
+      }
     }
   }
 
-  const single = root.querySelector?.(
-    '[role="feed"] [role="article"], [role="main"] [role="article"], [role="article"]'
-  );
-  if (
-    (typeof HTMLElement !== "undefined" && single instanceof HTMLElement) ||
-    (single && typeof single === "object")
-  ) {
-    return single as HTMLElement;
+  const single = feed.querySelector?.('[role="article"]');
+  if (single && typeof single === "object") {
+    let directChild: HTMLElement = single as HTMLElement;
+    while (directChild.parentElement && directChild.parentElement !== feed) {
+      directChild = directChild.parentElement as HTMLElement;
+    }
+    return directChild.parentElement === feed ? directChild : (single as HTMLElement);
   }
 
   return null;
@@ -116,41 +137,52 @@ function insertFacebookTopQuote(card: HTMLElement, root: ParentNode = document):
     return false;
   }
 
-  const firstPost = getFacebookFirstPost(root);
-  if (firstPost) {
-    const feed = firstPost.closest<HTMLElement>(
-      '[role="feed"], [data-pagelet="Feed"], div[role="main"], main[role="main"], main'
-    );
-    if (feed) {
-      let target: HTMLElement = firstPost;
-      while (target.parentElement && target.parentElement !== feed) {
-        target = target.parentElement as HTMLElement;
-      }
-      if (target.previousElementSibling === card) {
-        return true;
-      }
-      feed.insertBefore(card, target);
-      return true;
-    }
+  const feed = getFacebookFeedContainer(root);
+  if (!feed) {
+    // If not in the news feed, do NOT mount anywhere else (prevents sidebar injection)
+    return false;
+  }
 
+  // 1. If first post exists inside the feed, insert right before it
+  const firstPost = getFacebookFirstFeedPost(feed);
+  if (firstPost) {
     if (firstPost.previousElementSibling === card) {
       return true;
     }
-    firstPost.parentElement?.insertBefore(card, firstPost);
-    return true;
-  }
-
-  // Fallback: if role="feed" is present but has no posts loaded yet
-  const feed = root.querySelector<HTMLElement>('[role="feed"], [data-pagelet="Feed"]');
-  if (feed) {
-    if (feed.firstElementChild === card) {
+    if (firstPost.parentElement) {
+      firstPost.parentElement.insertBefore(card, firstPost);
       return true;
     }
-    feed.insertBefore(card, feed.firstElementChild);
+    feed.insertBefore(card, firstPost);
     return true;
   }
 
-  return false;
+  // 2. If composer exists in the feed, insert right after composer
+  const composer = feed.querySelector<HTMLElement>(
+    '[data-pagelet*="Composer"], div:has(input[aria-label*="mind" i], [aria-label*="mind" i])'
+  );
+  if (composer) {
+    let directChild: HTMLElement = composer;
+    while (directChild.parentElement && directChild.parentElement !== feed) {
+      directChild = directChild.parentElement as HTMLElement;
+    }
+    if (directChild.parentElement === feed) {
+      if (directChild.nextElementSibling) {
+        if (directChild.nextElementSibling === card) return true;
+        feed.insertBefore(card, directChild.nextElementSibling);
+        return true;
+      }
+      feed.appendChild(card);
+      return true;
+    }
+  }
+
+  // 3. Fallback: Top of feed container
+  if (feed.firstElementChild === card) {
+    return true;
+  }
+  feed.insertBefore(card, feed.firstElementChild);
+  return true;
 }
 
 function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
@@ -220,21 +252,38 @@ function insertInstagramTopQuote(card: HTMLElement, root: ParentNode = document)
   return false;
 }
 
-function getLinkedInFirstPost(root: ParentNode = document): HTMLElement | null {
-  if (typeof root.querySelectorAll === "function") {
+function getLinkedInMain(root: ParentNode = document): HTMLElement | null {
+  const docRef = typeof document !== "undefined" ? document : null;
+  const found =
+    root.querySelector?.<HTMLElement>('main.scaffold-layout__main, main[role="main"], main') ??
+    docRef?.querySelector<HTMLElement>('main.scaffold-layout__main, main[role="main"], main');
+
+  if (found && typeof found.querySelectorAll === "function") {
+    return found;
+  }
+
+  if (typeof (root as HTMLElement).querySelectorAll === "function") {
+    return root as HTMLElement;
+  }
+
+  return found ?? (root as HTMLElement);
+}
+
+function getLinkedInFirstPost(main: HTMLElement): HTMLElement | null {
+  if (typeof main.querySelectorAll === "function") {
     const candidates = Array.from(
-      root.querySelectorAll<HTMLElement>(
-        'main div.feed-shared-update-v2, main div[data-view-name*="feed"], main div[data-urn*="activity"], div.feed-shared-update-v2, div[data-view-name="feed-full-update"]'
+      main.querySelectorAll<HTMLElement>(
+        'div.feed-shared-update-v2, div[data-view-name*="feed"], div[data-view-name="feed-full-update"], div[data-urn*="activity"]'
       )
     );
     for (const post of candidates) {
-      if (post.hasAttribute?.("data-nullfeed-hidden") || post.hidden) continue;
+      if (post.hasAttribute?.("data-nullfeed-hidden") || post.hidden || post.style?.display === "none") continue;
       return post;
     }
   }
 
-  const single = root.querySelector?.(
-    'main div.feed-shared-update-v2, div.feed-shared-update-v2, .scaffold-finite-scroll__content .feed-shared-update-v2'
+  const single = main.querySelector?.(
+    'div.feed-shared-update-v2, div[data-view-name*="feed"], div[data-view-name="feed-full-update"], div[data-urn*="activity"]'
   );
   if (
     (typeof HTMLElement !== "undefined" && single instanceof HTMLElement) ||
@@ -251,20 +300,40 @@ function insertLinkedInTopQuote(card: HTMLElement, root: ParentNode = document):
     return false;
   }
 
-  // 1. Primary: insert right before the first visible post in the feed
-  const firstPost = getLinkedInFirstPost(root);
+  const main = getLinkedInMain(root);
+  if (!main) {
+    return false;
+  }
+
+  // 1. Primary: insert right before the first visible post in the feed container
+  const firstPost = getLinkedInFirstPost(main);
   if (firstPost && firstPost.parentElement) {
+    const scrollContent = firstPost.closest?.<HTMLElement>(
+      '.scaffold-finite-scroll__content, main'
+    );
+    if (scrollContent && scrollContent !== firstPost) {
+      let target: HTMLElement = firstPost;
+      while (target.parentElement && target.parentElement !== scrollContent) {
+        target = target.parentElement as HTMLElement;
+      }
+      if (target.parentElement === scrollContent) {
+        if (target.previousElementSibling === card) return true;
+        scrollContent.insertBefore(card, target);
+        return true;
+      }
+    }
+
     if (firstPost.previousElementSibling === card) return true;
     firstPost.parentElement.insertBefore(card, firstPost);
     return true;
   }
 
   // 2. Secondary: scaffold finite scroll content container (after the sort dropdown)
-  const scrollContent = root.querySelector<HTMLElement>(
-    'main .scaffold-finite-scroll__content, .scaffold-finite-scroll__content'
-  );
+  const scrollContent = typeof main.querySelector === "function"
+    ? main.querySelector<HTMLElement>('.scaffold-finite-scroll__content')
+    : null;
   if (scrollContent) {
-    const sortBar = scrollContent.querySelector<HTMLElement>(
+    const sortBar = scrollContent.querySelector?.<HTMLElement>(
       '.display-flex:has(button[aria-label*="sort" i]), .feed-sort'
     );
     if (sortBar && sortBar.nextElementSibling) {
@@ -278,16 +347,13 @@ function insertLinkedInTopQuote(card: HTMLElement, root: ParentNode = document):
   }
 
   // 3. Fallback: Main container right after the "Start a post" box
-  const main = root.querySelector<HTMLElement>('main.scaffold-layout__main, main[role="main"]');
-  if (main) {
-    const shareBox = main.querySelector<HTMLElement>(
-      '.share-box-feed-entry, div:has(button[aria-label*="Start a post" i])'
-    );
-    if (shareBox && shareBox.nextElementSibling) {
-      if (shareBox.nextElementSibling === card) return true;
-      main.insertBefore(card, shareBox.nextElementSibling);
-      return true;
-    }
+  const shareBox = typeof main.querySelector === "function"
+    ? main.querySelector<HTMLElement>('.share-box-feed-entry, div:has(button[aria-label*="Start a post" i])')
+    : null;
+  if (shareBox && shareBox.nextElementSibling) {
+    if (shareBox.nextElementSibling === card) return true;
+    main.insertBefore(card, shareBox.nextElementSibling);
+    return true;
   }
 
   return false;
