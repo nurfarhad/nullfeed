@@ -1,7 +1,6 @@
 import type { Settings } from "../shared/settings";
 import { getSettings, SETTINGS_STORAGE_KEY } from "../shared/storage";
 import { getOrCreateAnchor } from "../shared/focusCycleStorage";
-import { recordDistractions } from "../shared/statsStorage";
 import { hideElement } from "./domOwnership";
 import { getSnoozeUntil, SNOOZE_STORAGE_KEY } from "../shared/snoozeStorage";
 import type { SiteAdapter } from "./adapter";
@@ -149,7 +148,6 @@ function handleRoute(current: Settings): boolean {
     ? adapter.redirectDestination(location.pathname, current) ?? adapter.homeUrl
     : adapter.homeUrl;
 
-  recordDistractions(1);
   location.replace(destination);
   return true;
 }

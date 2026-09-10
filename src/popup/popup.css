@@ -429,57 +429,6 @@ footer {
   opacity: 0.85;
 }
 
-/* ── Stats Card (UI8 Bento Pro 3-Column Metrics Tile) ── */
-.stats-card {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr auto 1fr;
-  align-items: center;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background-color: var(--surface);
-  background-image: var(--surface-gradient);
-  box-shadow: var(--bevel-top);
-  transition:
-    background-color 220ms var(--ease),
-    border-color 220ms var(--ease),
-    box-shadow 220ms var(--ease);
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 2px;
-}
-
-.stat-value {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  transition: color 180ms var(--ease);
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 22px;
-  background: var(--border-subtle);
-}
-
 /* ── Platform tabs (UI8 Bento Pro Floating Capsule Segmented Bar) ── */
 .platform-tabs {
   display: grid;
@@ -802,11 +751,6 @@ footer a:focus-visible {
 
 .skeleton-protection {
   height: 54px;
-}
-
-.skeleton-stats {
-  height: 52px;
-  border-radius: 18px;
 }
 
 .skeleton-tabs {

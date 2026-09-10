@@ -48,7 +48,6 @@ Nullfeed is a privacy-first, lightweight Manifest V3 Chrome extension designed t
 * **Snooze Protection**: Quick 5-minute or 15-minute temporary unpause with a live countdown timer and immediate one-click resume — zero new permissions, zero persistent setting pollution.
 * **Automatic Focus Cycle**: Automatically switches between a 15-minute blocked and 15-minute open phase for feeds on Facebook, LinkedIn, Twitter/X, and Reddit, replacing endless scrolling with a serene focus quote card.
 * **Smart Trigger**: Behavioral doomscroll detection that cuts a Focus Cycle break short early when fast, sustained scrolling is detected across covered platforms.
-* **Time Reclaimed & Distraction Counter**: Real-time stats card in the popup tracking daily distractions intercepted, estimated focused time saved, and active focus day streaks.
 * **Master Switch**: One-click protection toggle to pause or restore all original platform layouts instantly.
 * **Zero Telemetry & 100% Privacy**: No trackers, no external network requests, no account required. All settings are stored locally on your machine via Chrome Storage API.
 

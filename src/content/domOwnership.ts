@@ -1,5 +1,3 @@
-import { recordDistractions } from "../shared/statsStorage";
-
 const HIDDEN_ATTRIBUTE = "data-nullfeed-hidden";
 const FEATURE_ATTRIBUTE = "data-nullfeed-feature";
 const PREVIOUS_HIDDEN_ATTRIBUTE = "data-nullfeed-previous-hidden";
@@ -21,7 +19,6 @@ export function hideElement(element: Element, feature: string): void {
       PREVIOUS_PRIORITY_ATTRIBUTE,
       element.style.getPropertyPriority("display")
     );
-    recordDistractions(1);
   }
 
   element.setAttribute(HIDDEN_ATTRIBUTE, "");

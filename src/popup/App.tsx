@@ -19,13 +19,6 @@ import {
 import { NullMark } from "./components/NullMark";
 import { PlatformTabs } from "./components/PlatformTabs";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { StatsCard } from "./components/StatsCard";
-import {
-  DEFAULT_STATS,
-  getStats,
-  STATS_STORAGE_KEY,
-  type FocusStats
-} from "../shared/statsStorage";
 import {
   cancelSnooze,
   formatSnoozeRemaining,
@@ -71,7 +64,6 @@ function getStatus(settings: Settings, snoozeUntil: number | null, now: number):
 
 export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [stats, setStats] = useState<FocusStats>(DEFAULT_STATS);
   const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
   const [now, setNow] = useState<number>(Date.now());
   const [error, setError] = useState<string | null>(null);
@@ -126,9 +118,6 @@ export function App() {
       }
 
       if (areaName === "local") {
-        if (changes[STATS_STORAGE_KEY]?.newValue !== undefined) {
-          setStats(changes[STATS_STORAGE_KEY].newValue as FocusStats);
-        }
         if (changes[SNOOZE_STORAGE_KEY] !== undefined) {
           setSnoozeUntil(
             (changes[SNOOZE_STORAGE_KEY].newValue as number | null) ?? null
@@ -138,10 +127,6 @@ export function App() {
     };
 
     chrome.storage.onChanged.addListener(handleStorageChange);
-
-    void getStats()
-      .then(setStats)
-      .catch(() => {});
 
     void getSnoozeUntil()
       .then(setSnoozeUntil)
@@ -180,7 +165,6 @@ export function App() {
         </header>
 
         <section class="protection skeleton-card" />
-        <div class="skeleton-stats skeleton-card" />
         <div class="skeleton-tabs" />
         <div class="preferences skeleton-card" />
       </main>
@@ -340,8 +324,6 @@ export function App() {
           </label>
         </div>
       </section>
-
-      <StatsCard stats={stats} />
 
       <PlatformTabs active={platform} onChange={changePlatform} />
 
