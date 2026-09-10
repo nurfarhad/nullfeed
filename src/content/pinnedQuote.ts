@@ -324,9 +324,6 @@ export function createFeedQuoteCardElement(doc?: Document, platform?: string): H
           <span class="nullfeed-yt-meta-sub">Nullfeed · Pause &amp; Reflect</span>
         </div>
       </div>
-      <div class="nullfeed-intent-container">
-        ${renderIntentHTML(currentIntent)}
-      </div>
     `;
   } else {
     // Standard post-style layout for Facebook, Instagram, LinkedIn etc.

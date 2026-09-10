@@ -821,32 +821,7 @@ ytd-rich-item-renderer[data-nullfeed-yt-card] {
 }
 
 .nullfeed-quote-card--yt-thumb .nullfeed-intent-container {
-  margin-top: 10px !important;
-  padding-top: 10px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-.nullfeed-quote-card--yt-thumb .nullfeed-intent-input {
-  height: 32px !important;
-  font-size: 11.5px !important;
-  padding: 0 10px !important;
-  border-radius: 6px !important;
-}
-
-.nullfeed-quote-card--yt-thumb .nullfeed-intent-submit {
-  height: 32px !important;
-  font-size: 11px !important;
-  padding: 0 12px !important;
-  border-radius: 6px !important;
-}
-
-.nullfeed-quote-card--yt-thumb .nullfeed-intent-badge {
-  padding: 7px 10px !important;
-  border-radius: 6px !important;
-}
-
-.nullfeed-quote-card--yt-thumb .nullfeed-intent-text {
-  font-size: 11.5px !important;
+  display: none !important;
 }
 
 /* --------------------------------------------------------------------------
