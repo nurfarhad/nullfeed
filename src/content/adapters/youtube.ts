@@ -174,44 +174,22 @@ function isChipElementSelected(chip: HTMLElement): boolean {
   return Boolean(innerSelected);
 }
 
-function clickChipElement(chip: HTMLElement): void {
-  const now = Date.now();
-  if (now - lastClickTimestamp < 800) {
-    return;
-  }
-  lastClickTimestamp = now;
+let hasActivatedNewToYou = false;
 
+export function resetYouTubeHomeFeedChipState(): void {
+  hasActivatedNewToYou = false;
+  lastClickTimestamp = 0;
+  stopHomeFeedChipWatcher();
+}
+
+function clickChipElement(chip: HTMLElement): void {
   const clickTarget =
     chip.querySelector<HTMLElement>(
       "button, a, [role='button'], [role='tab'], yt-formatted-string, #chip-container, chip-shape"
     ) ?? chip;
 
   try {
-    chip.scrollIntoView?.({ behavior: "instant", block: "nearest", inline: "nearest" });
-  } catch {
-    // ignore
-  }
-
-  const mouseEvents = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
-  for (const type of mouseEvents) {
-    try {
-      clickTarget.dispatchEvent(
-        new MouseEvent(type, {
-          bubbles: true,
-          cancelable: true,
-          composed: true,
-          view: typeof window !== "undefined" ? window : undefined
-        })
-      );
-    } catch {
-      // ignore
-    }
-  }
-
-  try {
-    if (typeof clickTarget.click === "function") {
-      clickTarget.click();
-    }
+    clickTarget.click();
   } catch {
     // ignore
   }
@@ -257,19 +235,32 @@ function syncYouTubeHomeFeedChips(doc: Document = document): boolean {
     }
   });
 
+  // If "New to you" is already active, we are completely done!
   if (isNewSelected) {
+    hasActivatedNewToYou = true;
     stopHomeFeedChipWatcher();
     return true;
   }
 
+  // If the user intentionally chose another topic (e.g. Gaming or Music), respect it
   if (otherTopicSelected) {
+    hasActivatedNewToYou = true;
     stopHomeFeedChipWatcher();
     return true;
   }
 
+  // If already triggered once for this page session, do not click again!
+  if (hasActivatedNewToYou) {
+    stopHomeFeedChipWatcher();
+    return true;
+  }
+
+  // If "New to you" exists, click it ONCE and stop the watcher immediately!
   if (newToYouChip) {
+    hasActivatedNewToYou = true;
+    stopHomeFeedChipWatcher();
     clickChipElement(newToYouChip);
-    return false;
+    return true;
   }
 
   return false;
@@ -278,6 +269,11 @@ function syncYouTubeHomeFeedChips(doc: Document = document): boolean {
 function startHomeFeedChipWatcher(doc: Document = document): void {
   if (typeof location === "undefined" || !isYouTubeHomePage()) {
     stopHomeFeedChipWatcher();
+    return;
+  }
+
+  // If already activated on this page visit, do not start watcher
+  if (hasActivatedNewToYou) {
     return;
   }
 
@@ -427,8 +423,7 @@ export const youtubeAdapter: SiteAdapter = {
   },
 
   cleanup() {
-    stopHomeFeedChipWatcher();
-    lastClickTimestamp = 0;
+    resetYouTubeHomeFeedChipState();
     cleanupOwnedElements();
     unmountQuoteCard();
   }

@@ -28,10 +28,19 @@ export function observeDynamicContent(scan: ScanCallback): () => void {
     if (!(node instanceof Element)) return false;
     return (
       node.id === "nullfeed-quote-card" ||
+      node.id === "nullfeed-feed-quote-card" ||
+      node.id === "nullfeed-yt-grid-wrapper" ||
       node.id === "nullfeed-snooze-overlay" ||
       node.hasAttribute("data-nullfeed-hidden") ||
+      node.hasAttribute("data-nullfeed-top-quote") ||
+      node.hasAttribute("data-nullfeed-yt-card") ||
       node.classList.contains("nullfeed-ad-label") ||
-      Boolean(node.closest?.("[data-nullfeed-hidden]"))
+      Boolean(node.closest?.("[data-nullfeed-hidden]")) ||
+      Boolean(
+        node.closest?.(
+          "#nullfeed-quote-card, #nullfeed-feed-quote-card, #nullfeed-yt-grid-wrapper, [data-nullfeed-top-quote], [data-nullfeed-yt-card]"
+        )
+      )
     );
   };
 

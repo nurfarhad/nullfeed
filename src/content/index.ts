@@ -7,7 +7,7 @@ import { getSnoozeUntil, SNOOZE_STORAGE_KEY } from "../shared/snoozeStorage";
 import type { SiteAdapter } from "./adapter";
 import { facebookAdapter } from "./adapters/facebook";
 import { instagramAdapter } from "./adapters/instagram";
-import { youtubeAdapter } from "./adapters/youtube";
+import { youtubeAdapter, resetYouTubeHomeFeedChipState } from "./adapters/youtube";
 import {
   applyCyclePhase,
   CYCLE_BREAK_MS,
@@ -216,6 +216,7 @@ if (adapter) {
   });
 
   stopRouteWatcher = watchRoutes(() => {
+    resetYouTubeHomeFeedChipState();
     const effective = settings ? getEffectiveSettings(settings) : null;
     if (effective?.enabled && !handleRoute(effective)) {
       scan(document);
