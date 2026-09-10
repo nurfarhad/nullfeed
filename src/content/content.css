@@ -828,15 +828,17 @@ html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platfo
   display: none !important;
 }
 
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] .scaffold-finite-scroll {
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="linkedin"] .scaffold-finite-scroll,
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="linkedin"] main.scaffold-layout__main {
   display: none !important;
 }
 
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] shreddit-feed {
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="reddit"] shreddit-feed {
   display: none !important;
 }
 
-html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] div[data-testid="primaryColumn"] section[role="region"] {
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="twitter"] div[data-testid="primaryColumn"] section[role="region"],
+html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"][data-nullfeed-platform="twitter"] div[aria-label="Home timeline"] > div > section[role="region"] {
   display: none !important;
 }
 
@@ -844,3 +846,4 @@ html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] div[data-testid="pri
 html[data-nullfeed-enabled][data-nullfeed-cycle-phase="on"] .nullfeed-quote-card {
   display: flex !important;
 }
+

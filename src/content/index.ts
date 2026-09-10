@@ -124,7 +124,7 @@ function updateRootState(current: Settings): void {
   root.toggleAttribute("data-nullfeed-snoozed", isSnoozeActive());
   root.setAttribute(
     "data-nullfeed-platform",
-    adapter?.platform ?? "unsupported"
+    adapter?.platform ?? cyclePlatform ?? "unsupported"
   );
 
   for (const attribute of [...root.attributes]) {
@@ -335,10 +335,12 @@ if (cyclePlatform) {
       if (Number.isFinite(cachedAnchor)) {
         const cachedPhase = getPhase(cachedAnchor);
         if (cachedPhase === "on") {
-          // Pre-paint both attributes so the CSS rule fires immediately,
+          // Pre-paint attributes so the CSS rule fires immediately,
           // before the feed even renders. tickCycle() will confirm/correct.
           document.documentElement.setAttribute("data-nullfeed-enabled", "");
           document.documentElement.setAttribute("data-nullfeed-cycle-phase", "on");
+          // Also set the platform so the per-platform CSS rules scope correctly.
+          document.documentElement.setAttribute("data-nullfeed-platform", cyclePlatform!);
         }
       }
     }
