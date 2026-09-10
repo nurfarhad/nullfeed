@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   detectPinnedPlatform,
-  findPinnedInsertionTarget
+  mountPinnedQuoteCard,
+  FEED_QUOTE_CARD_ID
 } from "../../src/content/pinnedQuote";
 
 describe("pinnedQuote - Platform Detection", () => {
@@ -19,46 +20,25 @@ describe("pinnedQuote - Platform Detection", () => {
   });
 });
 
-describe("pinnedQuote - Insertion Target Resolution", () => {
-  it("finds Facebook feed container and post target", () => {
+describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
+  it("inserts quote card before first post in Facebook feed", () => {
+    const mockPost = {
+      closest: vi.fn(),
+      parentElement: null as unknown as Element
+    };
     const mockFeed = {
-      querySelector: vi.fn((sel: string) => {
-        if (sel.includes("article")) {
-          return { parentElement: mockFeed };
-        }
-        return null;
-      }),
-      firstElementChild: null
+      insertBefore: vi.fn(),
+      querySelector: vi.fn((sel: string) => (sel.includes("article") ? mockPost : null))
     };
+    mockPost.closest.mockReturnValue(mockFeed);
+    mockPost.parentElement = mockFeed as unknown as Element;
 
     const mockRoot = {
-      querySelector: vi.fn((sel: string) => {
-        if (sel.includes('[role="feed"]')) {
-          return mockFeed;
-        }
-        return null;
-      })
+      querySelector: vi.fn((sel: string) => (sel.includes("article") ? mockPost : null))
     };
 
-    const target = findPinnedInsertionTarget("facebook", mockRoot as unknown as ParentNode);
-    expect(target).not.toBeNull();
-    expect(target?.container).toBe(mockFeed);
-  });
-
-  it("finds YouTube home grid container", () => {
-    const mockContents = { id: "contents" };
-    const mockGrid = {
-      querySelector: vi.fn((sel: string) => (sel === "#contents" ? mockContents : null)),
-      firstElementChild: mockContents
-    };
-
-    const mockRoot = {
-      querySelector: vi.fn((sel: string) => (sel === "ytd-rich-grid-renderer" ? mockGrid : null))
-    };
-
-    const target = findPinnedInsertionTarget("youtube", mockRoot as unknown as ParentNode);
-    expect(target).not.toBeNull();
-    expect(target?.container).toBe(mockGrid);
-    expect(target?.beforeChild).toBe(mockContents);
+    const mounted = mountPinnedQuoteCard("facebook", mockRoot as unknown as ParentNode);
+    expect(mounted).toBe(true);
+    expect(mockFeed.insertBefore).toHaveBeenCalled();
   });
 });

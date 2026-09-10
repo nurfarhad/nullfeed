@@ -438,10 +438,15 @@ html[data-nullfeed-enabled][data-nullfeed-platform="youtube"][data-nullfeed-filt
     0 0 70px -6px rgba(45, 212, 191, 0.3) !important;
 }
 
-/* Pinned top-of-feed variant */
+/* Feed Top Quote Card — sits in-stream like a post card */
+.nullfeed-quote-card--feed,
 .nullfeed-quote-card--pinned {
-  margin: 18px auto 28px auto !important;
-  width: min(100%, 680px) !important;
+  width: 100% !important;
+  max-width: 680px !important;
+  margin: 16px auto !important;
+  box-sizing: border-box !important;
+  align-self: center !important;
+  flex-shrink: 0 !important;
 }
 
 

@@ -1,6 +1,7 @@
 import { getRandomQuote } from "../shared/quotes";
 
-export const PINNED_CARD_ID = "nullfeed-pinned-quote-card";
+export const FEED_QUOTE_CARD_ID = "nullfeed-feed-quote-card";
+export const PINNED_CARD_ID = FEED_QUOTE_CARD_ID; // alias for backwards compatibility
 const INTENT_STORAGE_KEY = "nullfeed-session-intent";
 
 export type PinnedQuotePlatform =
@@ -21,123 +22,139 @@ export function detectPinnedPlatform(hostname: string): PinnedQuotePlatform | nu
   return null;
 }
 
-export type InsertionTarget = {
-  container: Element;
-  beforeChild: Element | null;
-};
+function insertFacebookTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  // Find the first post in the feed stream
+  const firstPost = root.querySelector(
+    'div[role="feed"] div[role="article"]:not([data-pagelet*="Stories"]), [data-pagelet^="FeedUnit"], div[role="feed"] div[data-virtualized="false"]'
+  );
 
-export function findPinnedInsertionTarget(
-  platform: PinnedQuotePlatform,
-  root: ParentNode = document
-): InsertionTarget | null {
-  if (platform === "facebook") {
-    const feed =
-      root.querySelector('[role="feed"]') ??
-      root.querySelector('div[role="main"] [data-pagelet="Feed"]') ??
-      root.querySelector('[data-pagelet="Feed"]') ??
-      root.querySelector('div[role="main"]');
-    if (!feed) return null;
-
-    const firstPost = feed.querySelector(
-      'div[role="article"]:not([data-pagelet*="Stories"]), [data-pagelet^="FeedUnit"], div[data-virtualized="false"]'
-    );
-    if (firstPost) {
-      let beforeChild: Element = firstPost;
-      while (beforeChild.parentElement && beforeChild.parentElement !== feed) {
-        beforeChild = beforeChild.parentElement;
+  if (firstPost) {
+    const feedContainer = firstPost.closest('[role="feed"], [data-pagelet="Feed"]');
+    if (feedContainer) {
+      let target: Element = firstPost;
+      while (target.parentElement && target.parentElement !== feedContainer) {
+        target = target.parentElement;
       }
-      return { container: feed, beforeChild };
-    }
-    return { container: feed, beforeChild: feed.firstElementChild };
-  }
-
-  if (platform === "youtube") {
-    if (
-      typeof location !== "undefined" &&
-      location.pathname !== "/" &&
-      location.pathname !== ""
-    ) {
-      return null;
-    }
-    const grid = root.querySelector("ytd-rich-grid-renderer");
-    if (!grid) return null;
-    const contents = grid.querySelector("#contents");
-    return { container: grid, beforeChild: contents ?? grid.firstElementChild };
-  }
-
-  if (platform === "instagram") {
-    if (
-      typeof location !== "undefined" &&
-      location.pathname !== "/" &&
-      location.pathname !== ""
-    ) {
-      return null;
-    }
-    const main = root.querySelector('main[role="main"], main');
-    if (!main) return null;
-    const firstArticle = main.querySelector("article");
-    if (firstArticle) {
-      const directParent = firstArticle.parentElement;
-      if (directParent) {
-        return { container: directParent, beforeChild: firstArticle };
+      if (target.previousElementSibling === card) {
+        return true;
       }
+      feedContainer.insertBefore(card, target);
+      return true;
     }
-    const section = main.querySelector("section");
-    if (section) {
-      return { container: section, beforeChild: section.firstElementChild };
+    if (firstPost.previousElementSibling === card) {
+      return true;
     }
-    return { container: main, beforeChild: main.firstElementChild };
+    firstPost.parentElement?.insertBefore(card, firstPost);
+    return true;
   }
 
-  if (platform === "linkedin") {
-    const container = root.querySelector(
-      ".scaffold-finite-scroll__content, .scaffold-finite-scroll, main.scaffold-layout__main"
-    );
-    if (!container) return null;
-    const firstUpdate = container.querySelector(
-      '.feed-shared-update-v2, div[data-urn*="activity"], .scaffold-finite-scroll__content > div'
-    );
-    if (firstUpdate) {
-      let beforeChild: Element = firstUpdate;
-      while (beforeChild.parentElement && beforeChild.parentElement !== container) {
-        beforeChild = beforeChild.parentElement;
+  // Fallback: if role="feed" is present but has no posts yet
+  const feed = root.querySelector('[role="feed"], [data-pagelet="Feed"]');
+  if (feed) {
+    if (feed.firstElementChild === card) {
+      return true;
+    }
+    feed.insertBefore(card, feed.firstElementChild);
+    return true;
+  }
+
+  return false;
+}
+
+function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  if (typeof location !== "undefined" && location.pathname !== "/" && location.pathname !== "") {
+    return false;
+  }
+  const grid = root.querySelector("ytd-rich-grid-renderer");
+  if (!grid) return false;
+  const contents = grid.querySelector("#contents");
+  if (contents && contents.previousElementSibling === card) {
+    return true;
+  }
+  if (contents) {
+    grid.insertBefore(card, contents);
+    return true;
+  }
+  if (grid.firstElementChild === card) return true;
+  grid.insertBefore(card, grid.firstElementChild);
+  return true;
+}
+
+function insertInstagramTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  if (typeof location !== "undefined" && location.pathname !== "/" && location.pathname !== "") {
+    return false;
+  }
+  const firstArticle = root.querySelector('main[role="main"] article, main article');
+  if (firstArticle && firstArticle.parentElement) {
+    if (firstArticle.previousElementSibling === card) return true;
+    firstArticle.parentElement.insertBefore(card, firstArticle);
+    return true;
+  }
+  const section = root.querySelector('main[role="main"] section, main section');
+  if (section) {
+    if (section.firstElementChild === card) return true;
+    section.insertBefore(card, section.firstElementChild);
+    return true;
+  }
+  return false;
+}
+
+function insertLinkedInTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  const update = root.querySelector(
+    '.scaffold-finite-scroll__content .feed-shared-update-v2, .scaffold-finite-scroll__content > div'
+  );
+  if (update && update.parentElement) {
+    if (update.previousElementSibling === card) return true;
+    update.parentElement.insertBefore(card, update);
+    return true;
+  }
+  const container = root.querySelector('.scaffold-finite-scroll__content, .scaffold-finite-scroll');
+  if (container) {
+    if (container.firstElementChild === card) return true;
+    container.insertBefore(card, container.firstElementChild);
+    return true;
+  }
+  return false;
+}
+
+function insertTwitterTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  const tweet = root.querySelector(
+    'div[aria-label="Home timeline"] article[data-testid="tweet"], div[data-testid="primaryColumn"] article[data-testid="tweet"]'
+  );
+  if (tweet && tweet.parentElement) {
+    const region = tweet.closest('section[role="region"], div[aria-label="Home timeline"]');
+    if (region) {
+      let target: Element = tweet;
+      while (target.parentElement && target.parentElement !== region) {
+        target = target.parentElement;
       }
-      return { container, beforeChild };
+      if (target.previousElementSibling === card) return true;
+      region.insertBefore(card, target);
+      return true;
     }
-    return { container, beforeChild: container.firstElementChild };
+    if (tweet.previousElementSibling === card) return true;
+    tweet.parentElement.insertBefore(card, tweet);
+    return true;
   }
+  return false;
+}
 
-  if (platform === "twitter") {
-    const region = root.querySelector(
-      'div[aria-label="Home timeline"] section[role="region"], div[data-testid="primaryColumn"] section[role="region"]'
-    );
-    if (!region) return null;
-    const firstTweet = region.querySelector('article[data-testid="tweet"]');
-    if (firstTweet) {
-      let beforeChild: Element = firstTweet;
-      while (beforeChild.parentElement && beforeChild.parentElement !== region) {
-        beforeChild = beforeChild.parentElement;
-      }
-      return { container: region, beforeChild };
+function insertRedditTopQuote(card: HTMLElement, root: ParentNode = document): boolean {
+  const feed = root.querySelector('shreddit-feed, div[data-testid="posts-list"]');
+  if (!feed) return false;
+  const post = feed.querySelector('shreddit-post, article');
+  if (post) {
+    let target: Element = post;
+    while (target.parentElement && target.parentElement !== feed) {
+      target = target.parentElement;
     }
-    return { container: region, beforeChild: region.firstElementChild };
+    if (target.previousElementSibling === card) return true;
+    feed.insertBefore(card, target);
+    return true;
   }
-
-  if (platform === "reddit") {
-    const feed = root.querySelector('shreddit-feed, div[data-testid="posts-list"]');
-    if (!feed) return null;
-    const firstPost = feed.querySelector("shreddit-post, article");
-    if (firstPost) {
-      let beforeChild: Element = firstPost;
-      while (beforeChild.parentElement && beforeChild.parentElement !== feed) {
-        beforeChild = beforeChild.parentElement;
-      }
-      return { container: feed, beforeChild };
-    }
-    return { container: feed, beforeChild: feed.firstElementChild };
-  }
-
-  return null;
+  if (feed.firstElementChild === card) return true;
+  feed.insertBefore(card, feed.firstElementChild);
+  return true;
 }
 
 function getSessionIntent(): string | null {
@@ -221,8 +238,12 @@ function bindIntentHandlers(container: HTMLElement): void {
 
 let currentQuoteIdx = 0;
 
-export function createPinnedQuoteCardElement(): HTMLElement {
-  const existing = document.getElementById(PINNED_CARD_ID);
+export function createFeedQuoteCardElement(doc?: Document): HTMLElement {
+  const documentRef = doc ?? (typeof document !== "undefined" ? document : null);
+  if (!documentRef) {
+    return { id: FEED_QUOTE_CARD_ID } as unknown as HTMLElement;
+  }
+  const existing = documentRef.getElementById(FEED_QUOTE_CARD_ID);
   if (existing && existing.isConnected) {
     return existing;
   }
@@ -234,16 +255,16 @@ export function createPinnedQuoteCardElement(): HTMLElement {
   currentQuoteIdx = index;
   const currentIntent = getSessionIntent();
 
-  const card = document.createElement("div");
-  card.id = PINNED_CARD_ID;
-  card.className = "nullfeed-quote-card nullfeed-quote-card--pinned";
-  card.dataset.nullfeedPinned = "true";
+  const card = documentRef.createElement("div");
+  card.id = FEED_QUOTE_CARD_ID;
+  card.className = "nullfeed-quote-card nullfeed-quote-card--feed";
+  card.dataset.nullfeedTopQuote = "true";
 
   card.innerHTML = `
     <div class="nullfeed-quote-topbar">
       <div class="nullfeed-quote-badge">
         <span class="nullfeed-quote-badge-dot"></span>
-        <span>MINDFUL INTENT</span>
+        <span>MINDFUL MOMENT</span>
       </div>
       <button type="button" class="nullfeed-quote-refresh" title="New Quote" aria-label="New Quote">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -261,7 +282,7 @@ export function createPinnedQuoteCardElement(): HTMLElement {
     </div>
   `;
 
-  const refreshBtn = card.querySelector<HTMLButtonElement>(".nullfeed-quote-refresh");
+  const refreshBtn = card.querySelector<HTMLButtonElement>("button.nullfeed-quote-refresh");
   if (refreshBtn) {
     refreshBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -283,55 +304,60 @@ export function createPinnedQuoteCardElement(): HTMLElement {
   return card;
 }
 
-export function mountPinnedQuoteCard(platform: PinnedQuotePlatform): boolean {
-  const target = findPinnedInsertionTarget(platform);
-  if (!target) {
-    return false;
+export const createPinnedQuoteCardElement = createFeedQuoteCardElement;
+
+export function mountPinnedQuoteCard(
+  platform: PinnedQuotePlatform,
+  root: ParentNode = typeof document !== "undefined" ? document : (null as unknown as ParentNode)
+): boolean {
+  if (!root) return false;
+  const documentRef = typeof document !== "undefined" ? document : null;
+  const existing = documentRef?.getElementById(FEED_QUOTE_CARD_ID);
+  if (existing && existing.isConnected) {
+    return true;
   }
 
-  let card = document.getElementById(PINNED_CARD_ID);
-  if (!card) {
-    card = createPinnedQuoteCardElement();
-  }
+  const card = createFeedQuoteCardElement(documentRef ?? undefined);
 
-  if (target.beforeChild) {
-    if (
-      target.beforeChild.previousElementSibling === card &&
-      card.parentElement === target.container
-    ) {
-      return true;
-    }
-    target.container.insertBefore(card, target.beforeChild);
-  } else {
-    if (target.container.firstElementChild === card) {
-      return true;
-    }
-    target.container.insertBefore(card, target.container.firstElementChild);
+  switch (platform) {
+    case "facebook":
+      return insertFacebookTopQuote(card, root);
+    case "youtube":
+      return insertYouTubeTopQuote(card, root);
+    case "instagram":
+      return insertInstagramTopQuote(card, root);
+    case "linkedin":
+      return insertLinkedInTopQuote(card, root);
+    case "twitter":
+      return insertTwitterTopQuote(card, root);
+    case "reddit":
+      return insertRedditTopQuote(card, root);
+    default:
+      return false;
   }
-  return true;
 }
 
 export function unmountPinnedQuoteCard(): void {
-  const card = document.getElementById(PINNED_CARD_ID);
+  const card = document.getElementById(FEED_QUOTE_CARD_ID);
   if (card) {
     card.remove();
   }
 }
 
 export function startPinnedQuoteWatcher(platform: PinnedQuotePlatform): () => void {
-  let scheduled = false;
-
-  function reassert(): void {
-    scheduled = false;
-    mountPinnedQuoteCard(platform);
+  // If already mounted, nothing to observe!
+  if (mountPinnedQuoteCard(platform)) {
+    return () => unmountPinnedQuoteCard();
   }
 
-  reassert();
-
+  // Observe until the feed mounts the quote card once, then immediately disconnect
   const observer = new MutationObserver(() => {
-    if (!scheduled) {
-      scheduled = true;
-      requestAnimationFrame(reassert);
+    if (document.getElementById(FEED_QUOTE_CARD_ID)?.isConnected) {
+      observer.disconnect();
+      return;
+    }
+    if (mountPinnedQuoteCard(platform)) {
+      observer.disconnect();
     }
   });
 
