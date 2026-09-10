@@ -73,9 +73,17 @@ const HOME_RECOMMENDED_SHELVES = [
   'ytd-rich-section-renderer:has(ytd-rich-shelf-renderer:has([title*="Mixes" i]))'
 ] as const;
 
-let lastNewChipClickTime = 0;
-let newChipRetryTimer: ReturnType<typeof setTimeout> | null = null;
-let newChipRetryCount = 0;
+let chipWatcherTimer: ReturnType<typeof setInterval> | null = null;
+let watcherStartTimestamp = 0;
+let lastClickTimestamp = 0;
+const WATCHER_MAX_DURATION_MS = 25000;
+
+function stopHomeFeedChipWatcher(): void {
+  if (chipWatcherTimer) {
+    clearInterval(chipWatcherTimer);
+    chipWatcherTimer = null;
+  }
+}
 
 function resolveDocument(root: ParentNode): Document | null {
   if (typeof Document !== "undefined" && root instanceof Document) {
@@ -91,81 +99,209 @@ function isYouTubeHomePage(): boolean {
   return location.pathname === "/" || location.pathname === "";
 }
 
-function syncYouTubeHomeFeedChips(doc: Document = document): void {
-  if (typeof location === "undefined" || !isYouTubeHomePage()) {
+function isAllChipElement(chip: HTMLElement, index: number): boolean {
+  if (chip.getAttribute("data-nullfeed-feature") === "youtube-all-chip") {
+    return true;
+  }
+  const text = (chip.textContent ?? "").trim().toLowerCase();
+  const title = (
+    chip.getAttribute("chip-title") ??
+    chip.getAttribute("title") ??
+    chip.querySelector("[title]")?.getAttribute("title") ??
+    ""
+  ).trim().toLowerCase();
+  const aria = (
+    chip.getAttribute("aria-label") ??
+    chip.querySelector("[aria-label]")?.getAttribute("aria-label") ??
+    ""
+  ).trim().toLowerCase();
+
+  // If text, title, or aria is "all", or "all" is the first word
+  if (
+    text === "all" ||
+    title === "all" ||
+    aria === "all" ||
+    /^all\b/i.test(text) ||
+    /\ball\b/i.test(title)
+  ) {
+    return true;
+  }
+
+  // On YouTube desktop home feed, the first chip in the feed filter chip bar is ALWAYS "All"
+  if (index === 0 && chip.closest("ytd-feed-filter-chip-bar-renderer")) {
+    return true;
+  }
+
+  return false;
+}
+
+function isNewToYouChipElement(chip: HTMLElement): boolean {
+  const text = (chip.textContent ?? "").trim().toLowerCase();
+  const title = (
+    chip.getAttribute("chip-title") ??
+    chip.getAttribute("title") ??
+    chip.querySelector("[title]")?.getAttribute("title") ??
+    ""
+  ).trim().toLowerCase();
+  const aria = (
+    chip.getAttribute("aria-label") ??
+    chip.querySelector("[aria-label]")?.getAttribute("aria-label") ??
+    ""
+  ).trim().toLowerCase();
+
+  return (
+    text.includes("new to you") ||
+    text.includes("new for you") ||
+    title.includes("new to you") ||
+    title.includes("new for you") ||
+    aria.includes("new to you") ||
+    aria.includes("new for you")
+  );
+}
+
+function isChipElementSelected(chip: HTMLElement): boolean {
+  if (
+    chip.classList.contains("iron-selected") ||
+    chip.getAttribute("aria-selected") === "true" ||
+    chip.hasAttribute("selected") ||
+    chip.getAttribute("aria-pressed") === "true"
+  ) {
+    return true;
+  }
+  const innerSelected = chip.querySelector(
+    '[aria-selected="true"], [aria-pressed="true"], .iron-selected, [selected]'
+  );
+  return Boolean(innerSelected);
+}
+
+function clickChipElement(chip: HTMLElement): void {
+  const now = Date.now();
+  if (now - lastClickTimestamp < 800) {
     return;
+  }
+  lastClickTimestamp = now;
+
+  const clickTarget =
+    chip.querySelector<HTMLElement>(
+      "button, a, [role='button'], [role='tab'], yt-formatted-string, #chip-container, chip-shape"
+    ) ?? chip;
+
+  try {
+    chip.scrollIntoView?.({ behavior: "instant", block: "nearest", inline: "nearest" });
+  } catch {
+    // ignore
+  }
+
+  const mouseEvents = ["pointerdown", "mousedown", "pointerup", "mouseup", "click"];
+  for (const type of mouseEvents) {
+    try {
+      clickTarget.dispatchEvent(
+        new MouseEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          view: typeof window !== "undefined" ? window : undefined
+        })
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  try {
+    if (typeof clickTarget.click === "function") {
+      clickTarget.click();
+    }
+  } catch {
+    // ignore
+  }
+}
+
+function syncYouTubeHomeFeedChips(doc: Document = document): boolean {
+  if (typeof location === "undefined" || !isYouTubeHomePage()) {
+    stopHomeFeedChipWatcher();
+    return true;
   }
 
   const chips = Array.from(
     doc.querySelectorAll<HTMLElement>(
-      "ytd-feed-filter-chip-bar-renderer yt-chip-cloud-chip-renderer, yt-chip-cloud-chip-renderer"
+      "ytd-feed-filter-chip-bar-renderer yt-chip-cloud-chip-renderer, ytd-feed-filter-chip-bar-renderer chip-shape, yt-chip-cloud-chip-renderer"
     )
   );
 
+  if (chips.length === 0) {
+    return false;
+  }
+
   let newToYouChip: HTMLElement | null = null;
   let isNewSelected = false;
-  let userSelectedTopic = false;
+  let otherTopicSelected = false;
 
-  for (const chip of chips) {
-    const text = chip.textContent?.trim().toLowerCase() ?? "";
-    const title = chip.getAttribute("chip-title")?.toLowerCase() ?? "";
-    const combined = `${text} ${title}`;
+  chips.forEach((chip, index) => {
+    const isAll = isAllChipElement(chip, index);
+    const isNew = isNewToYouChipElement(chip);
+    const isSelected = isChipElementSelected(chip);
 
-    const isSelected =
-      chip.classList.contains("iron-selected") ||
-      chip.getAttribute("aria-selected") === "true" ||
-      chip.hasAttribute("selected") ||
-      Boolean(chip.querySelector('[aria-selected="true"], [aria-pressed="true"], .iron-selected'));
-
-    if (text === "all" || title === "all" || combined === "all") {
+    if (isAll) {
       hideElement(chip, "youtube-all-chip");
-    } else if (
-      combined.includes("new to you") ||
-      combined.includes("new for you")
-    ) {
+    } else if (isNew) {
       newToYouChip = chip;
       if (isSelected) {
         isNewSelected = true;
       }
-    } else if (isSelected && !combined.includes("shorts")) {
-      userSelectedTopic = true;
+    } else {
+      const text = (chip.textContent ?? "").toLowerCase();
+      if (isSelected && !text.includes("shorts")) {
+        otherTopicSelected = true;
+      }
     }
+  });
+
+  if (isNewSelected) {
+    stopHomeFeedChipWatcher();
+    return true;
   }
 
-  if (newToYouChip && !isNewSelected && !userSelectedTopic) {
-    const now = Date.now();
-    if (now - lastNewChipClickTime > 1200) {
-      lastNewChipClickTime = now;
-      const clickTarget =
-        newToYouChip.querySelector<HTMLElement>(
-          "button, a, [role='button'], yt-formatted-string"
-        ) ?? newToYouChip;
-      clickTarget.click();
-      clickTarget.dispatchEvent(
-        new MouseEvent("click", {
-          bubbles: true,
-          cancelable: true,
-          view: window
-        })
-      );
-    }
-    newChipRetryCount = 0;
+  if (otherTopicSelected) {
+    stopHomeFeedChipWatcher();
+    return true;
+  }
+
+  if (newToYouChip) {
+    clickChipElement(newToYouChip);
+    return false;
+  }
+
+  return false;
+}
+
+function startHomeFeedChipWatcher(doc: Document = document): void {
+  if (typeof location === "undefined" || !isYouTubeHomePage()) {
+    stopHomeFeedChipWatcher();
     return;
   }
 
-  if (isNewSelected || userSelectedTopic) {
-    newChipRetryCount = 0;
+  const immediateDone = syncYouTubeHomeFeedChips(doc);
+  if (immediateDone) {
     return;
   }
 
-  // If chips haven't rendered into DOM yet, retry with backoff up to 8 times
-  if (newChipRetryCount < 8 && !newChipRetryTimer) {
-    newChipRetryCount++;
-    newChipRetryTimer = setTimeout(() => {
-      newChipRetryTimer = null;
-      syncYouTubeHomeFeedChips(doc);
-    }, 350);
+  if (chipWatcherTimer) {
+    return;
   }
+
+  watcherStartTimestamp = Date.now();
+  chipWatcherTimer = setInterval(() => {
+    if (!isYouTubeHomePage() || Date.now() - watcherStartTimestamp > WATCHER_MAX_DURATION_MS) {
+      stopHomeFeedChipWatcher();
+      return;
+    }
+
+    const done = syncYouTubeHomeFeedChips(doc);
+    if (done) {
+      stopHomeFeedChipWatcher();
+    }
+  }, 300);
 }
 
 export const youtubeAdapter: SiteAdapter = {
@@ -258,8 +394,9 @@ export const youtubeAdapter: SiteAdapter = {
 
       // 2. Process chips bar: hide the "All" chip and auto-activate "New to you"
       const doc = resolveDocument(root);
-      if (doc) syncYouTubeHomeFeedChips(doc);
+      if (doc) startHomeFeedChipWatcher(doc);
     } else if (!settings.youtube.feed || !isYouTubeHomePage()) {
+      stopHomeFeedChipWatcher();
       const doc = resolveDocument(root);
       if (doc) {
         cleanupOwnedFeature("youtube-all-chip", doc);
@@ -290,12 +427,8 @@ export const youtubeAdapter: SiteAdapter = {
   },
 
   cleanup() {
-    if (newChipRetryTimer) {
-      clearTimeout(newChipRetryTimer);
-      newChipRetryTimer = null;
-    }
-    newChipRetryCount = 0;
-    lastNewChipClickTime = 0;
+    stopHomeFeedChipWatcher();
+    lastClickTimestamp = 0;
     cleanupOwnedElements();
     unmountQuoteCard();
   }

@@ -423,19 +423,14 @@ export function unmountPinnedQuoteCard(): void {
 }
 
 export function startPinnedQuoteWatcher(platform: PinnedQuotePlatform): () => void {
-  // If already mounted, nothing to observe!
-  if (mountPinnedQuoteCard(platform)) {
-    return () => unmountPinnedQuoteCard();
-  }
+  // Mount immediately if feed is already present
+  mountPinnedQuoteCard(platform);
 
-  // Observe until the feed mounts the quote card once, then immediately disconnect
+  // Keep observing so if SPA feed re-rendering (or chip switching) clears the card, it is immediately remounted
   const observer = new MutationObserver(() => {
-    if (document.getElementById(FEED_QUOTE_CARD_ID)?.isConnected) {
-      observer.disconnect();
-      return;
-    }
-    if (mountPinnedQuoteCard(platform)) {
-      observer.disconnect();
+    const card = document.getElementById(FEED_QUOTE_CARD_ID);
+    if (!card || !card.isConnected) {
+      mountPinnedQuoteCard(platform);
     }
   });
 
