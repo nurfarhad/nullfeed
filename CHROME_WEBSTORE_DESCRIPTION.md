@@ -1,4 +1,4 @@
-# Nullfeed — Chrome Web Store Listing
+# Nullfeed: Block Distracting Social Feeds — Chrome Web Store Listing
 
 ## Short Description (132 characters max)
 Eliminate addictive feeds, shorts, reels, and ads on YouTube, Facebook, and Instagram. Reclaim your focus with zero tracking.
