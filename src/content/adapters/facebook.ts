@@ -692,11 +692,7 @@ export const facebookAdapter: SiteAdapter = {
       );
     }
 
-    if (settings.facebook.ads) {
-      hideSponsoredEntries(root);
-    } else {
-      restoreAds();
-    }
+    hideSponsoredEntries(root);
   },
 
   cleanup() {

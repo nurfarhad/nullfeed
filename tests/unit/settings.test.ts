@@ -16,10 +16,6 @@ describe("settings validation", () => {
     expect(DEFAULT_SETTINGS.lastPlatform).toBe("facebook");
   });
 
-  it("defaults ads to on for Facebook", () => {
-    expect(DEFAULT_SETTINGS.facebook.ads).toBe(true);
-  });
-
   it("preserves known values and ignores malformed or unknown data", () => {
     expect(
       validateSettings({
@@ -36,24 +32,16 @@ describe("settings validation", () => {
       enabled: false,
       showQuotes: true,
       lastPlatform: "instagram",
-      facebook: { reels: true, stories: true, videos: true, ads: true, messages: false },
+      facebook: { reels: true, stories: true, videos: true, messages: false },
       instagram: { reels: true, stories: true, explore: true, messages: false },
       youtube: {
         shorts: false,
-        redirect: true,
         sidebar: true,
         feed: true,
         comments: true,
         endscreen: true
       }
     });
-  });
-
-  it("backfills missing ads field to default", () => {
-    const result = validateSettings({
-      facebook: { reels: false, stories: false, videos: false, messages: false }
-    });
-    expect(result.facebook.ads).toBe(true);
   });
 
   it("defaults messages to false for Facebook and Instagram", () => {
@@ -68,13 +56,12 @@ describe("settings validation", () => {
         ...DEFAULT_SETTINGS,
         youtube: {
           shorts: false,
-          redirect: false,
           sidebar: false,
           feed: false,
           comments: false,
-          endscreen: false
+          endscreen: true
         },
-        facebook: { reels: false, stories: false, videos: false, ads: false, messages: false },
+        facebook: { reels: false, stories: false, videos: false, messages: false },
         instagram: { reels: false, stories: false, explore: false, messages: false }
       })
     ).toBe(false);
@@ -84,13 +71,12 @@ describe("settings validation", () => {
         ...DEFAULT_SETTINGS,
         youtube: {
           shorts: false,
-          redirect: false,
           sidebar: false,
           feed: false,
           comments: false,
-          endscreen: false
+          endscreen: true
         },
-        facebook: { reels: false, stories: false, videos: false, ads: false, messages: true },
+        facebook: { reels: false, stories: false, videos: false, messages: true },
         instagram: { reels: false, stories: false, explore: false, messages: false }
       })
     ).toBe(true);
@@ -104,19 +90,18 @@ describe("settings validation", () => {
     expect(result.youtube.endscreen).toBe(true);
   });
 
-  it("returns false if all visible toggles are off even if background ads, redirect, or endscreen are on", () => {
+  it("returns false if all visible toggles are off even if background endscreen is on", () => {
     expect(
       hasActiveFilters({
         ...DEFAULT_SETTINGS,
         youtube: {
           shorts: false,
-          redirect: true,
           sidebar: false,
           feed: false,
           comments: false,
           endscreen: true
         },
-        facebook: { reels: false, stories: false, videos: false, ads: true, messages: false },
+        facebook: { reels: false, stories: false, videos: false, messages: false },
         instagram: { reels: false, stories: false, explore: false, messages: false }
       })
     ).toBe(false);

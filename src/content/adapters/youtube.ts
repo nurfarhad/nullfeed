@@ -270,7 +270,7 @@ export const youtubeAdapter: SiteAdapter = {
   blockedRoute(pathname, settings) {
     return (
       settings.enabled &&
-      (settings.youtube.redirect || settings.youtube.shorts) &&
+      settings.youtube.shorts &&
       /^\/shorts(?:\/|$)/i.test(pathname)
     );
   },

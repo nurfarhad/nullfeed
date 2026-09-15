@@ -40,6 +40,30 @@ let currentCyclePhase: "on" | "off" | null = null;
 let stopPinnedWatcher: (() => void) | null = null;
 let tickCyclePlatform: ((current: Settings) => Promise<void>) | null = null;
 
+// Every teardown-able resource (observers, intervals, listeners) registers
+// its own stop function here, regardless of which block created it, so a
+// single teardown() can fully tear the content script down without leaking
+// anything — see __nullfeedTeardown below.
+const cleanupFns: Array<() => void> = [];
+function registerCleanup(fn: () => void): void {
+  cleanupFns.push(fn);
+}
+function teardown(): void {
+  while (cleanupFns.length > 0) {
+    const fn = cleanupFns.pop();
+    try {
+      fn?.();
+    } catch {
+      // ignore — best-effort teardown
+    }
+  }
+}
+if (typeof window !== "undefined") {
+  // Expose teardown for diagnostics (accessible from the page-world via
+  // chrome.scripting in dev mode, no-op in production).
+  Reflect.set(window, "__nullfeedTeardown", teardown);
+}
+
 function syncPinnedQuote(): void {
   if (!pinnedPlatform) return;
   const effective = settings ? getEffectiveSettings(settings) : null;
@@ -193,21 +217,9 @@ function apply(nextSettings: Settings): void {
 }
 
 if (adapter) {
-  // Keep cleanup handles so the 2-second route-polling interval and the
-  // MutationObserver can be torn down if needed (prevents leak across lifetime).
-  let stopObserver: (() => void) | null = null;
-  let stopRouteWatcher: (() => void) | null = null;
+  registerCleanup(() => stopPinnedWatcher?.());
 
-  function teardown(): void {
-    stopObserver?.();
-    stopObserver = null;
-    stopRouteWatcher?.();
-    stopRouteWatcher = null;
-    stopPinnedWatcher?.();
-    stopPinnedWatcher = null;
-  }
-
-  stopObserver = observeDynamicContent((root) => {
+  const stopObserver = observeDynamicContent((root) => {
     const effective = settings ? getEffectiveSettings(settings) : null;
     if (effective?.enabled && !handleRoute(effective)) {
       scan(root);
@@ -218,7 +230,7 @@ if (adapter) {
     syncPinnedQuote();
   });
 
-  stopRouteWatcher = watchRoutes(() => {
+  const stopRouteWatcher = watchRoutes(() => {
     resetYouTubeHomeFeedChipState();
     const effective = settings ? getEffectiveSettings(settings) : null;
     if (effective?.enabled && !handleRoute(effective)) {
@@ -227,11 +239,8 @@ if (adapter) {
     syncPinnedQuote();
   });
 
-  // Expose teardown for diagnostics (accessible from the page-world via
-  // chrome.scripting in dev mode, no-op in production).
-  if (typeof window !== "undefined") {
-    Reflect.set(window, "__nullfeedTeardown", teardown);
-  }
+  registerCleanup(stopObserver);
+  registerCleanup(stopRouteWatcher);
 }
 
 void Promise.all([getSettings(), getSnoozeUntil()])
@@ -433,11 +442,13 @@ if (cyclePlatform) {
       void tickCyclePlatform(settings).catch(() => {});
     }
   }, 3000);
+  registerCleanup(() => clearInterval(cycleInterval));
+  registerCleanup(stopFeedWatcher);
 
   // For platforms without an adapter (e.g. LinkedIn, Twitter, Reddit),
   // observe dynamic DOM mutations to ensure the feed remains hidden in "on" phase.
   if (!adapter) {
-    observeDynamicContent(() => {
+    const stopNoAdapterObserver = observeDynamicContent(() => {
       void getSettings().then((s) => {
         settings = s;
         if (s.enabled && currentCyclePhase === "on") {
@@ -446,6 +457,7 @@ if (cyclePlatform) {
         syncPinnedQuote();
       });
     });
+    registerCleanup(stopNoAdapterObserver);
   }
 
   // --- Scroll Detector: end an "off" (free-browsing) window early when the
@@ -497,14 +509,12 @@ if (cyclePlatform) {
     }
   }
 
-  window.addEventListener(
-    "scroll",
-    () => {
-      if (!scrollRafScheduled) {
-        scrollRafScheduled = true;
-        requestAnimationFrame(handleScrollSample);
-      }
-    },
-    { passive: true }
-  );
+  const handleScroll = () => {
+    if (!scrollRafScheduled) {
+      scrollRafScheduled = true;
+      requestAnimationFrame(handleScrollSample);
+    }
+  };
+  window.addEventListener("scroll", handleScroll, { passive: true });
+  registerCleanup(() => window.removeEventListener("scroll", handleScroll));
 }

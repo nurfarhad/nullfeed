@@ -194,27 +194,27 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
   // Apply YouTube thumbnail card styling
   card.classList?.add("nullfeed-quote-card--yt-thumb");
 
-  const existingWrapper =
-    root.querySelector?.("#nullfeed-yt-grid-wrapper") ??
-    (typeof document !== "undefined" ? document.querySelector("#nullfeed-yt-grid-wrapper") : null);
-  if (existingWrapper?.isConnected) return true;
-
   // Target the rich grid contents list
   const contents =
     root.querySelector?.("ytd-rich-grid-renderer #contents") ??
     (typeof document !== "undefined" ? document.querySelector("ytd-rich-grid-renderer #contents") : null);
   if (!contents) return false;
 
-  // Wrap the card in a div with YouTube grid item classes so it blends into the grid without crashing Polymer
+  const existingWrapper =
+    root.querySelector?.("#nullfeed-yt-grid-wrapper") ??
+    (typeof document !== "undefined" ? document.querySelector("#nullfeed-yt-grid-wrapper") : null);
+
   const docRef =
     typeof document !== "undefined"
       ? document
       : ((root as Element).ownerDocument ?? null);
   const wrapper =
-    docRef && typeof docRef.createElement === "function"
+    existingWrapper ??
+    (docRef && typeof docRef.createElement === "function"
       ? docRef.createElement("div")
-      : card;
-  if (wrapper !== card) {
+      : card);
+
+  if (wrapper !== card && !wrapper.id) {
     wrapper.id = "nullfeed-yt-grid-wrapper";
     wrapper.className = "style-scope ytd-rich-grid-row ytd-rich-item-renderer";
     wrapper.setAttribute("data-nullfeed-yt-card", "");
@@ -224,6 +224,9 @@ function insertYouTubeTopQuote(card: HTMLElement, root: ParentNode = document): 
   // Find the first native video item in the grid
   const firstVideo = contents.querySelector("ytd-rich-item-renderer:not([data-nullfeed-yt-card])");
   if (firstVideo && firstVideo.parentElement) {
+    if (firstVideo.previousElementSibling === wrapper) {
+      return true;
+    }
     firstVideo.parentElement.insertBefore(wrapper, firstVideo);
     return true;
   }
@@ -592,11 +595,10 @@ export function mountPinnedQuoteCard(
 
   const documentRef = typeof document !== "undefined" ? document : null;
   const existing = documentRef?.getElementById(FEED_QUOTE_CARD_ID);
-  if (existing && existing.isConnected) {
-    return true;
-  }
-
-  const card = createFeedQuoteCardElement(documentRef ?? undefined, platform);
+  const card =
+    existing && existing.isConnected
+      ? existing
+      : createFeedQuoteCardElement(documentRef ?? undefined, platform);
 
   switch (platform) {
     case "facebook":
@@ -644,10 +646,7 @@ export function startPinnedQuoteWatcher(platform: PinnedQuotePlatform): () => vo
       unmountPinnedQuoteCard();
       return;
     }
-    const card = document.getElementById(FEED_QUOTE_CARD_ID);
-    if (!card || !card.isConnected) {
-      mountPinnedQuoteCard(platform);
-    }
+    mountPinnedQuoteCard(platform);
   });
 
   observer.observe(document.documentElement, {

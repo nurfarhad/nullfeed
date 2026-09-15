@@ -112,4 +112,45 @@ describe("pinnedQuote - Top of Feed In-Stream Insertion", () => {
     const mounted = mountPinnedQuoteCard("facebook", mockRoot as unknown as ParentNode);
     expect(mounted).toBe(false);
   });
+
+  it("reasserts quote card position when an existing card is displaced", () => {
+    const mockCard = {
+      id: FEED_QUOTE_CARD_ID,
+      isConnected: true,
+      classList: { add: vi.fn() }
+    };
+    const mockFirstVideo = {
+      previousElementSibling: null,
+      parentElement: {
+        insertBefore: vi.fn()
+      }
+    };
+    const mockContents = {
+      querySelector: vi.fn((sel: string) =>
+        sel.includes("ytd-rich-item-renderer") ? mockFirstVideo : null
+      ),
+      insertBefore: vi.fn()
+    };
+    const mockRoot = {
+      querySelector: vi.fn((sel: string) => {
+        if (sel.includes("#nullfeed-yt-grid-wrapper")) return mockCard;
+        if (sel.includes("ytd-rich-grid-renderer")) return mockContents;
+        return null;
+      })
+    };
+
+    const docRef = {
+      getElementById: vi.fn(() => mockCard),
+      querySelector: mockRoot.querySelector
+    };
+    const originalDoc = global.document;
+    // @ts-expect-error Mocking document
+    global.document = docRef;
+
+    const mounted = mountPinnedQuoteCard("youtube", mockRoot as unknown as ParentNode);
+    expect(mounted).toBe(true);
+    expect(mockFirstVideo.parentElement.insertBefore).toHaveBeenCalledWith(mockCard, mockFirstVideo);
+
+    global.document = originalDoc;
+  });
 });

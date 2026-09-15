@@ -13,6 +13,15 @@ describe("blocked routes", () => {
     expect(youtubeAdapter.blockedRoute("/watch", DEFAULT_SETTINGS)).toBe(false);
   });
 
+  it("does not redirect YouTube Shorts routes when shorts is disabled", () => {
+    const disabledShorts = {
+      ...DEFAULT_SETTINGS,
+      youtube: { ...DEFAULT_SETTINGS.youtube, shorts: false }
+    };
+    expect(youtubeAdapter.blockedRoute("/shorts/abc", disabledShorts)).toBe(false);
+    expect(youtubeAdapter.blockedRoute("/shorts", disabledShorts)).toBe(false);
+  });
+
   it("redirects Facebook Reels but not Videos by default", () => {
     expect(facebookAdapter.blockedRoute("/reels/", DEFAULT_SETTINGS)).toBe(
       true

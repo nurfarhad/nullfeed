@@ -13,11 +13,10 @@ const DEFAULT_SETTINGS = {
   enabled: true,
   showQuotes: true,
   lastPlatform: "facebook",
-  facebook: { reels: true, stories: true, videos: false, ads: true, messages: false },
+  facebook: { reels: true, stories: true, videos: false, messages: false },
   instagram: { reels: true, stories: true, explore: true, messages: false },
   youtube: {
     shorts: true,
-    redirect: true,
     sidebar: true,
     feed: false,
     comments: false,
@@ -142,7 +141,7 @@ test("Facebook filters Reels and Stories while leaving Videos at its default", a
 test("Facebook hides Sponsored posts while leaving organic posts untouched", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: false, videos: false, ads: true }
+    facebook: { reels: false, stories: false, videos: false, messages: false }
   });
 
   const page = await fixturePage(
@@ -188,7 +187,7 @@ test("Facebook hides Sponsored posts while leaving organic posts untouched", asy
 test("Facebook detects modern 'Ad · ' feed ads without CTAs and hides Right Rail sidebar ads", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: false, videos: false, ads: true }
+    facebook: { reels: false, stories: false, videos: false, messages: false }
   });
 
   const page = await fixturePage(
@@ -260,7 +259,7 @@ test("Facebook detects modern 'Ad · ' feed ads without CTAs and hides Right Rai
 test("Facebook Stories never hide an unverified newsfeed wrapper", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: true, videos: false, ads: false }
+    facebook: { reels: false, stories: true, videos: false, messages: false }
   });
 
   const page = await fixturePage(
@@ -292,7 +291,7 @@ test("Facebook Stories never hide an unverified newsfeed wrapper", async () => {
 test("Facebook collapses a modern Stories carousel without leaving a gap", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: true, videos: false, ads: false }
+    facebook: { reels: false, stories: true, videos: false, messages: false }
   });
 
   const page = await fixturePage(
@@ -322,7 +321,7 @@ test("Facebook collapses a modern Stories carousel without leaving a gap", async
 test("Facebook Reels and Videos hide only verified feed units", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: true, stories: false, videos: true, ads: false }
+    facebook: { reels: true, stories: false, videos: true, messages: false }
   });
 
   const page = await fixturePage(
@@ -354,7 +353,7 @@ test("Facebook Reels and Videos hide only verified feed units", async () => {
 test("Facebook hides and pauses native feed videos without a watch link", async () => {
   await setSettings({
     ...DEFAULT_SETTINGS,
-    facebook: { reels: false, stories: false, videos: true, ads: false }
+    facebook: { reels: false, stories: false, videos: true, messages: false }
   });
 
   const page = await fixturePage(
@@ -665,6 +664,28 @@ test("blocked routes use replacement navigation to the platform home", async () 
 
     await page.goto("https://www.youtube.com/shorts/abc");
     await expect(page).toHaveURL("https://www.youtube.com/");
+  } finally {
+    await page.close().catch(() => {});
+  }
+});
+
+test("YouTube Shorts does not redirect when Hide Shorts toggle is disabled", async () => {
+  await setSettings({
+    ...DEFAULT_SETTINGS,
+    youtube: { ...DEFAULT_SETTINGS.youtube, shorts: false }
+  });
+
+  const page = await context.newPage();
+  try {
+    await page.route("https://www.youtube.com/**", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "<!doctype html><html><body>Fixture</body></html>"
+      })
+    );
+
+    await page.goto("https://www.youtube.com/shorts/abc");
+    await expect(page).toHaveURL("https://www.youtube.com/shorts/abc");
   } finally {
     await page.close().catch(() => {});
   }

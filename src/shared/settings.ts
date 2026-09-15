@@ -6,7 +6,6 @@ export type FacebookSettings = {
   reels: boolean;
   stories: boolean;
   videos: boolean;
-  ads: boolean;
   messages: boolean;
 };
 
@@ -19,11 +18,13 @@ export type InstagramSettings = {
 
 export type YouTubeSettings = {
   shorts: boolean;
-  redirect: boolean;
   sidebar: boolean;
   feed: boolean;
   comments: boolean;
-  endscreen: boolean;
+  // Always-on: endscreen suggestions are permanently hidden, not a user
+  // toggle. Typed as a literal so setPlatformPreference can't be used to
+  // "flip" it — validateSettings would silently discard that write anyway.
+  endscreen: true;
 };
 
 export type Settings = {
@@ -53,7 +54,6 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
     reels: true,
     stories: true,
     videos: false,
-    ads: true,
     messages: false
   }),
   instagram: Object.freeze({
@@ -64,7 +64,6 @@ export const DEFAULT_SETTINGS: Settings = Object.freeze({
   }),
   youtube: Object.freeze({
     shorts: true,
-    redirect: true,
     sidebar: true,
     feed: false,
     comments: false,
@@ -116,10 +115,6 @@ export function validateSettings(value: unknown): Settings {
         facebook.videos,
         DEFAULT_SETTINGS.facebook.videos
       ),
-      ads: booleanOrDefault(
-        facebook.ads,
-        DEFAULT_SETTINGS.facebook.ads
-      ),
       messages: booleanOrDefault(
         facebook.messages,
         DEFAULT_SETTINGS.facebook.messages
@@ -147,10 +142,6 @@ export function validateSettings(value: unknown): Settings {
       shorts: booleanOrDefault(
         youtube.shorts,
         DEFAULT_SETTINGS.youtube.shorts
-      ),
-      redirect: booleanOrDefault(
-        youtube.redirect,
-        DEFAULT_SETTINGS.youtube.redirect
       ),
       sidebar: booleanOrDefault(
         youtube.sidebar,

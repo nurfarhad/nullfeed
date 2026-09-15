@@ -5,14 +5,20 @@ export const ROUTE_CHANGE_EVENT = "nullfeed:route-change";
 const FALLBACK_INTERVAL_MS = 2_000;
 
 export function watchRoutes(callback: RouteCallback): () => void {
-  let previousPathname = location.pathname;
+  // Track pathname + search so same-path SPA navigations (e.g. YouTube's
+  // /watch?v=A -> /watch?v=B) are treated as route changes too, not just
+  // full pathname changes. Hash is intentionally excluded — hashchange is
+  // handled as its own trigger below and most platforms use it for in-page
+  // anchors rather than navigation.
+  let previousRoute = location.pathname + location.search;
 
   const check = () => {
-    if (location.pathname === previousPathname) {
+    const currentRoute = location.pathname + location.search;
+    if (currentRoute === previousRoute) {
       return;
     }
-    previousPathname = location.pathname;
-    callback(previousPathname);
+    previousRoute = currentRoute;
+    callback(location.pathname);
   };
 
   // The page-world routeSignal content script emits synchronously after
